@@ -1,0 +1,3026 @@
+[
+  {
+    "matricula": "5613776",
+    "nome": "ANA CLARA RODRIGUES DE SOUSA",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "4003455",
+    "nome": "ANA ESTER MARTINS LIMA",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "3282472",
+    "nome": "ANA KELLY VIEIRA MENDES",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5559874",
+    "nome": "ANA RAFAELA BARROS DE OLIVEIRA",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5561994",
+    "nome": "ANTONIO CLEBIO DOS SANTOS FILHO",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5562835",
+    "nome": "ARTHUR DO VALE SANTOS",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5564126",
+    "nome": "BRENNA KARLA ALVES FRANCA",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5564702",
+    "nome": "CAMILLY VITORIA NOGUEIRA TELES",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5564874",
+    "nome": "CARLOS DAVI ALENCAR DE SOUZA",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5564973",
+    "nome": "CARLOS EDUARDO PAIXAO DE LIMA",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5565176",
+    "nome": "CARLOS RAFAEL SILVA SOARES",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5565980",
+    "nome": "DANIELA NASCIMENTO VALENTIM",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5659713",
+    "nome": "DIOGO SOUZA LOPES",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5568795",
+    "nome": "EMILLY RODRIGUES DOS SANTOS DE SOUSA",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5570544",
+    "nome": "FERNANDO GABRIEL MOUTA DA SILVA",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5572567",
+    "nome": "GEOVANE FERREIRA LEITE",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5613803",
+    "nome": "GUSTAVO NOGUEIRA DE SOUSA",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5574760",
+    "nome": "ISABELLE DE FREITAS SOUSA",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5613887",
+    "nome": "ISADORA MESQUITA BRASIL",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5662694",
+    "nome": "JAYLSON NICOLLAS ROCHA DOS SANTOS",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5576218",
+    "nome": "JESSE BARROSO NASCIMENTO",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5576587",
+    "nome": "JOAO CARLOS BRITO ALVES",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5618997",
+    "nome": "JOAO GABRIEL DO NASCIMENTO MATOS",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5577116",
+    "nome": "JOAO IGOR LIMA DO NASCIMENTO",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5578189",
+    "nome": "JOAO VICTOR ALVES FRANCA SAMPAIO",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5578692",
+    "nome": "JONH KELTON FERREIRA LIMA",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5579263",
+    "nome": "JOSE LEVY ALVES FEITOSA",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5580816",
+    "nome": "KAUA JONAS MOTTA DA SILVA",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5581952",
+    "nome": "LARA JENNIFER DA COSTA SILVA",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5613851",
+    "nome": "LEVI DA SILVA NOBREGA",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5583551",
+    "nome": "LION SOARES DA SILVA",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5613738",
+    "nome": "MARIA IZADORA ALVES GASPAR",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5591546",
+    "nome": "MAXWELL PERPETUO CAVALCANTE SOUSA",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5591888",
+    "nome": "MICHAEL LUCAS DE SOUSA ARAUJO MOURA",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "2560641",
+    "nome": "MIRIAM SOUZA ARAUJO",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5592835",
+    "nome": "MONIQUE EVELLYN DIOGO FERREIRA",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "3999133",
+    "nome": "PEDRO HENRIQUE FERREIRA DIOGO",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5594870",
+    "nome": "PEDRO HENRIQUE MARTINS DOS SANTOS",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5615732",
+    "nome": "RAFAEL LEVI CAETANO VASCONCELOS",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5618266",
+    "nome": "RAIMUNDO DYEGO SIMOES FONSECA",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5597380",
+    "nome": "ROMARIO ALVES DE SOUSA",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5598025",
+    "nome": "SAMIA RAQUEL LIMA DOS SANTOS",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5600028",
+    "nome": "THALYA SOARES TEIXEIRA",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5600904",
+    "nome": "VICTOR MIGUEL FERREIRA GOMES",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5600917",
+    "nome": "VICTOR SAULO CHAGAS DE ABREU",
+    "serie": "1º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "4009690",
+    "nome": "ALESSIA MARIA DE OLIVEIRA BARBOSA",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5556999",
+    "nome": "AMANDA KELLY FIGUEIREDO VIEIRA DO NASCIMENTO",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5557030",
+    "nome": "AMANDA VITORIA RODRIGUES SILVA",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5652765",
+    "nome": "ANA CLARA BARCELOS SILVA",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "2730762",
+    "nome": "ANA CLARA FELIX SAMPAIO",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "3159654",
+    "nome": "ANA DAVILA MARANHAO SOUZA",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5558557",
+    "nome": "ANA JULIA OLIVEIRA SCHAEFER",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5558639",
+    "nome": "ANA JULYA DE CASTRO PAIVA",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5563636",
+    "nome": "BEATRIZ VASCONCELOS MENEZES",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5616046",
+    "nome": "DAVILA MARIA AMERICO FREITAS",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5568062",
+    "nome": "ELIAS DE SOUSA SILVA",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5568218",
+    "nome": "ELLEN MENDES DO NASCIMENTO",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5569732",
+    "nome": "ESTER DE ALMEIDA FREITAS",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5571186",
+    "nome": "FRANCISCO FLAVIO SALES FERNANDES",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5572177",
+    "nome": "GABRIELLE ARAUJO DA SILVA",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5641999",
+    "nome": "GIULIA LOPES MARTINS CAVALCANTE",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5572798",
+    "nome": "GIULYA VITORIA MOREIRA LIMA",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5573805",
+    "nome": "HENRIQUE CEZAR SILVA DOS SANTOS JUNIOR",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5575069",
+    "nome": "ISADORA GOMES DE SOUSA",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5577858",
+    "nome": "JOAO PAULO DE JESUS NASCIMENTO",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5580191",
+    "nome": "JULLYA MARA RODRIGUES DE MOURA",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5581998",
+    "nome": "LARA LETICIA SOUZA MACEDO",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "3994094",
+    "nome": "LEVI LIMA SILVA",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "4010828",
+    "nome": "LUIZA CATARINA CARLOS DE SOUZA SILVA",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "4910846",
+    "nome": "MANUELLA INGRID ALVES DE OLIVEIRA",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "4420399",
+    "nome": "MARIA ANA JULYA ALMEIDA SILVA",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5587145",
+    "nome": "MARIA CLARA NOBREGA LOIOLA DE SOUZA",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5587164",
+    "nome": "MARIA CLARA PAULA DA SILVA",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5587379",
+    "nome": "MARIA DE FATIMA SANTOS DE AZEVEDO",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5587603",
+    "nome": "MARIA EDUARDA DE SOUSA CASTRO",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5588197",
+    "nome": "MARIA ESTER DANTAS MENDES",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5588907",
+    "nome": "MARIA ISABELLY SOUSA ELOY",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5588914",
+    "nome": "MARIA ISABEL MARQUES FERREIRA",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5589218",
+    "nome": "MARIA JULIA LIRA DA SILVA",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5589969",
+    "nome": "MARIANA CARVALHO MENDES",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5590031",
+    "nome": "MARIANA LIMA DE SOUSA",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5590055",
+    "nome": "MARIANA RABELO DA SILVA",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5590152",
+    "nome": "MARIA NICOLY MARTINS ALCANTARA",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5593130",
+    "nome": "NATHALIE EDUARDA FERREIRA MOREIRA",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5614107",
+    "nome": "NICOLLY DE OLIVEIRA SAMPAIO",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5613893",
+    "nome": "RAMON MATHEUS ALEXANDRE VASCONCELOS",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5596860",
+    "nome": "REBECA SENA SILVA",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5617951",
+    "nome": "THALITA NORONHA RODRIGUES",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5600485",
+    "nome": "UILANA TEIXEIRA CAVALCANTE",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5601252",
+    "nome": "VITORIA LIVIA MORAIS FELIX",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5602082",
+    "nome": "YANA RADASSA TEIXEIRA RODRIGUES",
+    "serie": "1º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5558685",
+    "nome": "ANA KAROLINA PAULO OLIVEIRA",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5558832",
+    "nome": "ANA KETHELLYN BEZERRA DE OLIVEIRA",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5613740",
+    "nome": "ANA LUIZA FREIRE RODRIGUES",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5560712",
+    "nome": "ANDERSON MICHAEL DE OLIVEIRA SENA",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5560784",
+    "nome": "ANDRE LUIS NOGUEIRA ARRUDA DE SOUSA",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5566659",
+    "nome": "DAVI FRIGIO MACENO DA COSTA",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5567151",
+    "nome": "DAVI RODRIGUES COSTA",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5567722",
+    "nome": "DOUGLAS ALEXANDRE MOREIRA DA CRUZ",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5568665",
+    "nome": "EMILE KAROLINE CONCEICAO FERREIRA",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5568930",
+    "nome": "EMILY VITORIA DE SOUSA SOARES",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5568981",
+    "nome": "ENRI AZEVEDO BRANDAO",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5570144",
+    "nome": "EVILYN PEREIRA NOJOSA",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5570220",
+    "nome": "EZEQUIEL FREITAS DA SILVA PEREIRA",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5570990",
+    "nome": "FRANCISCO CRISTIAN TAVARES DA COSTA",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5620629",
+    "nome": "IZABELLA VITORIA FARIAS FERREIRA",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5576528",
+    "nome": "JOAO ARTHUR SILVA LEMOS",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5663950",
+    "nome": "JOAO GABRIEL SILVA GOMES",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5612051",
+    "nome": "JOSE CAIO SILVA DA CUNHA",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5632075",
+    "nome": "JOSUE HENRIQUE MELO MONTEIRO",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5619974",
+    "nome": "LETICIA BERNARDINO DE SOUSA",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5630034",
+    "nome": "LEVI MARTINS ARAUJO",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5583620",
+    "nome": "LIVIA MARIA ALVES LUSTOSA",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5587384",
+    "nome": "MARIA DE FATIMA SOBRINHO CORDEIRO",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5588533",
+    "nome": "MARIA GIULLYANA BARBOSA ALVINO",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5588873",
+    "nome": "MARIA ISABELLY DA SILVA OLIVEIRA",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5589649",
+    "nome": "MARIA LORENA SANTOS SAMPAIO",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5589671",
+    "nome": "MARIA LUANARA DA SILVA ALVES",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5590180",
+    "nome": "MARIANY GOMES SILVA",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5590194",
+    "nome": "MARIA PAULA DE SOUZA ALVES",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "2431501",
+    "nome": "MARIA STEFANY FREITAS DE OLIVEIRA",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5591143",
+    "nome": "MARYLANE GOMES DA SILVA",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5022127",
+    "nome": "NAIRA ROBERTA CASTRO SILVA",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5595236",
+    "nome": "PEDRO LUCAS DA SILVA MOURA",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5595935",
+    "nome": "PRISCILA AGATHA SOUZA DOS SANTOS",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5596244",
+    "nome": "RAISA MAYARA DOS SANTOS XAVIER",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5596417",
+    "nome": "RAUAN OLIVEIRA CASTRO",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "4236414",
+    "nome": "RONALDY SILVA NASCIMENTO",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5597627",
+    "nome": "RUAN VINICIUS MATOS DE PAIVA",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5598032",
+    "nome": "SAMILA DOS SANTOS PEREIRA",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "4896865",
+    "nome": "SAMUEL HENRY SOARES SENA",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5599285",
+    "nome": "SOPHIA DE LIMA LOPES",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5601745",
+    "nome": "WESLEI DE SOUSA OLIVEIRA",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5601841",
+    "nome": "WEVERTON GUERRA BARROS",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5602516",
+    "nome": "YASMIN KAIANE RODRIGUES DA SILVA",
+    "serie": "1º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5557132",
+    "nome": "ANA ALICIA DO NASCIMENTO MARCOLINO",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5558002",
+    "nome": "ANA EMANUELY TEIXEIRA BARBOSA",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5558246",
+    "nome": "ANA HAVILA DA SILVA GOMES",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5614619",
+    "nome": "ANA JULIA DE OLIVEIRA BARROS",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5658738",
+    "nome": "ANA KESIA OLIVEIRA DE SOUSA",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "3225716",
+    "nome": "ANA THALYNE SILVA BRAZ",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5636205",
+    "nome": "ANA YASMIM DOS SANTOS PAULINO",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5561710",
+    "nome": "ANNY LINDSEY MESQUITA NASCIMENTO",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5636497",
+    "nome": "DIELEN EVYLIN DA SILVA COELHO",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5569721",
+    "nome": "ESTER DA ROCHA GOMES",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5569978",
+    "nome": "EUDILANE BENTO DO NASCIMENTO",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "3995816",
+    "nome": "FRANCISCA LIVIA DE OLIVEIRA FERREIRA",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "3857269",
+    "nome": "FRANCISCO YURI SILVA DE OLIVEIRA",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "3229812",
+    "nome": "HADASSA REBEKA SABOIA SILVA",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5574382",
+    "nome": "IRIS VICTORIA DA SILVA QUEIROZ",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5612062",
+    "nome": "ISABELLE MUNIZ BARBOSA",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5576169",
+    "nome": "JENNYFER DE SOUZA BERNARDINO",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5576724",
+    "nome": "JOAO EUDES BATISTA MOREIRA",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "3291953",
+    "nome": "JOAO PEDRO DA SILVA ALENCAR",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5581304",
+    "nome": "KELLYANE RODRIGUES ALEXANDRE VIDAL",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5619426",
+    "nome": "LARISSA LOHANNY DE SOUSA SILVA",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5582792",
+    "nome": "LAYS ALVES NUNES",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5583781",
+    "nome": "LORENA GONCALVES SOARES",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5586599",
+    "nome": "MARIA BEATRIZ SOARES DOS SANTOS",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5587181",
+    "nome": "MARIA CLARA ROCHA DOS SANTOS",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5587749",
+    "nome": "MARIA EDUARDA LOPES DE ALMEIDA MEDICI",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5588799",
+    "nome": "MARIA ISABELLA DOS SANTOS FERREIRA",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5615594",
+    "nome": "MARIA JULIA DE OLIVEIRA NASCIMENTO",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5591018",
+    "nome": "MARINA VITORIA GOMES CASSIANO",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5591053",
+    "nome": "MARK KELVIN NASCIMENTO SOARES",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5591149",
+    "nome": "MARYSSA FRANCA VIEIRA",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5593053",
+    "nome": "NATALY CRISTINA DE LIMA DO NASCIMENTO",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5665377",
+    "nome": "PEDRO ARTHUR COSTA DE SOUZA",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5598000",
+    "nome": "SAMARA KELLY CARVALHO CUNHA",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5598601",
+    "nome": "SANTHIAGO FERREIRA DOS SANTOS",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5598687",
+    "nome": "SARAH DE LIMA GOMES",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5630211",
+    "nome": "SARA KETHELEN FELIX BRITO",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5599860",
+    "nome": "THAINA ALESSANDRA TEIXEIRA DA SILVA",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5600687",
+    "nome": "VANESSA COLACO FREITAS",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5601777",
+    "nome": "WESLEY FERREIRA DOS SANTOS",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5602109",
+    "nome": "YANDRA VICTORIA ANDRADE DE PAULO",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5602344",
+    "nome": "YASMIM DO NASCIMENTO MONTENEGRO",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5602567",
+    "nome": "YASMIN PIETRA SOUSA DE MENESES",
+    "serie": "1º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5449878",
+    "nome": "ANA LETICIA RODRIGUES GOMES",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5449881",
+    "nome": "ANA LIVIA ANDRADE DOS SANTOS",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5450169",
+    "nome": "ANA LIVIA DO NASCIMENTO SILVA",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5413143",
+    "nome": "ANA MONARA COELHO DE LIMA",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5450229",
+    "nome": "ANA VITORIA DOS SANTOS PEREIRA",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5451047",
+    "nome": "ANTONIO GABRIEL DA CRUZ ARAUJO",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5409775",
+    "nome": "ANTONIO LEVY DOURADO DOS SANTOS",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5407168",
+    "nome": "ARTHUR ADLER PEREIRA MENEZES DA SILVA",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5451127",
+    "nome": "ARTHUR BRUNO DA SILVA CHAVES",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5451375",
+    "nome": "ARTHUR NOBRE SANTOS",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5451444",
+    "nome": "BIANCA ARAUJO SOARES",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5451518",
+    "nome": "BIANCA DE LIMA BARBOSA",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5451574",
+    "nome": "CAIO DERICK OLIVEIRA SAMPAIO",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5408204",
+    "nome": "CALEBE SILVA SOUSA",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5407152",
+    "nome": "CAUA ADRIAN MARQUES SOUSA",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5452175",
+    "nome": "EDGAR RODRIGUES TEIXEIRA",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5399851",
+    "nome": "EMILLY DA SILVA SANTOS",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5452178",
+    "nome": "ERICK FEITOSA DA COSTA",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5452183",
+    "nome": "ESTER ALVES DA SILVA",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5452196",
+    "nome": "GABRIEL COSTA DE FRANCA",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5460250",
+    "nome": "GABRIEL LEVI DE ARAUJO SILVA",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5452237",
+    "nome": "GEOVANNA VERAS DE OLIVEIRA",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5437878",
+    "nome": "GUILHERME NASCIMENTO SANTOS",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5452274",
+    "nome": "GUSTAVO NICOLAS GOMES FORTE",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5404455",
+    "nome": "JOAO PEDRO DE SOUSA SILVA RODRIGUES",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5414314",
+    "nome": "JOAO VITOR DUARTE DA SILVA",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5452319",
+    "nome": "JOSE GUSTAVO DOS SANTOS FREIRE",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5414478",
+    "nome": "KAIRO GABRIEL PEIXOTO DOS SANTOS",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5452539",
+    "nome": "LARA INGRID ANDRADE DA SILVA",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5452656",
+    "nome": "LETICIA MENDES VIEIRA",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "4236029",
+    "nome": "LUMA THAYLA SANTIAGO",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5453061",
+    "nome": "MAICON AGUIAR DIAS DE SOUZA",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5408183",
+    "nome": "MARIA ANGELINA LEMOS OLIVEIRA",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "2858607",
+    "nome": "MARIA HELOYZA PIMENTEL RIBEIRO",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5414324",
+    "nome": "MIKAEL RYAN GOMES DE OLIVEIRA FIRMINO",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5402424",
+    "nome": "NATHAN GABRIEL ANDRADE CANDIDO BARROS",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5453315",
+    "nome": "NICOLAS MOURA DA SILVA",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "4181050",
+    "nome": "OTON BENICIO FERREIRA CARVALHO",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5453368",
+    "nome": "PAULO BERNARDO SILVA DE ALMEIDA",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5414349",
+    "nome": "PEDRO ALYSSON SOUSA SILVA",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5406336",
+    "nome": "PEDRO ERICK DA SILVA PEIXOTO",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5454041",
+    "nome": "PEDRO RYAN MESTRE PONTES",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "1796146",
+    "nome": "PHILIPE AUGUSTO FREITAS DE LIMA",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5408094",
+    "nome": "REYNALDO ALVES DE ALMEIDA",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5414524",
+    "nome": "RYAN LUCAS SILVA ANTUNES",
+    "serie": "2º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5455955",
+    "nome": "ALICE VIEIRA LIMA",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5415076",
+    "nome": "ANA BEATRIZ ARAUJO OLIVEIRA",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5400247",
+    "nome": "ANA CAROLINA ARAGAO SENA",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5456101",
+    "nome": "ANA ELLEN SOUSA RIBEIRO",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5456078",
+    "nome": "ANA LETICIA RODRIGUES DE CARVALHO",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5456091",
+    "nome": "ANA VITORIA TEIXEIRA CARDOSO",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5412119",
+    "nome": "ANNA SAMELLA VERAS DE ARAUJO",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "4161380",
+    "nome": "ANNA THAMIRES LIMA CASTELO BRANCO",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5456307",
+    "nome": "ANTONIO LUCAS FELISBERTO DE OLIVEIRA",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5456374",
+    "nome": "ARIELY DE FATIMA GONDIM DA SILVA",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5406433",
+    "nome": "BEATRIZ AZEVEDO DA SILVA",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5456641",
+    "nome": "CARLA MIRELLA DA SILVA CAVALCANTE",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5456800",
+    "nome": "EMILLY LETICIA SOUSA GOMES",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5457449",
+    "nome": "GABRYELLA DA COSTA SA DE ALBUQUERQUE",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5457641",
+    "nome": "GUILHERME MESQUITA CAVALCANTE",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5400257",
+    "nome": "IOHANNA MOURA ALVES DE CARVALHO",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5458048",
+    "nome": "ISABELA MORAES SILVA",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5458134",
+    "nome": "ISADORA DA SILVA OLIVEIRA",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5458297",
+    "nome": "JACKELINE SEIXAS GALDINO DE SOUZA",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5458328",
+    "nome": "JOANA NATALLI DE CASTRO MELO",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5397441",
+    "nome": "JULIA FERREIRA SANTOS",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5458335",
+    "nome": "JULIA PEREIRA COSTA",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5458678",
+    "nome": "LARA BEATRIZ DA SILVA MESQUITA",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5458350",
+    "nome": "LIA CRISTINA FERREIRA FREIRES",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5409622",
+    "nome": "LISANDRA DE ARAUJO COSTA",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5458503",
+    "nome": "LUKAS MIGUEL RODRIGUES TEIXEIRA",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5458616",
+    "nome": "LUZANIRA SUELLEN DA SILVA AMARO",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5459238",
+    "nome": "MAIARA MACIEL BATISTA",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5409394",
+    "nome": "MARCIO VINICIOS BARBOSA DE SOUSA",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5413549",
+    "nome": "MARIA CLARA SILVEIRA RODRIGUES",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5459050",
+    "nome": "MARIA EMANUELLY DA SILVA VIEIRA",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5459085",
+    "nome": "MARIA EMILY PEREIRA DE SOUSA",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "3819291",
+    "nome": "MARIA FERNANDA DE LIMA GOMES",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5459136",
+    "nome": "MARIA NICOLLY ALVES CASTELO BRANCO",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5459207",
+    "nome": "MARIA SARAH SOUSA CASTELO BRANCO",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5308303",
+    "nome": "MARIA THAIS GOMES FERNANDES",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5459273",
+    "nome": "NATHANAEL BALBINO DA SILVA",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5399894",
+    "nome": "RAICCA DOS SANTOS OLIVEIRA",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5459733",
+    "nome": "RUANY KATIUCIA DE CASTRO BENTO",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5459858",
+    "nome": "SAMUEL ELIAB ALVES DE MORAIS",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5459981",
+    "nome": "SARA DO NASCIMENTO GOMES",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "3410620",
+    "nome": "SOFIA DA SILVA OLIVEIRA",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5407735",
+    "nome": "SUZANA SOARES DE OLIVEIRA",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5458864",
+    "nome": "YASMIM NATALY DA SILVA LIMA",
+    "serie": "2º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5412612",
+    "nome": "AGHATA KELY OLIVEIRA BEZERRA",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5404069",
+    "nome": "ANA ADILA AVELINO PAULA",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5441530",
+    "nome": "AQUILES MYGUEL SANTOS ARAUJO",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "4971174",
+    "nome": "ARIELLY OLIVEIRA DA SILVA",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5441814",
+    "nome": "BIANCA LETICIA OLIVEIRA CAMARA",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5441970",
+    "nome": "BIANCA PIMENTEL SOUZA",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "3249026",
+    "nome": "BIANCA SILVA VIANA",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5442035",
+    "nome": "CAMILE VITORIA VAES DE SOUSA",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5442246",
+    "nome": "CHRISTIAN BARBOSA PAIVA",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5442112",
+    "nome": "CRHISLANE SANTOS DE SOUZA",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5442281",
+    "nome": "DAVYNA OLIVEIRA DANTAS",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5413109",
+    "nome": "ELOA SAMILY OLIVEIRA DOS SANTOS",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5443415",
+    "nome": "ERICA RAYSSA MOURA DA SILVA",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5443168",
+    "nome": "ESTEFHANY KOLYN RODRIGUES VERCOSA",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5442988",
+    "nome": "EULINA AGATA NASCIMENTO DE SOUZA",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5400400",
+    "nome": "GABRIELE DA SILVA FERREIRA",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5446787",
+    "nome": "ISAAC BARROS LIMA",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5446846",
+    "nome": "JAMILE LOBO PEREIRA DA SILVA",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "4426987",
+    "nome": "JOSE THENORIO FROTA ROCHA",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5442798",
+    "nome": "LARYSSA JOYCE DE MARIA DE OLIVEIRA GOES",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5446892",
+    "nome": "LEANE NARA OLIVEIRA SILVA",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "4020330",
+    "nome": "MARIA CLARA ALVES DE SOUSA",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5446920",
+    "nome": "MARIA CLARA PESSOA PEREIRA",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5394056",
+    "nome": "MARIA EDUARDA FACANHA RIBEIRO",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5447054",
+    "nome": "MARIA EVELYN DA SILVA VIEIRA",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5447228",
+    "nome": "MARIA LETICIA MORAES CHAGAS",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5414326",
+    "nome": "MYLLA CHRYS NASCIMENTO FEITOSA",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5447382",
+    "nome": "NYCOLE EVELLEN OLIVEIRA DA SILVA",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5414353",
+    "nome": "PIETRA MATOS PIERRE",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5448562",
+    "nome": "RAFAELLY RAMOS DE SOUZA",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5448021",
+    "nome": "RAMON RAYLLON MORAIS DE HOLANDA",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5448578",
+    "nome": "RENAN MATHEUS MARTINS DE SOUSA",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5448541",
+    "nome": "RUTE COSTA NASCIMENTO",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5448671",
+    "nome": "SARAH NICOLY DE LEMOS COUTINHO",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5408818",
+    "nome": "SOFIA SILVA PEREIRA",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5448740",
+    "nome": "SOPHIA ELLEN ALCANTARA ALEXANDRE",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5448825",
+    "nome": "THAILA SAMY DOS SANTOS RIBEIRO",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5449838",
+    "nome": "VITORIA EVELYN DA COSTA SOUSA",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5449829",
+    "nome": "VITORIA KEIVILLY LOPES DA SILVA",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5403350",
+    "nome": "VITORIA MIRANDA MORAIS",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5449835",
+    "nome": "YASMIM NOBREGA MENEZES VIANA",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5397196",
+    "nome": "YGOR DANIEL ALIANCA BARROS",
+    "serie": "2º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5456155",
+    "nome": "AMANDA ROCHA BRAGA",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5456276",
+    "nome": "ANA BEATRIZ GUILHERME LIMA CUNHA",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5456354",
+    "nome": "ANA CAROLINE BENICIO DA SILVA",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "3820842",
+    "nome": "ANA CHIARA DA SILVA VIEIRA",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5456029",
+    "nome": "ANA JOVANNA VASCONCELOS DE SOUZA",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5456043",
+    "nome": "ANA LIVIA ALVES FREITAS",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5455164",
+    "nome": "ANA RAYSSA SALES DE LIMA",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5403537",
+    "nome": "ANA SUZY DE OLIVEIRA BARROS",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5408193",
+    "nome": "AQUILYS ERICK RIBEIRO DE CASTRO",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5456115",
+    "nome": "ARIEL NASCIMENTO RIBEIRO",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5456495",
+    "nome": "CLARA ISABELI LIMA DA SILVA",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5456705",
+    "nome": "ELLEN GOMES AMORIM DA SILVA",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5456757",
+    "nome": "EVELYN BARBOSA PEREIRA MONTE",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5414304",
+    "nome": "FRANCISCA EMILY RODRIGUES DAS NEVES",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5443547",
+    "nome": "HELOIZE NUNES FEIJAO",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5458863",
+    "nome": "IANE LIVIA LIMA DE BRITO",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5457577",
+    "nome": "IASMIN DA SILVA FERREIRA",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5457512",
+    "nome": "ISADORA MARQUES ROCHA",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5406535",
+    "nome": "JOAO GABRIEL RODRIGUES PONTES",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5395121",
+    "nome": "KAUA SILVA GOMES",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5404017",
+    "nome": "LEVI MENEZES DUTRA",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5468448",
+    "nome": "LOHANNA KELLY FERREIRA RODRIGUES",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5457439",
+    "nome": "LUANNA SABOIA GOES",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5458975",
+    "nome": "MARCOS PAULO DE SOUSA ARAUJO",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5414903",
+    "nome": "MARIA ADRYELLY DO NASCIMENTO LIRA",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5457242",
+    "nome": "MARIA CLARA POMPEU DA PENHA BANDEIRA",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5400577",
+    "nome": "MARIA KLAIVIANE DOS SANTOS DE SOUZA",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5375924",
+    "nome": "MARIA LAIZ MENDONCA BALBINO",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5457912",
+    "nome": "MATHEUS GUSTAVO DE SOUSA ARAUJO",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5458919",
+    "nome": "NAIARA FERREIRA SANTOS",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5406400",
+    "nome": "PEDRO HENRIQUE FRANCO GALDINO",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5415637",
+    "nome": "RAKELLE DO NASCIMENTO OLIVEIRA",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5289817",
+    "nome": "RAYSA GABRIELA RODRIGUES DOS SANTOS",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5458358",
+    "nome": "REBECA NASCIMENTO ALVES",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5458604",
+    "nome": "RITA DE CASSIA CORREIA DA SILVA",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5458759",
+    "nome": "SOPHIA BARBOZA PINTO",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5458652",
+    "nome": "TAYLA NARA RIBEIRO DE LIMA SOUSA",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5458684",
+    "nome": "THAISSA REINALDO PEIXOTO SOBRINHA",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5455755",
+    "nome": "YASMIN GABRIELE DE FRANCA CARVALHO",
+    "serie": "2º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "4919225",
+    "nome": "ALINNY KERLLEN LINHARES OLIVEIRA",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5252099",
+    "nome": "ANA LETICIA CHIMENES DE CASTRO",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5264264",
+    "nome": "ANDERSON YTALO VIEIRA DOS SANTOS",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "4681621",
+    "nome": "ANDREW VINICIUS BARROS BENEVENUTO",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5265624",
+    "nome": "ANNE ELISE LIMA DOS SANTOS RODRIGUES",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5252144",
+    "nome": "ANTONIA JULIA DE OLIVEIRA MATOS",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5252266",
+    "nome": "ANTONIO RONALD NEVES DA SILVA",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5252351",
+    "nome": "ARIEL CANDIDO SOARES",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "2510886",
+    "nome": "ARIEL DE SOUSA MAGALHAES",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5242593",
+    "nome": "ARIEL PEREIRA DE OLIVEIRA",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5253407",
+    "nome": "DANTE DE SOUSA MEDEIROS",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5253450",
+    "nome": "ELIANA VITORIA SALES VERAS",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "4957634",
+    "nome": "EMANUEL VERAS MOREIRA",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5261962",
+    "nome": "ERMESSON RIAN LEMOS COSTA",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5253574",
+    "nome": "FERNANDA PINHEIRO PEIXOTO SILVA",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5253611",
+    "nome": "GUILHERME AGUIAR DIAS DA SILVA",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5253650",
+    "nome": "GUSTAVO EMANOEL SILVEIRA LIMA",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5289396",
+    "nome": "IAN SILVA MARQUES CUNHA",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5253699",
+    "nome": "ISABEL CRISTINY VITORIANO PEREIRA",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5253770",
+    "nome": "JEAN SILVA CAVALCANTE JUNIOR",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5243367",
+    "nome": "JEFFERSON SILVA MARTINS DA SILVEIRA",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5262186",
+    "nome": "JEOVANA MIRANDA DE CARVALHO",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5254080",
+    "nome": "JESSICA PEREIRA DA SILVA",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5254026",
+    "nome": "JESSIKA PAMELA DOS SANTOS OLIVEIRA",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5254150",
+    "nome": "JOAO PAULO DE HOLANDA NERES",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5254242",
+    "nome": "JOHN KELLVIN FERREIRA LIMA",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "4509657",
+    "nome": "JOICE KELLY BERNARDINO DA SILVA",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "4682492",
+    "nome": "JOSAFA SILVA BARBOSA",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5254513",
+    "nome": "JOSE GABRIEL BEZERRA DA SILVA",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5288338",
+    "nome": "JOSE VALDEMIR DO NASCIMENTO FILHO",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5262756",
+    "nome": "KAUANY DE SOUSA MANGETH",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5246063",
+    "nome": "LAURA HERCULANO SANTIAGO DE AGUIAR",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5254597",
+    "nome": "LUDMILA EVELIN GOMES DE SANTIAGO",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "4679927",
+    "nome": "LUIZ FERNANDO LOPES XAVIER",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5290033",
+    "nome": "MARIA CLARA DE SOUSA GOMES",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5254680",
+    "nome": "MARIA LAYANE OLIVEIRA DOS SANTOS",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5261990",
+    "nome": "MARIANA TORRES DO NASCIMENTO",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "4680699",
+    "nome": "NICOLLE FREITAS RODRIGUES",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5261390",
+    "nome": "PAULO RYAN LIMA SANTOS",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5262534",
+    "nome": "PEDRO GUSTAVO MENEZES DA CRUZ",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5262568",
+    "nome": "PEDRO RENAN MESQUITA BRASIL",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5262591",
+    "nome": "RAFAELA DE ARAUJO RODRIGUES",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5249498",
+    "nome": "RAFAEL ARAUJO GOMES BATISTA",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5262616",
+    "nome": "RAYSSA PEIXOTO DA COSTA",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5262629",
+    "nome": "VIRGINIA STHEFFNY SOUSA DA SILVA",
+    "serie": "3º",
+    "curso": "DS"
+  },
+  {
+    "matricula": "5264373",
+    "nome": "ANA LETICIA DE PAULA PAIVA",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5258576",
+    "nome": "ANA NAIARA SOUZA AGUIAR",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5246267",
+    "nome": "ANA SOPHIA MOREIRA MENDES",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "4887719",
+    "nome": "ANDRESSA KHADJAH DA SILVA LIMA",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5246695",
+    "nome": "ANGELA IRYS DO NASCIMENTO SILVA",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5258807",
+    "nome": "ANTHONY MIGUEL DAMASCENO DOS SANTOS",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5261177",
+    "nome": "CIBELY SOARES DE CASTRO",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5258890",
+    "nome": "DARA LORENA ROCHA DE OLIVEIRA",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5260029",
+    "nome": "DAVID KEVEN NASCIMENTO XAVIER",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5237771",
+    "nome": "DEBORA EVELYN RODRIGUES DE MORAIS",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5246122",
+    "nome": "EMANUELA EMILY CAVALCANTE VIEIRA",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5260084",
+    "nome": "EMILLY MARTINS CAVALCANTE",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5281344",
+    "nome": "FRANCISCO DAVI VERAS DA COSTA",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5260136",
+    "nome": "GABRIEL FELIX MARTINS DA SILVA",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5260181",
+    "nome": "GEOVANA KETHLEN MAGALHAES DE OLIVEIRA",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5262614",
+    "nome": "ISRAELY MARIA VIANA DA SILVA",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5260582",
+    "nome": "IVINY SILVA ALBUQUERQUE",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5260620",
+    "nome": "JADE LIVIA DA ROCHA SANTOS",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5237583",
+    "nome": "JAMILE TIFANY DOS SANTOS ARRUDA",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5260651",
+    "nome": "JHONATAN KELVIN IRINEU DO NASCIMENTO",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5258563",
+    "nome": "JOAO DAVI AMORIM SOUSA",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5260677",
+    "nome": "JOICY KELLY ROMAO DO NASCIMENTO",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5260685",
+    "nome": "JULIA DAMASCENO SOUSA",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5246843",
+    "nome": "LIVIANY KATLEY DE CASTRO SILVA SOUSA",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5260701",
+    "nome": "LORENA GOMES DE ANDRADE",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5284260",
+    "nome": "LUCIANO DA SILVA FURTADO",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5263617",
+    "nome": "MARIA ALINE ALVES DA SILVA",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5245948",
+    "nome": "MARIA CECILIA SILVA SOUSA OLIVEIRA",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5260715",
+    "nome": "MARIA CLARA PIRES GOMES",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5260767",
+    "nome": "MARIA ISABELE LOURENCO DA SILVA",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5252197",
+    "nome": "MARILIA FROTA RODRIGUES",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5260788",
+    "nome": "MIRELLA RODRIGUES DE OLIVEIRA",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5260817",
+    "nome": "NATHALIA NARA QUEIROZ DO NASCIMENTO",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5247974",
+    "nome": "RAVELY NASCIMENTO DE SOUSA",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "4683082",
+    "nome": "RAYSSA MOURA CUNHA",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5238505",
+    "nome": "RHAIRA EVELLYN RODRIGUES VERCOSA",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5260899",
+    "nome": "SAMARA BARROSO NASCIMENTO",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "3293619",
+    "nome": "SOPHYA VITORIA SANTOS MARTINS",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5260938",
+    "nome": "THAYLA MARA DA LIMA COSTA",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5260975",
+    "nome": "VITORIA EVELY RODRIGUES GARCEZ",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "5263460",
+    "nome": "YASMIN KETLEN DE OLIVEIRA CARNEIRO",
+    "serie": "3º",
+    "curso": "ENF"
+  },
+  {
+    "matricula": "4681543",
+    "nome": "ANA BEATRIZ SOUZA DE OLIVEIRA",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5108911",
+    "nome": "ANA LETICIA VASCONCELOS BEZERRA DE FREITAS",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5263731",
+    "nome": "ANA LUIZA RIBEIRO RODRIGUES FEITOSA",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5263764",
+    "nome": "ANA RAYCCA DA SILVA CASSIANO",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5264019",
+    "nome": "ANNA LETICIA DE SOUSA LIMA",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5264121",
+    "nome": "ANNE LAIS SOUZA NOGUEIRA",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5264186",
+    "nome": "BEATRIZ DA SILVA OLIVEIRA",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5264222",
+    "nome": "CAMILY MARQUES ALVES",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5264307",
+    "nome": "CLEBIANE DE ASSIS LIMA",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5235181",
+    "nome": "CLEITON ALAN SANTOS DE ALMEIDA",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5266142",
+    "nome": "DERLANE AZEVEDO DE SOUSA",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5264319",
+    "nome": "ENZO EDUARDO GOMES DE OLIVEIRA",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5264328",
+    "nome": "ESTER LIVIA SILVA ZEFERINO",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5264348",
+    "nome": "FATIMA VITORIA GOMES PEREIRA",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5238271",
+    "nome": "FRANCISCO RONALDO BATISTA MONTEIRO",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5245880",
+    "nome": "GABRIEL MORAIS PACHECO",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5248941",
+    "nome": "GIOVANA ROCHA ARAUJO",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5242634",
+    "nome": "GRAZIELLY OTILIA RODRIGUES SANTIAGO",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5264371",
+    "nome": "HENRIQUE SANTIAGO SANTOS DA SILVA",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5264384",
+    "nome": "IASMYN OLIVEIRA DE SOUZA",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "4682471",
+    "nome": "JEICELANE SILVA DOS SANTOS",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5264557",
+    "nome": "JESSICA EMILY PAIVA RODRIGUES",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5263672",
+    "nome": "JOAO MATHEUS EVANGELISTA BRAGA",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5263708",
+    "nome": "JONATHAN SANTOS BRITO DE NORONHA",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5249676",
+    "nome": "KAUANE KETELY DE SOUSA CASTRO",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5245581",
+    "nome": "KAUE JARDILINO DA SILVA",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5290148",
+    "nome": "LARISSA RAMOS ALVES",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5246569",
+    "nome": "LEANDRO EMANUEL PEREIRA SILVA",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5264650",
+    "nome": "LIANA SOUSA DA SILVA",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5263816",
+    "nome": "LIVIA MARIA DE SOUSA MADEIRA",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "4680278",
+    "nome": "LUCAS YOHAN RODRIGUES DUTRA",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5263655",
+    "nome": "MANUELLA SOPHIA CIDRAO VIEIRA",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5284631",
+    "nome": "MARIA CECILIA ALVES SOARES",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5263926",
+    "nome": "MARIA EDUARDA FREITAS SARAIVA",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5263627",
+    "nome": "THAYNA ALVES DE ARRUDA",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5264758",
+    "nome": "VINICIUS RODRIGUES OLIVEIRA",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5242628",
+    "nome": "VITORIA EMANUELLE DOS SANTOS SILVA",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "4681216",
+    "nome": "YANNA KETLYN COSTA LUSTOSA",
+    "serie": "3º",
+    "curso": "HOSP"
+  },
+  {
+    "matricula": "5247013",
+    "nome": "ANA BEATRIZ DA SILVA MARIANO",
+    "serie": "3º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5247855",
+    "nome": "ANA CLARA POMPEU DA SILVA",
+    "serie": "3º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5247964",
+    "nome": "ANA DAIANE SILVA ALMEIDA",
+    "serie": "3º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5237762",
+    "nome": "ANA GRAZIELA SOUSA BARBOSA",
+    "serie": "3º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5248108",
+    "nome": "ANA KAROLINE DA SILVA LIMA",
+    "serie": "3º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5248197",
+    "nome": "ANA LAIZA SILVA DE OLIVEIRA",
+    "serie": "3º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5236753",
+    "nome": "ANDREIA MAIRE FELIX BRASIL",
+    "serie": "3º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5248903",
+    "nome": "ARISON FEITOSA SANTOS",
+    "serie": "3º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5246539",
+    "nome": "CLARA LIVIA OLIVEIRA BORGES",
+    "serie": "3º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5250318",
+    "nome": "EDNA KELVIA DE HOLANDA DA SILVA",
+    "serie": "3º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5250391",
+    "nome": "EMILE YASMIM SILVA ONOFRE",
+    "serie": "3º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5250649",
+    "nome": "ESTER DA COSTA FREITAS",
+    "serie": "3º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5250726",
+    "nome": "EVELLY LETICIA OLIVEIRA DOS SANTOS",
+    "serie": "3º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5287399",
+    "nome": "FABIO RUAN FREITAS DE PAULA DA SILVA",
+    "serie": "3º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5279046",
+    "nome": "FRANCISCA ISABELY SANTOS DE SOUZA",
+    "serie": "3º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5319587",
+    "nome": "IASMYN DUTRA DOS SANTOS",
+    "serie": "3º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5251017",
+    "nome": "JOANA CASTRO HISSA",
+    "serie": "3º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5292450",
+    "nome": "JOAO PEDRO BRAGA DE OLIVEIRA",
+    "serie": "3º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "3884934",
+    "nome": "JOAO PEDRO SOBRINHO DE SOUZA",
+    "serie": "3º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5251125",
+    "nome": "LARYSSA DA SILVA LOPES",
+    "serie": "3º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5292969",
+    "nome": "LEVI RODRIGUES DE SOUSA",
+    "serie": "3º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5293411",
+    "nome": "MARIA CLAIANE RABELO DE SOUZA",
+    "serie": "3º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5251570",
+    "nome": "MARIA EDUARDA DE SOUZA LIMEIRA",
+    "serie": "3º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5290193",
+    "nome": "MARIA LARA FERREIRA GOMES SOUZA",
+    "serie": "3º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5290348",
+    "nome": "NAGILA MARIA MARTINS DUARTE",
+    "serie": "3º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "4682974",
+    "nome": "NICOLE PEREIRA DO VALE",
+    "serie": "3º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5292259",
+    "nome": "PEDRO IGOR SILVA RAMOS DE MEDEIROS",
+    "serie": "3º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5291365",
+    "nome": "RAKELLY BARBOSA RODRIGUES",
+    "serie": "3º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5291674",
+    "nome": "TAINA DA SILVA OLIVEIRA",
+    "serie": "3º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5245118",
+    "nome": "VALESCA DOS SANTOS ROCHA",
+    "serie": "3º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5265940",
+    "nome": "WLADIA MIRANDA DA ROCHA",
+    "serie": "3º",
+    "curso": "MOD"
+  },
+  {
+    "matricula": "5291904",
+    "nome": "YASMIM DE OLIVEIRA LOPES",
+    "serie": "3º",
+    "curso": "MOD"
+  }
+]

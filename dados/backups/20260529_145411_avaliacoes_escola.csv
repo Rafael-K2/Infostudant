@@ -1,0 +1,862 @@
+Data,Aluno,Serie,Curso,Estagio,Item,Nota
+29/05/2026 09:04:08,marcio vinicios barbosa de sousa,2° Ano,Enfermagem,1,Almoço-Segunda,3
+29/05/2026 09:04:08,marcio vinicios barbosa de sousa,2° Ano,Enfermagem,1,Almoço-Terça,3
+29/05/2026 09:04:08,marcio vinicios barbosa de sousa,2° Ano,Enfermagem,1,Almoço-Quarta,3
+29/05/2026 09:04:08,marcio vinicios barbosa de sousa,2° Ano,Enfermagem,1,Almoço-Quinta,3
+29/05/2026 09:04:08,marcio vinicios barbosa de sousa,2° Ano,Enfermagem,1,Almoço-Sexta,3
+29/05/2026 09:04:08,marcio vinicios barbosa de sousa,2° Ano,Enfermagem,1,Merenda da manhã-Todos os dias,2
+29/05/2026 09:04:08,marcio vinicios barbosa de sousa,2° Ano,Enfermagem,1,Merenda da tarde-Todos os dias,2
+29/05/2026 09:04:08,marcio vinicios barbosa de sousa,2° Ano,Enfermagem,2,Salas de Aula,5
+29/05/2026 09:04:08,marcio vinicios barbosa de sousa,2° Ano,Enfermagem,2,Refeitório,3
+29/05/2026 09:04:08,marcio vinicios barbosa de sousa,2° Ano,Enfermagem,2,Banheiros,4
+29/05/2026 09:04:08,marcio vinicios barbosa de sousa,2° Ano,Enfermagem,2,Auditório,4
+29/05/2026 09:04:08,marcio vinicios barbosa de sousa,2° Ano,Enfermagem,2,Laboratórios,5
+29/05/2026 09:04:08,marcio vinicios barbosa de sousa,2° Ano,Enfermagem,3,Linguagens,5
+29/05/2026 09:04:08,marcio vinicios barbosa de sousa,2° Ano,Enfermagem,3,Humanas,5
+29/05/2026 09:04:08,marcio vinicios barbosa de sousa,2° Ano,Enfermagem,3,Ciências da natureza,5
+29/05/2026 09:04:08,marcio vinicios barbosa de sousa,2° Ano,Enfermagem,3,Matemática,5
+29/05/2026 09:04:08,marcio vinicios barbosa de sousa,2° Ano,Enfermagem,4,O quão acolhido você foi na escola ?,4
+29/05/2026 09:04:08,marcio vinicios barbosa de sousa,2° Ano,Enfermagem,4,O quão respeitado(@) você é nessa escola ?,5
+29/05/2026 09:04:08,marcio vinicios barbosa de sousa,2° Ano,Enfermagem,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",5
+29/05/2026 09:04:08,marcio vinicios barbosa de sousa,2° Ano,Enfermagem,4,Qual foi o seu almoço favorito?,QUARTA
+29/05/2026 09:06:49,Antonio Lucas Felisberto de Oliveira,2° Ano,Enfermagem,1,Almoço-Segunda,3
+29/05/2026 09:06:49,Antonio Lucas Felisberto de Oliveira,2° Ano,Enfermagem,1,Almoço-Terça,4
+29/05/2026 09:06:49,Antonio Lucas Felisberto de Oliveira,2° Ano,Enfermagem,1,Almoço-Quarta,4
+29/05/2026 09:06:49,Antonio Lucas Felisberto de Oliveira,2° Ano,Enfermagem,1,Almoço-Quinta,5
+29/05/2026 09:06:49,Antonio Lucas Felisberto de Oliveira,2° Ano,Enfermagem,1,Almoço-Sexta,5
+29/05/2026 09:06:49,Antonio Lucas Felisberto de Oliveira,2° Ano,Enfermagem,1,Merenda da manhã-Todos os dias,3
+29/05/2026 09:06:49,Antonio Lucas Felisberto de Oliveira,2° Ano,Enfermagem,1,Merenda da tarde-Todos os dias,4
+29/05/2026 09:06:49,Antonio Lucas Felisberto de Oliveira,2° Ano,Enfermagem,2,Salas de Aula,5
+29/05/2026 09:06:49,Antonio Lucas Felisberto de Oliveira,2° Ano,Enfermagem,2,Refeitório,4
+29/05/2026 09:06:49,Antonio Lucas Felisberto de Oliveira,2° Ano,Enfermagem,2,Banheiros,4
+29/05/2026 09:06:49,Antonio Lucas Felisberto de Oliveira,2° Ano,Enfermagem,2,Auditório,5
+29/05/2026 09:06:49,Antonio Lucas Felisberto de Oliveira,2° Ano,Enfermagem,2,Laboratórios,5
+29/05/2026 09:06:49,Antonio Lucas Felisberto de Oliveira,2° Ano,Enfermagem,3,Linguagens,5
+29/05/2026 09:06:49,Antonio Lucas Felisberto de Oliveira,2° Ano,Enfermagem,3,Humanas,5
+29/05/2026 09:06:49,Antonio Lucas Felisberto de Oliveira,2° Ano,Enfermagem,3,Ciências da natureza,5
+29/05/2026 09:06:49,Antonio Lucas Felisberto de Oliveira,2° Ano,Enfermagem,3,Matemática,5
+29/05/2026 09:06:49,Antonio Lucas Felisberto de Oliveira,2° Ano,Enfermagem,4,O quão acolhido você foi na escola ?,5
+29/05/2026 09:06:49,Antonio Lucas Felisberto de Oliveira,2° Ano,Enfermagem,4,O quão respeitado(@) você é nessa escola ?,5
+29/05/2026 09:06:49,Antonio Lucas Felisberto de Oliveira,2° Ano,Enfermagem,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",5
+29/05/2026 09:06:49,Antonio Lucas Felisberto de Oliveira,2° Ano,Enfermagem,4,Qual foi o seu almoço favorito?,SEXTA
+29/05/2026 09:20:26,beatriz vasconcelos menezes,1° Ano,Enfermagem,1,Almoço-Segunda,4
+29/05/2026 09:20:26,beatriz vasconcelos menezes,1° Ano,Enfermagem,1,Almoço-Terça,4
+29/05/2026 09:20:26,beatriz vasconcelos menezes,1° Ano,Enfermagem,1,Almoço-Quarta,4
+29/05/2026 09:20:26,beatriz vasconcelos menezes,1° Ano,Enfermagem,1,Almoço-Quinta,1
+29/05/2026 09:20:26,beatriz vasconcelos menezes,1° Ano,Enfermagem,1,Almoço-Sexta,3
+29/05/2026 09:20:26,beatriz vasconcelos menezes,1° Ano,Enfermagem,1,Merenda da manhã-Todos os dias,2
+29/05/2026 09:20:26,beatriz vasconcelos menezes,1° Ano,Enfermagem,1,Merenda da tarde-Todos os dias,3
+29/05/2026 09:20:26,beatriz vasconcelos menezes,1° Ano,Enfermagem,2,Salas de Aula,1
+29/05/2026 09:20:26,beatriz vasconcelos menezes,1° Ano,Enfermagem,2,Refeitório,4
+29/05/2026 09:20:26,beatriz vasconcelos menezes,1° Ano,Enfermagem,2,Banheiros,1
+29/05/2026 09:20:26,beatriz vasconcelos menezes,1° Ano,Enfermagem,2,Auditório,5
+29/05/2026 09:20:26,beatriz vasconcelos menezes,1° Ano,Enfermagem,2,Laboratórios,5
+29/05/2026 09:20:26,beatriz vasconcelos menezes,1° Ano,Enfermagem,3,Linguagens,5
+29/05/2026 09:20:26,beatriz vasconcelos menezes,1° Ano,Enfermagem,3,Humanas,3
+29/05/2026 09:20:26,beatriz vasconcelos menezes,1° Ano,Enfermagem,3,Ciências da natureza,5
+29/05/2026 09:20:26,beatriz vasconcelos menezes,1° Ano,Enfermagem,3,Matemática,5
+29/05/2026 09:20:26,beatriz vasconcelos menezes,1° Ano,Enfermagem,4,O quão acolhido você foi na escola ?,4
+29/05/2026 09:20:26,beatriz vasconcelos menezes,1° Ano,Enfermagem,4,O quão respeitado(@) você é nessa escola ?,4
+29/05/2026 09:20:26,beatriz vasconcelos menezes,1° Ano,Enfermagem,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",4
+29/05/2026 09:20:26,beatriz vasconcelos menezes,1° Ano,Enfermagem,4,Qual foi o seu almoço favorito?,SEGUNDA
+29/05/2026 09:22:11,maria de fatima santos de azevedo,1° Ano,Enfermagem,1,Almoço-Segunda,3
+29/05/2026 09:22:11,maria de fatima santos de azevedo,1° Ano,Enfermagem,1,Almoço-Terça,1
+29/05/2026 09:22:11,maria de fatima santos de azevedo,1° Ano,Enfermagem,1,Almoço-Quarta,5
+29/05/2026 09:22:11,maria de fatima santos de azevedo,1° Ano,Enfermagem,1,Almoço-Quinta,4
+29/05/2026 09:22:11,maria de fatima santos de azevedo,1° Ano,Enfermagem,1,Almoço-Sexta,3
+29/05/2026 09:22:11,maria de fatima santos de azevedo,1° Ano,Enfermagem,1,Merenda da manhã-Todos os dias,5
+29/05/2026 09:22:11,maria de fatima santos de azevedo,1° Ano,Enfermagem,1,Merenda da tarde-Todos os dias,3
+29/05/2026 09:22:11,maria de fatima santos de azevedo,1° Ano,Enfermagem,2,Salas de Aula,5
+29/05/2026 09:22:11,maria de fatima santos de azevedo,1° Ano,Enfermagem,2,Refeitório,5
+29/05/2026 09:22:11,maria de fatima santos de azevedo,1° Ano,Enfermagem,2,Banheiros,4
+29/05/2026 09:22:11,maria de fatima santos de azevedo,1° Ano,Enfermagem,2,Auditório,5
+29/05/2026 09:22:11,maria de fatima santos de azevedo,1° Ano,Enfermagem,2,Laboratórios,5
+29/05/2026 09:22:11,maria de fatima santos de azevedo,1° Ano,Enfermagem,3,Linguagens,5
+29/05/2026 09:22:11,maria de fatima santos de azevedo,1° Ano,Enfermagem,3,Humanas,5
+29/05/2026 09:22:11,maria de fatima santos de azevedo,1° Ano,Enfermagem,3,Ciências da natureza,5
+29/05/2026 09:22:11,maria de fatima santos de azevedo,1° Ano,Enfermagem,3,Matemática,5
+29/05/2026 09:22:11,maria de fatima santos de azevedo,1° Ano,Enfermagem,4,O quão acolhido você foi na escola ?,4
+29/05/2026 09:22:11,maria de fatima santos de azevedo,1° Ano,Enfermagem,4,O quão respeitado(@) você é nessa escola ?,3
+29/05/2026 09:22:11,maria de fatima santos de azevedo,1° Ano,Enfermagem,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",5
+29/05/2026 09:22:11,maria de fatima santos de azevedo,1° Ano,Enfermagem,4,Qual foi o seu almoço favorito?,QUARTA
+29/05/2026 09:27:55,CLEITON ALAN SANTOS DE ALMEIDA,3° Ano,Hospedagem,1,Almoço-Segunda,5
+29/05/2026 09:27:55,CLEITON ALAN SANTOS DE ALMEIDA,3° Ano,Hospedagem,1,Almoço-Terça,4
+29/05/2026 09:27:55,CLEITON ALAN SANTOS DE ALMEIDA,3° Ano,Hospedagem,1,Almoço-Quarta,4
+29/05/2026 09:27:55,CLEITON ALAN SANTOS DE ALMEIDA,3° Ano,Hospedagem,1,Almoço-Quinta,4
+29/05/2026 09:27:55,CLEITON ALAN SANTOS DE ALMEIDA,3° Ano,Hospedagem,1,Almoço-Sexta,4
+29/05/2026 09:27:55,CLEITON ALAN SANTOS DE ALMEIDA,3° Ano,Hospedagem,1,Merenda da manhã-Todos os dias,2
+29/05/2026 09:27:55,CLEITON ALAN SANTOS DE ALMEIDA,3° Ano,Hospedagem,1,Merenda da tarde-Todos os dias,2
+29/05/2026 09:27:55,CLEITON ALAN SANTOS DE ALMEIDA,3° Ano,Hospedagem,2,Salas de Aula,5
+29/05/2026 09:27:55,CLEITON ALAN SANTOS DE ALMEIDA,3° Ano,Hospedagem,2,Refeitório,5
+29/05/2026 09:27:55,CLEITON ALAN SANTOS DE ALMEIDA,3° Ano,Hospedagem,2,Banheiros,5
+29/05/2026 09:27:55,CLEITON ALAN SANTOS DE ALMEIDA,3° Ano,Hospedagem,2,Auditório,5
+29/05/2026 09:27:55,CLEITON ALAN SANTOS DE ALMEIDA,3° Ano,Hospedagem,2,Laboratórios,5
+29/05/2026 09:27:55,CLEITON ALAN SANTOS DE ALMEIDA,3° Ano,Hospedagem,3,Linguagens,5
+29/05/2026 09:27:55,CLEITON ALAN SANTOS DE ALMEIDA,3° Ano,Hospedagem,3,Humanas,5
+29/05/2026 09:27:55,CLEITON ALAN SANTOS DE ALMEIDA,3° Ano,Hospedagem,3,Ciências da natureza,5
+29/05/2026 09:27:55,CLEITON ALAN SANTOS DE ALMEIDA,3° Ano,Hospedagem,3,Matemática,5
+29/05/2026 09:27:55,CLEITON ALAN SANTOS DE ALMEIDA,3° Ano,Hospedagem,4,O quão acolhido você foi na escola ?,5
+29/05/2026 09:27:55,CLEITON ALAN SANTOS DE ALMEIDA,3° Ano,Hospedagem,4,O quão respeitado(@) você é nessa escola ?,5
+29/05/2026 09:27:55,CLEITON ALAN SANTOS DE ALMEIDA,3° Ano,Hospedagem,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",5
+29/05/2026 09:27:55,CLEITON ALAN SANTOS DE ALMEIDA,3° Ano,Hospedagem,4,Qual foi o seu almoço favorito?,SEGUNDA
+29/05/2026 09:30:05,anonimo,N/A,N/A,1,Almoço-Segunda,3
+29/05/2026 09:30:05,anonimo,N/A,N/A,1,Almoço-Terça,3
+29/05/2026 09:30:05,anonimo,N/A,N/A,1,Almoço-Quarta,3
+29/05/2026 09:30:05,anonimo,N/A,N/A,1,Almoço-Quinta,3
+29/05/2026 09:30:05,anonimo,N/A,N/A,1,Almoço-Sexta,3
+29/05/2026 09:30:05,anonimo,N/A,N/A,1,Merenda da manhã-Todos os dias,3
+29/05/2026 09:30:05,anonimo,N/A,N/A,1,Merenda da tarde-Todos os dias,3
+29/05/2026 09:30:05,anonimo,N/A,N/A,2,Salas de Aula,3
+29/05/2026 09:30:05,anonimo,N/A,N/A,2,Refeitório,3
+29/05/2026 09:30:05,anonimo,N/A,N/A,2,Banheiros,3
+29/05/2026 09:30:05,anonimo,N/A,N/A,2,Auditório,3
+29/05/2026 09:30:05,anonimo,N/A,N/A,2,Laboratórios,3
+29/05/2026 09:30:05,anonimo,N/A,N/A,3,Linguagens,3
+29/05/2026 09:30:05,anonimo,N/A,N/A,3,Humanas,3
+29/05/2026 09:30:05,anonimo,N/A,N/A,3,Ciências da natureza,3
+29/05/2026 09:30:05,anonimo,N/A,N/A,3,Matemática,3
+29/05/2026 09:30:05,anonimo,N/A,N/A,4,O quão acolhido você foi na escola ?,3
+29/05/2026 09:30:05,anonimo,N/A,N/A,4,O quão respeitado(@) você é nessa escola ?,3
+29/05/2026 09:30:05,anonimo,N/A,N/A,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",3
+29/05/2026 09:30:05,anonimo,N/A,N/A,4,Qual foi o seu almoço favorito?,SEGUNDA
+29/05/2026 10:43:38,Manuella Ingrid Alves de Oliveira,1° Ano,Enfermagem,1,Almoço-Segunda,5
+29/05/2026 10:43:38,Manuella Ingrid Alves de Oliveira,1° Ano,Enfermagem,1,Almoço-Terça,5
+29/05/2026 10:43:38,Manuella Ingrid Alves de Oliveira,1° Ano,Enfermagem,1,Almoço-Quarta,5
+29/05/2026 10:43:38,Manuella Ingrid Alves de Oliveira,1° Ano,Enfermagem,1,Almoço-Quinta,3
+29/05/2026 10:43:38,Manuella Ingrid Alves de Oliveira,1° Ano,Enfermagem,1,Almoço-Sexta,3
+29/05/2026 10:43:38,Manuella Ingrid Alves de Oliveira,1° Ano,Enfermagem,1,Merenda da manhã-Todos os dias,3
+29/05/2026 10:43:38,Manuella Ingrid Alves de Oliveira,1° Ano,Enfermagem,1,Merenda da tarde-Todos os dias,3
+29/05/2026 10:43:38,Manuella Ingrid Alves de Oliveira,1° Ano,Enfermagem,2,Salas de Aula,4
+29/05/2026 10:43:38,Manuella Ingrid Alves de Oliveira,1° Ano,Enfermagem,2,Refeitório,5
+29/05/2026 10:43:38,Manuella Ingrid Alves de Oliveira,1° Ano,Enfermagem,2,Banheiros,4
+29/05/2026 10:43:38,Manuella Ingrid Alves de Oliveira,1° Ano,Enfermagem,2,Auditório,5
+29/05/2026 10:43:38,Manuella Ingrid Alves de Oliveira,1° Ano,Enfermagem,2,Laboratórios,5
+29/05/2026 10:43:38,Manuella Ingrid Alves de Oliveira,1° Ano,Enfermagem,3,Linguagens,5
+29/05/2026 10:43:38,Manuella Ingrid Alves de Oliveira,1° Ano,Enfermagem,3,Humanas,5
+29/05/2026 10:43:38,Manuella Ingrid Alves de Oliveira,1° Ano,Enfermagem,3,Ciências da natureza,4
+29/05/2026 10:43:38,Manuella Ingrid Alves de Oliveira,1° Ano,Enfermagem,3,Matemática,4
+29/05/2026 10:43:38,Manuella Ingrid Alves de Oliveira,1° Ano,Enfermagem,4,O quão acolhido você foi na escola ?,5
+29/05/2026 10:43:38,Manuella Ingrid Alves de Oliveira,1° Ano,Enfermagem,4,O quão respeitado(@) você é nessa escola ?,5
+29/05/2026 10:43:38,Manuella Ingrid Alves de Oliveira,1° Ano,Enfermagem,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",5
+29/05/2026 10:43:38,Manuella Ingrid Alves de Oliveira,1° Ano,Enfermagem,4,Qual foi o seu almoço favorito?,TERÇA
+29/05/2026 10:45:02,anonimo,N/A,N/A,1,Almoço-Segunda,4
+29/05/2026 10:45:02,anonimo,N/A,N/A,1,Almoço-Terça,5
+29/05/2026 10:45:02,anonimo,N/A,N/A,1,Almoço-Quarta,4
+29/05/2026 10:45:02,anonimo,N/A,N/A,1,Almoço-Quinta,5
+29/05/2026 10:45:02,anonimo,N/A,N/A,1,Almoço-Sexta,4
+29/05/2026 10:45:02,anonimo,N/A,N/A,1,Merenda da manhã-Todos os dias,1
+29/05/2026 10:45:02,anonimo,N/A,N/A,1,Merenda da tarde-Todos os dias,4
+29/05/2026 10:45:02,anonimo,N/A,N/A,2,Salas de Aula,5
+29/05/2026 10:45:02,anonimo,N/A,N/A,2,Refeitório,4
+29/05/2026 10:45:02,anonimo,N/A,N/A,2,Banheiros,3
+29/05/2026 10:45:02,anonimo,N/A,N/A,2,Auditório,5
+29/05/2026 10:45:02,anonimo,N/A,N/A,2,Laboratórios,5
+29/05/2026 10:45:02,anonimo,N/A,N/A,3,Linguagens,3
+29/05/2026 10:45:02,anonimo,N/A,N/A,3,Humanas,5
+29/05/2026 10:45:02,anonimo,N/A,N/A,3,Ciências da natureza,5
+29/05/2026 10:45:02,anonimo,N/A,N/A,3,Matemática,4
+29/05/2026 10:45:02,anonimo,N/A,N/A,4,O quão acolhido você foi na escola ?,4
+29/05/2026 10:45:02,anonimo,N/A,N/A,4,O quão respeitado(@) você é nessa escola ?,5
+29/05/2026 10:45:02,anonimo,N/A,N/A,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",4
+29/05/2026 10:45:02,anonimo,N/A,N/A,4,Qual foi o seu almoço favorito?,SEGUNDA
+29/05/2026 10:47:57,mariana rabelo da silva,1° Ano,Enfermagem,1,Almoço-Segunda,4
+29/05/2026 10:47:57,mariana rabelo da silva,1° Ano,Enfermagem,1,Almoço-Terça,3
+29/05/2026 10:47:57,mariana rabelo da silva,1° Ano,Enfermagem,1,Almoço-Quarta,2
+29/05/2026 10:47:57,mariana rabelo da silva,1° Ano,Enfermagem,1,Almoço-Quinta,3
+29/05/2026 10:47:57,mariana rabelo da silva,1° Ano,Enfermagem,1,Almoço-Sexta,4
+29/05/2026 10:47:57,mariana rabelo da silva,1° Ano,Enfermagem,1,Merenda da manhã-Todos os dias,1
+29/05/2026 10:47:57,mariana rabelo da silva,1° Ano,Enfermagem,1,Merenda da tarde-Todos os dias,1
+29/05/2026 10:47:57,mariana rabelo da silva,1° Ano,Enfermagem,2,Salas de Aula,5
+29/05/2026 10:47:57,mariana rabelo da silva,1° Ano,Enfermagem,2,Refeitório,4
+29/05/2026 10:47:57,mariana rabelo da silva,1° Ano,Enfermagem,2,Banheiros,2
+29/05/2026 10:47:57,mariana rabelo da silva,1° Ano,Enfermagem,2,Auditório,5
+29/05/2026 10:47:57,mariana rabelo da silva,1° Ano,Enfermagem,2,Laboratórios,5
+29/05/2026 10:47:57,mariana rabelo da silva,1° Ano,Enfermagem,3,Linguagens,5
+29/05/2026 10:47:57,mariana rabelo da silva,1° Ano,Enfermagem,3,Humanas,3
+29/05/2026 10:47:57,mariana rabelo da silva,1° Ano,Enfermagem,3,Ciências da natureza,5
+29/05/2026 10:47:57,mariana rabelo da silva,1° Ano,Enfermagem,3,Matemática,5
+29/05/2026 10:47:57,mariana rabelo da silva,1° Ano,Enfermagem,4,O quão acolhido você foi na escola ?,4
+29/05/2026 10:47:57,mariana rabelo da silva,1° Ano,Enfermagem,4,O quão respeitado(@) você é nessa escola ?,4
+29/05/2026 10:47:57,mariana rabelo da silva,1° Ano,Enfermagem,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",3
+29/05/2026 10:47:57,mariana rabelo da silva,1° Ano,Enfermagem,4,Qual foi o seu almoço favorito?,SEGUNDA
+29/05/2026 10:49:12,anonimo,N/A,N/A,1,Almoço-Segunda,3
+29/05/2026 10:49:12,anonimo,N/A,N/A,1,Almoço-Terça,5
+29/05/2026 10:49:12,anonimo,N/A,N/A,1,Almoço-Quarta,4
+29/05/2026 10:49:12,anonimo,N/A,N/A,1,Almoço-Quinta,5
+29/05/2026 10:49:12,anonimo,N/A,N/A,1,Almoço-Sexta,4
+29/05/2026 10:49:12,anonimo,N/A,N/A,1,Merenda da manhã-Todos os dias,3
+29/05/2026 10:49:12,anonimo,N/A,N/A,1,Merenda da tarde-Todos os dias,3
+29/05/2026 10:49:12,anonimo,N/A,N/A,2,Salas de Aula,5
+29/05/2026 10:49:12,anonimo,N/A,N/A,2,Refeitório,5
+29/05/2026 10:49:12,anonimo,N/A,N/A,2,Banheiros,4
+29/05/2026 10:49:12,anonimo,N/A,N/A,2,Auditório,5
+29/05/2026 10:49:12,anonimo,N/A,N/A,2,Laboratórios,5
+29/05/2026 10:49:12,anonimo,N/A,N/A,3,Linguagens,5
+29/05/2026 10:49:12,anonimo,N/A,N/A,3,Humanas,4
+29/05/2026 10:49:12,anonimo,N/A,N/A,3,Ciências da natureza,4
+29/05/2026 10:49:12,anonimo,N/A,N/A,3,Matemática,4
+29/05/2026 10:49:12,anonimo,N/A,N/A,4,O quão acolhido você foi na escola ?,4
+29/05/2026 10:49:12,anonimo,N/A,N/A,4,O quão respeitado(@) você é nessa escola ?,4
+29/05/2026 10:49:12,anonimo,N/A,N/A,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",5
+29/05/2026 10:49:12,anonimo,N/A,N/A,4,Qual foi o seu almoço favorito?,QUINTA
+29/05/2026 11:39:47,maria nicoly martins alcantara,1° Ano,Enfermagem,1,Almoço-Segunda,3
+29/05/2026 11:39:47,maria nicoly martins alcantara,1° Ano,Enfermagem,1,Almoço-Terça,5
+29/05/2026 11:39:47,maria nicoly martins alcantara,1° Ano,Enfermagem,1,Almoço-Quarta,1
+29/05/2026 11:39:47,maria nicoly martins alcantara,1° Ano,Enfermagem,1,Almoço-Quinta,3
+29/05/2026 11:39:47,maria nicoly martins alcantara,1° Ano,Enfermagem,1,Almoço-Sexta,5
+29/05/2026 11:39:47,maria nicoly martins alcantara,1° Ano,Enfermagem,1,Merenda da manhã-Todos os dias,1
+29/05/2026 11:39:47,maria nicoly martins alcantara,1° Ano,Enfermagem,1,Merenda da tarde-Todos os dias,1
+29/05/2026 11:39:47,maria nicoly martins alcantara,1° Ano,Enfermagem,2,Salas de Aula,5
+29/05/2026 11:39:47,maria nicoly martins alcantara,1° Ano,Enfermagem,2,Refeitório,1
+29/05/2026 11:39:47,maria nicoly martins alcantara,1° Ano,Enfermagem,2,Banheiros,3
+29/05/2026 11:39:47,maria nicoly martins alcantara,1° Ano,Enfermagem,2,Auditório,5
+29/05/2026 11:39:47,maria nicoly martins alcantara,1° Ano,Enfermagem,2,Laboratórios,5
+29/05/2026 11:39:47,maria nicoly martins alcantara,1° Ano,Enfermagem,3,Linguagens,5
+29/05/2026 11:39:47,maria nicoly martins alcantara,1° Ano,Enfermagem,3,Humanas,5
+29/05/2026 11:39:47,maria nicoly martins alcantara,1° Ano,Enfermagem,3,Ciências da natureza,5
+29/05/2026 11:39:47,maria nicoly martins alcantara,1° Ano,Enfermagem,3,Matemática,5
+29/05/2026 11:39:47,maria nicoly martins alcantara,1° Ano,Enfermagem,4,O quão acolhido você foi na escola ?,3
+29/05/2026 11:39:47,maria nicoly martins alcantara,1° Ano,Enfermagem,4,O quão respeitado(@) você é nessa escola ?,5
+29/05/2026 11:39:47,maria nicoly martins alcantara,1° Ano,Enfermagem,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",3
+29/05/2026 11:39:47,maria nicoly martins alcantara,1° Ano,Enfermagem,4,Qual foi o seu almoço favorito?,TERÇA
+29/05/2026 11:43:38,Davila Maria Americo Freitas,1° Ano,Enfermagem,1,Almoço-Segunda,5
+29/05/2026 11:43:38,Davila Maria Americo Freitas,1° Ano,Enfermagem,1,Almoço-Terça,5
+29/05/2026 11:43:38,Davila Maria Americo Freitas,1° Ano,Enfermagem,1,Almoço-Quarta,5
+29/05/2026 11:43:38,Davila Maria Americo Freitas,1° Ano,Enfermagem,1,Almoço-Quinta,5
+29/05/2026 11:43:38,Davila Maria Americo Freitas,1° Ano,Enfermagem,1,Almoço-Sexta,5
+29/05/2026 11:43:38,Davila Maria Americo Freitas,1° Ano,Enfermagem,1,Merenda da manhã-Todos os dias,1
+29/05/2026 11:43:38,Davila Maria Americo Freitas,1° Ano,Enfermagem,1,Merenda da tarde-Todos os dias,1
+29/05/2026 11:43:38,Davila Maria Americo Freitas,1° Ano,Enfermagem,2,Salas de Aula,5
+29/05/2026 11:43:38,Davila Maria Americo Freitas,1° Ano,Enfermagem,2,Refeitório,5
+29/05/2026 11:43:38,Davila Maria Americo Freitas,1° Ano,Enfermagem,2,Banheiros,2
+29/05/2026 11:43:38,Davila Maria Americo Freitas,1° Ano,Enfermagem,2,Auditório,5
+29/05/2026 11:43:38,Davila Maria Americo Freitas,1° Ano,Enfermagem,2,Laboratórios,5
+29/05/2026 11:43:38,Davila Maria Americo Freitas,1° Ano,Enfermagem,3,Linguagens,5
+29/05/2026 11:43:38,Davila Maria Americo Freitas,1° Ano,Enfermagem,3,Humanas,5
+29/05/2026 11:43:38,Davila Maria Americo Freitas,1° Ano,Enfermagem,3,Ciências da natureza,5
+29/05/2026 11:43:38,Davila Maria Americo Freitas,1° Ano,Enfermagem,3,Matemática,5
+29/05/2026 11:43:38,Davila Maria Americo Freitas,1° Ano,Enfermagem,4,O quão acolhido você foi na escola ?,4
+29/05/2026 11:43:38,Davila Maria Americo Freitas,1° Ano,Enfermagem,4,O quão respeitado(@) você é nessa escola ?,4
+29/05/2026 11:43:38,Davila Maria Americo Freitas,1° Ano,Enfermagem,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",5
+29/05/2026 11:43:38,Davila Maria Americo Freitas,1° Ano,Enfermagem,4,Qual foi o seu almoço favorito?,TERÇA
+29/05/2026 11:47:28,Bianca de Lima Barbosa,2° Ano,Desenvolvimento de Sistemas,1,Almoço-Segunda,2
+29/05/2026 11:47:28,Bianca de Lima Barbosa,2° Ano,Desenvolvimento de Sistemas,1,Almoço-Terça,4
+29/05/2026 11:47:28,Bianca de Lima Barbosa,2° Ano,Desenvolvimento de Sistemas,1,Almoço-Quarta,5
+29/05/2026 11:47:28,Bianca de Lima Barbosa,2° Ano,Desenvolvimento de Sistemas,1,Almoço-Quinta,4
+29/05/2026 11:47:28,Bianca de Lima Barbosa,2° Ano,Desenvolvimento de Sistemas,1,Almoço-Sexta,5
+29/05/2026 11:47:28,Bianca de Lima Barbosa,2° Ano,Desenvolvimento de Sistemas,1,Merenda da manhã-Todos os dias,3
+29/05/2026 11:47:28,Bianca de Lima Barbosa,2° Ano,Desenvolvimento de Sistemas,1,Merenda da tarde-Todos os dias,3
+29/05/2026 11:47:28,Bianca de Lima Barbosa,2° Ano,Desenvolvimento de Sistemas,2,Salas de Aula,4
+29/05/2026 11:47:28,Bianca de Lima Barbosa,2° Ano,Desenvolvimento de Sistemas,2,Refeitório,4
+29/05/2026 11:47:28,Bianca de Lima Barbosa,2° Ano,Desenvolvimento de Sistemas,2,Banheiros,3
+29/05/2026 11:47:28,Bianca de Lima Barbosa,2° Ano,Desenvolvimento de Sistemas,2,Auditório,4
+29/05/2026 11:47:28,Bianca de Lima Barbosa,2° Ano,Desenvolvimento de Sistemas,2,Laboratórios,3
+29/05/2026 11:47:28,Bianca de Lima Barbosa,2° Ano,Desenvolvimento de Sistemas,3,Linguagens,5
+29/05/2026 11:47:28,Bianca de Lima Barbosa,2° Ano,Desenvolvimento de Sistemas,3,Humanas,5
+29/05/2026 11:47:28,Bianca de Lima Barbosa,2° Ano,Desenvolvimento de Sistemas,3,Ciências da natureza,4
+29/05/2026 11:47:28,Bianca de Lima Barbosa,2° Ano,Desenvolvimento de Sistemas,3,Matemática,4
+29/05/2026 11:47:28,Bianca de Lima Barbosa,2° Ano,Desenvolvimento de Sistemas,4,O quão acolhido você foi na escola ?,5
+29/05/2026 11:47:28,Bianca de Lima Barbosa,2° Ano,Desenvolvimento de Sistemas,4,O quão respeitado(@) você é nessa escola ?,5
+29/05/2026 11:47:28,Bianca de Lima Barbosa,2° Ano,Desenvolvimento de Sistemas,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",4
+29/05/2026 11:47:28,Bianca de Lima Barbosa,2° Ano,Desenvolvimento de Sistemas,4,Qual foi o seu almoço favorito?,SEXTA
+29/05/2026 11:49:02,anonimo,N/A,N/A,1,Almoço-Segunda,1
+29/05/2026 11:49:02,anonimo,N/A,N/A,1,Almoço-Terça,1
+29/05/2026 11:49:02,anonimo,N/A,N/A,1,Almoço-Quarta,1
+29/05/2026 11:49:02,anonimo,N/A,N/A,1,Almoço-Quinta,1
+29/05/2026 11:49:02,anonimo,N/A,N/A,1,Almoço-Sexta,1
+29/05/2026 11:49:02,anonimo,N/A,N/A,1,Merenda da manhã-Todos os dias,1
+29/05/2026 11:49:02,anonimo,N/A,N/A,1,Merenda da tarde-Todos os dias,2
+29/05/2026 11:49:02,anonimo,N/A,N/A,2,Salas de Aula,4
+29/05/2026 11:49:02,anonimo,N/A,N/A,2,Refeitório,1
+29/05/2026 11:49:02,anonimo,N/A,N/A,2,Banheiros,3
+29/05/2026 11:49:02,anonimo,N/A,N/A,2,Auditório,3
+29/05/2026 11:49:02,anonimo,N/A,N/A,2,Laboratórios,1
+29/05/2026 11:49:02,anonimo,N/A,N/A,3,Linguagens,4
+29/05/2026 11:49:02,anonimo,N/A,N/A,3,Humanas,3
+29/05/2026 11:49:02,anonimo,N/A,N/A,3,Ciências da natureza,4
+29/05/2026 11:49:02,anonimo,N/A,N/A,3,Matemática,1
+29/05/2026 11:49:02,anonimo,N/A,N/A,4,O quão acolhido você foi na escola ?,3
+29/05/2026 11:49:02,anonimo,N/A,N/A,4,O quão respeitado(@) você é nessa escola ?,1
+29/05/2026 11:49:02,anonimo,N/A,N/A,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",2
+29/05/2026 11:49:02,anonimo,N/A,N/A,4,Qual foi o seu almoço favorito?,Nenhum
+29/05/2026 11:51:24,anonimo,N/A,N/A,1,Almoço-Segunda,4
+29/05/2026 11:51:24,anonimo,N/A,N/A,1,Almoço-Terça,5
+29/05/2026 11:51:24,anonimo,N/A,N/A,1,Almoço-Quarta,4
+29/05/2026 11:51:24,anonimo,N/A,N/A,1,Almoço-Quinta,3
+29/05/2026 11:51:24,anonimo,N/A,N/A,1,Almoço-Sexta,4
+29/05/2026 11:51:24,anonimo,N/A,N/A,1,Merenda da manhã-Todos os dias,1
+29/05/2026 11:51:24,anonimo,N/A,N/A,1,Merenda da tarde-Todos os dias,3
+29/05/2026 11:51:24,anonimo,N/A,N/A,2,Salas de Aula,4
+29/05/2026 11:51:24,anonimo,N/A,N/A,2,Refeitório,2
+29/05/2026 11:51:24,anonimo,N/A,N/A,2,Banheiros,2
+29/05/2026 11:51:24,anonimo,N/A,N/A,2,Auditório,4
+29/05/2026 11:51:24,anonimo,N/A,N/A,2,Laboratórios,3
+29/05/2026 11:51:24,anonimo,N/A,N/A,3,Linguagens,4
+29/05/2026 11:51:24,anonimo,N/A,N/A,3,Humanas,3
+29/05/2026 11:51:24,anonimo,N/A,N/A,3,Ciências da natureza,3
+29/05/2026 11:51:24,anonimo,N/A,N/A,3,Matemática,1
+29/05/2026 11:51:24,anonimo,N/A,N/A,4,O quão acolhido você foi na escola ?,3
+29/05/2026 11:51:24,anonimo,N/A,N/A,4,O quão respeitado(@) você é nessa escola ?,1
+29/05/2026 11:51:24,anonimo,N/A,N/A,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",1
+29/05/2026 11:51:24,anonimo,N/A,N/A,4,Qual foi o seu almoço favorito?,TERÇA
+29/05/2026 11:55:03,isabelle de freitas sousa,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Segunda,4
+29/05/2026 11:55:03,isabelle de freitas sousa,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Terça,5
+29/05/2026 11:55:03,isabelle de freitas sousa,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Quarta,3
+29/05/2026 11:55:03,isabelle de freitas sousa,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Quinta,3
+29/05/2026 11:55:03,isabelle de freitas sousa,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Sexta,3
+29/05/2026 11:55:03,isabelle de freitas sousa,1° Ano,Desenvolvimento de Sistemas,1,Merenda da manhã-Todos os dias,4
+29/05/2026 11:55:03,isabelle de freitas sousa,1° Ano,Desenvolvimento de Sistemas,1,Merenda da tarde-Todos os dias,4
+29/05/2026 11:55:03,isabelle de freitas sousa,1° Ano,Desenvolvimento de Sistemas,2,Salas de Aula,4
+29/05/2026 11:55:03,isabelle de freitas sousa,1° Ano,Desenvolvimento de Sistemas,2,Refeitório,4
+29/05/2026 11:55:03,isabelle de freitas sousa,1° Ano,Desenvolvimento de Sistemas,2,Banheiros,2
+29/05/2026 11:55:03,isabelle de freitas sousa,1° Ano,Desenvolvimento de Sistemas,2,Auditório,5
+29/05/2026 11:55:03,isabelle de freitas sousa,1° Ano,Desenvolvimento de Sistemas,2,Laboratórios,4
+29/05/2026 11:55:03,isabelle de freitas sousa,1° Ano,Desenvolvimento de Sistemas,3,Linguagens,5
+29/05/2026 11:55:03,isabelle de freitas sousa,1° Ano,Desenvolvimento de Sistemas,3,Humanas,4
+29/05/2026 11:55:03,isabelle de freitas sousa,1° Ano,Desenvolvimento de Sistemas,3,Ciências da natureza,3
+29/05/2026 11:55:03,isabelle de freitas sousa,1° Ano,Desenvolvimento de Sistemas,3,Matemática,5
+29/05/2026 11:55:03,isabelle de freitas sousa,1° Ano,Desenvolvimento de Sistemas,4,O quão acolhido você foi na escola ?,5
+29/05/2026 11:55:03,isabelle de freitas sousa,1° Ano,Desenvolvimento de Sistemas,4,O quão respeitado(@) você é nessa escola ?,4
+29/05/2026 11:55:03,isabelle de freitas sousa,1° Ano,Desenvolvimento de Sistemas,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",5
+29/05/2026 11:55:03,isabelle de freitas sousa,1° Ano,Desenvolvimento de Sistemas,4,Qual foi o seu almoço favorito?,TERÇA
+29/05/2026 11:56:34,anonimo,N/A,N/A,1,Almoço-Segunda,1
+29/05/2026 11:56:34,anonimo,N/A,N/A,1,Almoço-Terça,1
+29/05/2026 11:56:34,anonimo,N/A,N/A,1,Almoço-Quarta,1
+29/05/2026 11:56:34,anonimo,N/A,N/A,1,Almoço-Quinta,1
+29/05/2026 11:56:34,anonimo,N/A,N/A,1,Almoço-Sexta,1
+29/05/2026 11:56:34,anonimo,N/A,N/A,1,Merenda da manhã-Todos os dias,1
+29/05/2026 11:56:34,anonimo,N/A,N/A,1,Merenda da tarde-Todos os dias,1
+29/05/2026 11:56:34,anonimo,N/A,N/A,2,Salas de Aula,5
+29/05/2026 11:56:34,anonimo,N/A,N/A,2,Refeitório,3
+29/05/2026 11:56:34,anonimo,N/A,N/A,2,Banheiros,1
+29/05/2026 11:56:34,anonimo,N/A,N/A,2,Auditório,4
+29/05/2026 11:56:34,anonimo,N/A,N/A,2,Laboratórios,5
+29/05/2026 11:56:34,anonimo,N/A,N/A,3,Linguagens,2
+29/05/2026 11:56:34,anonimo,N/A,N/A,3,Humanas,5
+29/05/2026 11:56:34,anonimo,N/A,N/A,3,Ciências da natureza,5
+29/05/2026 11:56:34,anonimo,N/A,N/A,3,Matemática,4
+29/05/2026 11:56:34,anonimo,N/A,N/A,4,O quão acolhido você foi na escola ?,5
+29/05/2026 11:56:34,anonimo,N/A,N/A,4,O quão respeitado(@) você é nessa escola ?,1
+29/05/2026 11:56:34,anonimo,N/A,N/A,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",1
+29/05/2026 11:56:34,anonimo,N/A,N/A,4,Qual foi o seu almoço favorito?,Nenhum
+29/05/2026 11:58:59,anonimo,N/A,N/A,1,Almoço-Segunda,3
+29/05/2026 11:58:59,anonimo,N/A,N/A,1,Almoço-Terça,5
+29/05/2026 11:58:59,anonimo,N/A,N/A,1,Almoço-Quarta,4
+29/05/2026 11:58:59,anonimo,N/A,N/A,1,Almoço-Quinta,3
+29/05/2026 11:58:59,anonimo,N/A,N/A,1,Almoço-Sexta,4
+29/05/2026 11:58:59,anonimo,N/A,N/A,1,Merenda da manhã-Todos os dias,3
+29/05/2026 11:58:59,anonimo,N/A,N/A,1,Merenda da tarde-Todos os dias,4
+29/05/2026 11:58:59,anonimo,N/A,N/A,2,Salas de Aula,5
+29/05/2026 11:58:59,anonimo,N/A,N/A,2,Refeitório,3
+29/05/2026 11:58:59,anonimo,N/A,N/A,2,Banheiros,1
+29/05/2026 11:58:59,anonimo,N/A,N/A,2,Auditório,4
+29/05/2026 11:58:59,anonimo,N/A,N/A,2,Laboratórios,5
+29/05/2026 11:58:59,anonimo,N/A,N/A,3,Linguagens,3
+29/05/2026 11:58:59,anonimo,N/A,N/A,3,Humanas,5
+29/05/2026 11:58:59,anonimo,N/A,N/A,3,Ciências da natureza,5
+29/05/2026 11:58:59,anonimo,N/A,N/A,3,Matemática,4
+29/05/2026 11:58:59,anonimo,N/A,N/A,4,O quão acolhido você foi na escola ?,5
+29/05/2026 11:58:59,anonimo,N/A,N/A,4,O quão respeitado(@) você é nessa escola ?,5
+29/05/2026 11:58:59,anonimo,N/A,N/A,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",3
+29/05/2026 11:58:59,anonimo,N/A,N/A,4,Qual foi o seu almoço favorito?,TERÇA
+29/05/2026 12:03:17,Sophia De Lima Lopes,1° Ano,Hospedagem,1,Almoço-Segunda,2
+29/05/2026 12:03:17,Sophia De Lima Lopes,1° Ano,Hospedagem,1,Almoço-Terça,5
+29/05/2026 12:03:17,Sophia De Lima Lopes,1° Ano,Hospedagem,1,Almoço-Quarta,3
+29/05/2026 12:03:17,Sophia De Lima Lopes,1° Ano,Hospedagem,1,Almoço-Quinta,2
+29/05/2026 12:03:17,Sophia De Lima Lopes,1° Ano,Hospedagem,1,Almoço-Sexta,3
+29/05/2026 12:03:17,Sophia De Lima Lopes,1° Ano,Hospedagem,1,Merenda da manhã-Todos os dias,3
+29/05/2026 12:03:17,Sophia De Lima Lopes,1° Ano,Hospedagem,1,Merenda da tarde-Todos os dias,2
+29/05/2026 12:03:17,Sophia De Lima Lopes,1° Ano,Hospedagem,2,Salas de Aula,5
+29/05/2026 12:03:17,Sophia De Lima Lopes,1° Ano,Hospedagem,2,Refeitório,5
+29/05/2026 12:03:17,Sophia De Lima Lopes,1° Ano,Hospedagem,2,Banheiros,4
+29/05/2026 12:03:17,Sophia De Lima Lopes,1° Ano,Hospedagem,2,Auditório,5
+29/05/2026 12:03:17,Sophia De Lima Lopes,1° Ano,Hospedagem,2,Laboratórios,5
+29/05/2026 12:03:17,Sophia De Lima Lopes,1° Ano,Hospedagem,3,Linguagens,5
+29/05/2026 12:03:17,Sophia De Lima Lopes,1° Ano,Hospedagem,3,Humanas,5
+29/05/2026 12:03:17,Sophia De Lima Lopes,1° Ano,Hospedagem,3,Ciências da natureza,5
+29/05/2026 12:03:17,Sophia De Lima Lopes,1° Ano,Hospedagem,3,Matemática,5
+29/05/2026 12:03:17,Sophia De Lima Lopes,1° Ano,Hospedagem,4,O quão acolhido você foi na escola ?,5
+29/05/2026 12:03:17,Sophia De Lima Lopes,1° Ano,Hospedagem,4,O quão respeitado(@) você é nessa escola ?,5
+29/05/2026 12:03:17,Sophia De Lima Lopes,1° Ano,Hospedagem,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",5
+29/05/2026 12:03:17,Sophia De Lima Lopes,1° Ano,Hospedagem,4,Qual foi o seu almoço favorito?,TERÇA
+29/05/2026 12:05:36,Isaac Barros Lima,2° Ano,Hospedagem,1,Almoço-Segunda,3
+29/05/2026 12:05:36,Isaac Barros Lima,2° Ano,Hospedagem,1,Almoço-Terça,3
+29/05/2026 12:05:36,Isaac Barros Lima,2° Ano,Hospedagem,1,Almoço-Quarta,4
+29/05/2026 12:05:36,Isaac Barros Lima,2° Ano,Hospedagem,1,Almoço-Quinta,2
+29/05/2026 12:05:36,Isaac Barros Lima,2° Ano,Hospedagem,1,Almoço-Sexta,5
+29/05/2026 12:05:36,Isaac Barros Lima,2° Ano,Hospedagem,1,Merenda da manhã-Todos os dias,3
+29/05/2026 12:05:36,Isaac Barros Lima,2° Ano,Hospedagem,1,Merenda da tarde-Todos os dias,3
+29/05/2026 12:05:36,Isaac Barros Lima,2° Ano,Hospedagem,2,Salas de Aula,4
+29/05/2026 12:05:36,Isaac Barros Lima,2° Ano,Hospedagem,2,Refeitório,4
+29/05/2026 12:05:36,Isaac Barros Lima,2° Ano,Hospedagem,2,Banheiros,3
+29/05/2026 12:05:36,Isaac Barros Lima,2° Ano,Hospedagem,2,Auditório,5
+29/05/2026 12:05:36,Isaac Barros Lima,2° Ano,Hospedagem,2,Laboratórios,4
+29/05/2026 12:05:36,Isaac Barros Lima,2° Ano,Hospedagem,3,Linguagens,5
+29/05/2026 12:05:36,Isaac Barros Lima,2° Ano,Hospedagem,3,Humanas,5
+29/05/2026 12:05:36,Isaac Barros Lima,2° Ano,Hospedagem,3,Ciências da natureza,5
+29/05/2026 12:05:36,Isaac Barros Lima,2° Ano,Hospedagem,3,Matemática,5
+29/05/2026 12:05:36,Isaac Barros Lima,2° Ano,Hospedagem,4,O quão acolhido você foi na escola ?,5
+29/05/2026 12:05:36,Isaac Barros Lima,2° Ano,Hospedagem,4,O quão respeitado(@) você é nessa escola ?,5
+29/05/2026 12:05:36,Isaac Barros Lima,2° Ano,Hospedagem,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",5
+29/05/2026 12:05:36,Isaac Barros Lima,2° Ano,Hospedagem,4,Qual foi o seu almoço favorito?,SEXTA
+29/05/2026 12:10:27,Ana Kelly Vieira Mendes,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Segunda,5
+29/05/2026 12:10:27,Ana Kelly Vieira Mendes,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Terça,5
+29/05/2026 12:10:27,Ana Kelly Vieira Mendes,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Quarta,5
+29/05/2026 12:10:27,Ana Kelly Vieira Mendes,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Quinta,3
+29/05/2026 12:10:27,Ana Kelly Vieira Mendes,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Sexta,3
+29/05/2026 12:10:27,Ana Kelly Vieira Mendes,1° Ano,Desenvolvimento de Sistemas,1,Merenda da manhã-Todos os dias,4
+29/05/2026 12:10:27,Ana Kelly Vieira Mendes,1° Ano,Desenvolvimento de Sistemas,1,Merenda da tarde-Todos os dias,3
+29/05/2026 12:10:27,Ana Kelly Vieira Mendes,1° Ano,Desenvolvimento de Sistemas,2,Salas de Aula,5
+29/05/2026 12:10:27,Ana Kelly Vieira Mendes,1° Ano,Desenvolvimento de Sistemas,2,Refeitório,3
+29/05/2026 12:10:27,Ana Kelly Vieira Mendes,1° Ano,Desenvolvimento de Sistemas,2,Banheiros,4
+29/05/2026 12:10:27,Ana Kelly Vieira Mendes,1° Ano,Desenvolvimento de Sistemas,2,Auditório,5
+29/05/2026 12:10:27,Ana Kelly Vieira Mendes,1° Ano,Desenvolvimento de Sistemas,2,Laboratórios,5
+29/05/2026 12:10:27,Ana Kelly Vieira Mendes,1° Ano,Desenvolvimento de Sistemas,3,Linguagens,5
+29/05/2026 12:10:27,Ana Kelly Vieira Mendes,1° Ano,Desenvolvimento de Sistemas,3,Humanas,5
+29/05/2026 12:10:27,Ana Kelly Vieira Mendes,1° Ano,Desenvolvimento de Sistemas,3,Ciências da natureza,5
+29/05/2026 12:10:27,Ana Kelly Vieira Mendes,1° Ano,Desenvolvimento de Sistemas,3,Matemática,5
+29/05/2026 12:10:27,Ana Kelly Vieira Mendes,1° Ano,Desenvolvimento de Sistemas,4,O quão acolhido você foi na escola ?,5
+29/05/2026 12:10:27,Ana Kelly Vieira Mendes,1° Ano,Desenvolvimento de Sistemas,4,O quão respeitado(@) você é nessa escola ?,5
+29/05/2026 12:10:27,Ana Kelly Vieira Mendes,1° Ano,Desenvolvimento de Sistemas,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",5
+29/05/2026 12:10:27,Ana Kelly Vieira Mendes,1° Ano,Desenvolvimento de Sistemas,4,Qual foi o seu almoço favorito?,QUARTA
+29/05/2026 12:18:03,anonimo,N/A,N/A,1,Almoço-Segunda,1
+29/05/2026 12:18:03,anonimo,N/A,N/A,1,Almoço-Terça,2
+29/05/2026 12:18:03,anonimo,N/A,N/A,1,Almoço-Quarta,3
+29/05/2026 12:18:03,anonimo,N/A,N/A,1,Almoço-Quinta,3
+29/05/2026 12:18:03,anonimo,N/A,N/A,1,Almoço-Sexta,3
+29/05/2026 12:18:03,anonimo,N/A,N/A,1,Merenda da manhã-Todos os dias,1
+29/05/2026 12:18:03,anonimo,N/A,N/A,1,Merenda da tarde-Todos os dias,1
+29/05/2026 12:18:03,anonimo,N/A,N/A,2,Salas de Aula,3
+29/05/2026 12:18:03,anonimo,N/A,N/A,2,Refeitório,3
+29/05/2026 12:18:03,anonimo,N/A,N/A,2,Banheiros,2
+29/05/2026 12:18:03,anonimo,N/A,N/A,2,Auditório,2
+29/05/2026 12:18:03,anonimo,N/A,N/A,2,Laboratórios,2
+29/05/2026 12:18:03,anonimo,N/A,N/A,3,Linguagens,4
+29/05/2026 12:18:03,anonimo,N/A,N/A,3,Humanas,3
+29/05/2026 12:18:03,anonimo,N/A,N/A,3,Ciências da natureza,3
+29/05/2026 12:18:03,anonimo,N/A,N/A,3,Matemática,5
+29/05/2026 12:18:03,anonimo,N/A,N/A,4,O quão acolhido você foi na escola ?,2
+29/05/2026 12:18:03,anonimo,N/A,N/A,4,O quão respeitado(@) você é nessa escola ?,3
+29/05/2026 12:18:03,anonimo,N/A,N/A,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",3
+29/05/2026 12:18:03,anonimo,N/A,N/A,4,Qual foi o seu almoço favorito?,Nenhum
+29/05/2026 12:23:20,wladia miranda da rocha,3° Ano,Modelagem,1,Almoço-Segunda,2
+29/05/2026 12:23:20,wladia miranda da rocha,3° Ano,Modelagem,1,Almoço-Terça,5
+29/05/2026 12:23:20,wladia miranda da rocha,3° Ano,Modelagem,1,Almoço-Quarta,1
+29/05/2026 12:23:20,wladia miranda da rocha,3° Ano,Modelagem,1,Almoço-Quinta,3
+29/05/2026 12:23:20,wladia miranda da rocha,3° Ano,Modelagem,1,Almoço-Sexta,5
+29/05/2026 12:23:20,wladia miranda da rocha,3° Ano,Modelagem,1,Merenda da manhã-Todos os dias,1
+29/05/2026 12:23:20,wladia miranda da rocha,3° Ano,Modelagem,1,Merenda da tarde-Todos os dias,1
+29/05/2026 12:23:20,wladia miranda da rocha,3° Ano,Modelagem,2,Salas de Aula,5
+29/05/2026 12:23:20,wladia miranda da rocha,3° Ano,Modelagem,2,Refeitório,5
+29/05/2026 12:23:20,wladia miranda da rocha,3° Ano,Modelagem,2,Banheiros,2
+29/05/2026 12:23:20,wladia miranda da rocha,3° Ano,Modelagem,2,Auditório,5
+29/05/2026 12:23:20,wladia miranda da rocha,3° Ano,Modelagem,2,Laboratórios,5
+29/05/2026 12:23:20,wladia miranda da rocha,3° Ano,Modelagem,3,Linguagens,5
+29/05/2026 12:23:20,wladia miranda da rocha,3° Ano,Modelagem,3,Humanas,3
+29/05/2026 12:23:20,wladia miranda da rocha,3° Ano,Modelagem,3,Ciências da natureza,3
+29/05/2026 12:23:20,wladia miranda da rocha,3° Ano,Modelagem,3,Matemática,2
+29/05/2026 12:23:20,wladia miranda da rocha,3° Ano,Modelagem,4,O quão acolhido você foi na escola ?,2
+29/05/2026 12:23:20,wladia miranda da rocha,3° Ano,Modelagem,4,O quão respeitado(@) você é nessa escola ?,3
+29/05/2026 12:23:20,wladia miranda da rocha,3° Ano,Modelagem,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",2
+29/05/2026 12:23:20,wladia miranda da rocha,3° Ano,Modelagem,4,Qual foi o seu almoço favorito?,Nenhum
+29/05/2026 12:25:44,anonimo,N/A,N/A,1,Almoço-Segunda,1
+29/05/2026 12:25:44,anonimo,N/A,N/A,1,Almoço-Terça,4
+29/05/2026 12:25:44,anonimo,N/A,N/A,1,Almoço-Quarta,4
+29/05/2026 12:25:44,anonimo,N/A,N/A,1,Almoço-Quinta,3
+29/05/2026 12:25:44,anonimo,N/A,N/A,1,Almoço-Sexta,3
+29/05/2026 12:25:44,anonimo,N/A,N/A,1,Merenda da manhã-Todos os dias,1
+29/05/2026 12:25:44,anonimo,N/A,N/A,1,Merenda da tarde-Todos os dias,1
+29/05/2026 12:25:44,anonimo,N/A,N/A,2,Salas de Aula,5
+29/05/2026 12:25:44,anonimo,N/A,N/A,2,Refeitório,3
+29/05/2026 12:25:44,anonimo,N/A,N/A,2,Banheiros,2
+29/05/2026 12:25:44,anonimo,N/A,N/A,2,Auditório,5
+29/05/2026 12:25:44,anonimo,N/A,N/A,2,Laboratórios,3
+29/05/2026 12:25:44,anonimo,N/A,N/A,3,Linguagens,5
+29/05/2026 12:25:44,anonimo,N/A,N/A,3,Humanas,4
+29/05/2026 12:25:44,anonimo,N/A,N/A,3,Ciências da natureza,2
+29/05/2026 12:25:44,anonimo,N/A,N/A,3,Matemática,1
+29/05/2026 12:25:44,anonimo,N/A,N/A,4,O quão acolhido você foi na escola ?,1
+29/05/2026 12:25:44,anonimo,N/A,N/A,4,O quão respeitado(@) você é nessa escola ?,3
+29/05/2026 12:25:44,anonimo,N/A,N/A,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",4
+29/05/2026 12:25:44,anonimo,N/A,N/A,4,Qual foi o seu almoço favorito?,QUARTA
+29/05/2026 12:27:13,anonimo,N/A,N/A,1,Almoço-Segunda,1
+29/05/2026 12:27:13,anonimo,N/A,N/A,1,Almoço-Terça,4
+29/05/2026 12:27:13,anonimo,N/A,N/A,1,Almoço-Quarta,4
+29/05/2026 12:27:13,anonimo,N/A,N/A,1,Almoço-Quinta,4
+29/05/2026 12:27:13,anonimo,N/A,N/A,1,Almoço-Sexta,4
+29/05/2026 12:27:13,anonimo,N/A,N/A,1,Merenda da manhã-Todos os dias,1
+29/05/2026 12:27:13,anonimo,N/A,N/A,1,Merenda da tarde-Todos os dias,1
+29/05/2026 12:27:13,anonimo,N/A,N/A,2,Salas de Aula,5
+29/05/2026 12:27:13,anonimo,N/A,N/A,2,Refeitório,3
+29/05/2026 12:27:13,anonimo,N/A,N/A,2,Banheiros,2
+29/05/2026 12:27:13,anonimo,N/A,N/A,2,Auditório,5
+29/05/2026 12:27:13,anonimo,N/A,N/A,2,Laboratórios,2
+29/05/2026 12:27:13,anonimo,N/A,N/A,3,Linguagens,5
+29/05/2026 12:27:13,anonimo,N/A,N/A,3,Humanas,5
+29/05/2026 12:27:13,anonimo,N/A,N/A,3,Ciências da natureza,2
+29/05/2026 12:27:13,anonimo,N/A,N/A,3,Matemática,1
+29/05/2026 12:27:13,anonimo,N/A,N/A,4,O quão acolhido você foi na escola ?,3
+29/05/2026 12:27:13,anonimo,N/A,N/A,4,O quão respeitado(@) você é nessa escola ?,3
+29/05/2026 12:27:13,anonimo,N/A,N/A,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",4
+29/05/2026 12:27:13,anonimo,N/A,N/A,4,Qual foi o seu almoço favorito?,QUARTA
+29/05/2026 12:39:23,anonimo,N/A,N/A,1,Almoço-Segunda,3
+29/05/2026 12:39:23,anonimo,N/A,N/A,1,Almoço-Terça,3
+29/05/2026 12:39:23,anonimo,N/A,N/A,1,Almoço-Quarta,3
+29/05/2026 12:39:23,anonimo,N/A,N/A,1,Almoço-Quinta,3
+29/05/2026 12:39:23,anonimo,N/A,N/A,1,Almoço-Sexta,4
+29/05/2026 12:39:23,anonimo,N/A,N/A,1,Merenda da manhã-Todos os dias,3
+29/05/2026 12:39:23,anonimo,N/A,N/A,1,Merenda da tarde-Todos os dias,3
+29/05/2026 12:39:23,anonimo,N/A,N/A,2,Salas de Aula,5
+29/05/2026 12:39:23,anonimo,N/A,N/A,2,Refeitório,5
+29/05/2026 12:39:23,anonimo,N/A,N/A,2,Banheiros,5
+29/05/2026 12:39:23,anonimo,N/A,N/A,2,Auditório,5
+29/05/2026 12:39:23,anonimo,N/A,N/A,2,Laboratórios,5
+29/05/2026 12:39:23,anonimo,N/A,N/A,3,Linguagens,5
+29/05/2026 12:39:23,anonimo,N/A,N/A,3,Humanas,5
+29/05/2026 12:39:23,anonimo,N/A,N/A,3,Ciências da natureza,5
+29/05/2026 12:39:23,anonimo,N/A,N/A,3,Matemática,3
+29/05/2026 12:39:23,anonimo,N/A,N/A,4,O quão acolhido você foi na escola ?,4
+29/05/2026 12:39:23,anonimo,N/A,N/A,4,O quão respeitado(@) você é nessa escola ?,2
+29/05/2026 12:39:23,anonimo,N/A,N/A,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",2
+29/05/2026 12:39:23,anonimo,N/A,N/A,4,Qual foi o seu almoço favorito?,SEGUNDA
+29/05/2026 12:42:59,izabella vitoria farias ferreira,1° Ano,Hospedagem,1,Almoço-Segunda,3
+29/05/2026 12:42:59,izabella vitoria farias ferreira,1° Ano,Hospedagem,1,Almoço-Terça,3
+29/05/2026 12:42:59,izabella vitoria farias ferreira,1° Ano,Hospedagem,1,Almoço-Quarta,4
+29/05/2026 12:42:59,izabella vitoria farias ferreira,1° Ano,Hospedagem,1,Almoço-Quinta,3
+29/05/2026 12:42:59,izabella vitoria farias ferreira,1° Ano,Hospedagem,1,Almoço-Sexta,2
+29/05/2026 12:42:59,izabella vitoria farias ferreira,1° Ano,Hospedagem,1,Merenda da manhã-Todos os dias,2
+29/05/2026 12:42:59,izabella vitoria farias ferreira,1° Ano,Hospedagem,1,Merenda da tarde-Todos os dias,4
+29/05/2026 12:42:59,izabella vitoria farias ferreira,1° Ano,Hospedagem,2,Salas de Aula,5
+29/05/2026 12:42:59,izabella vitoria farias ferreira,1° Ano,Hospedagem,2,Refeitório,3
+29/05/2026 12:42:59,izabella vitoria farias ferreira,1° Ano,Hospedagem,2,Banheiros,2
+29/05/2026 12:42:59,izabella vitoria farias ferreira,1° Ano,Hospedagem,2,Auditório,5
+29/05/2026 12:42:59,izabella vitoria farias ferreira,1° Ano,Hospedagem,2,Laboratórios,5
+29/05/2026 12:42:59,izabella vitoria farias ferreira,1° Ano,Hospedagem,3,Linguagens,5
+29/05/2026 12:42:59,izabella vitoria farias ferreira,1° Ano,Hospedagem,3,Humanas,5
+29/05/2026 12:42:59,izabella vitoria farias ferreira,1° Ano,Hospedagem,3,Ciências da natureza,5
+29/05/2026 12:42:59,izabella vitoria farias ferreira,1° Ano,Hospedagem,3,Matemática,5
+29/05/2026 12:42:59,izabella vitoria farias ferreira,1° Ano,Hospedagem,4,O quão acolhido você foi na escola ?,4
+29/05/2026 12:42:59,izabella vitoria farias ferreira,1° Ano,Hospedagem,4,O quão respeitado(@) você é nessa escola ?,5
+29/05/2026 12:42:59,izabella vitoria farias ferreira,1° Ano,Hospedagem,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",4
+29/05/2026 12:42:59,izabella vitoria farias ferreira,1° Ano,Hospedagem,4,Qual foi o seu almoço favorito?,QUARTA
+29/05/2026 12:45:25,anonimo,N/A,N/A,1,Almoço-Segunda,1
+29/05/2026 12:45:25,anonimo,N/A,N/A,1,Almoço-Terça,3
+29/05/2026 12:45:25,anonimo,N/A,N/A,1,Almoço-Quarta,5
+29/05/2026 12:45:25,anonimo,N/A,N/A,1,Almoço-Quinta,2
+29/05/2026 12:45:25,anonimo,N/A,N/A,1,Almoço-Sexta,5
+29/05/2026 12:45:25,anonimo,N/A,N/A,1,Merenda da manhã-Todos os dias,2
+29/05/2026 12:45:25,anonimo,N/A,N/A,1,Merenda da tarde-Todos os dias,4
+29/05/2026 12:45:25,anonimo,N/A,N/A,2,Salas de Aula,4
+29/05/2026 12:45:25,anonimo,N/A,N/A,2,Refeitório,4
+29/05/2026 12:45:25,anonimo,N/A,N/A,2,Banheiros,1
+29/05/2026 12:45:25,anonimo,N/A,N/A,2,Auditório,5
+29/05/2026 12:45:25,anonimo,N/A,N/A,2,Laboratórios,5
+29/05/2026 12:45:25,anonimo,N/A,N/A,3,Linguagens,4
+29/05/2026 12:45:25,anonimo,N/A,N/A,3,Humanas,5
+29/05/2026 12:45:25,anonimo,N/A,N/A,3,Ciências da natureza,3
+29/05/2026 12:45:25,anonimo,N/A,N/A,3,Matemática,4
+29/05/2026 12:45:25,anonimo,N/A,N/A,4,O quão acolhido você foi na escola ?,3
+29/05/2026 12:45:25,anonimo,N/A,N/A,4,O quão respeitado(@) você é nessa escola ?,3
+29/05/2026 12:45:25,anonimo,N/A,N/A,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",2
+29/05/2026 12:45:25,anonimo,N/A,N/A,4,Qual foi o seu almoço favorito?,QUARTA
+29/05/2026 12:47:20,anonimo,N/A,N/A,1,Almoço-Segunda,1
+29/05/2026 12:47:20,anonimo,N/A,N/A,1,Almoço-Terça,5
+29/05/2026 12:47:20,anonimo,N/A,N/A,1,Almoço-Quarta,3
+29/05/2026 12:47:20,anonimo,N/A,N/A,1,Almoço-Quinta,5
+29/05/2026 12:47:20,anonimo,N/A,N/A,1,Almoço-Sexta,5
+29/05/2026 12:47:20,anonimo,N/A,N/A,1,Merenda da manhã-Todos os dias,3
+29/05/2026 12:47:20,anonimo,N/A,N/A,1,Merenda da tarde-Todos os dias,3
+29/05/2026 12:47:20,anonimo,N/A,N/A,2,Salas de Aula,5
+29/05/2026 12:47:20,anonimo,N/A,N/A,2,Refeitório,4
+29/05/2026 12:47:20,anonimo,N/A,N/A,2,Banheiros,3
+29/05/2026 12:47:20,anonimo,N/A,N/A,2,Auditório,5
+29/05/2026 12:47:20,anonimo,N/A,N/A,2,Laboratórios,5
+29/05/2026 12:47:20,anonimo,N/A,N/A,3,Linguagens,5
+29/05/2026 12:47:20,anonimo,N/A,N/A,3,Humanas,5
+29/05/2026 12:47:20,anonimo,N/A,N/A,3,Ciências da natureza,5
+29/05/2026 12:47:20,anonimo,N/A,N/A,3,Matemática,5
+29/05/2026 12:47:20,anonimo,N/A,N/A,4,O quão acolhido você foi na escola ?,5
+29/05/2026 12:47:20,anonimo,N/A,N/A,4,O quão respeitado(@) você é nessa escola ?,5
+29/05/2026 12:47:20,anonimo,N/A,N/A,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",5
+29/05/2026 12:47:20,anonimo,N/A,N/A,4,Qual foi o seu almoço favorito?,QUINTA
+29/05/2026 12:49:51,raisa mayara dos santos xavier,1° Ano,Hospedagem,1,Almoço-Segunda,1
+29/05/2026 12:49:51,raisa mayara dos santos xavier,1° Ano,Hospedagem,1,Almoço-Terça,4
+29/05/2026 12:49:51,raisa mayara dos santos xavier,1° Ano,Hospedagem,1,Almoço-Quarta,5
+29/05/2026 12:49:51,raisa mayara dos santos xavier,1° Ano,Hospedagem,1,Almoço-Quinta,4
+29/05/2026 12:49:51,raisa mayara dos santos xavier,1° Ano,Hospedagem,1,Almoço-Sexta,5
+29/05/2026 12:49:51,raisa mayara dos santos xavier,1° Ano,Hospedagem,1,Merenda da manhã-Todos os dias,2
+29/05/2026 12:49:51,raisa mayara dos santos xavier,1° Ano,Hospedagem,1,Merenda da tarde-Todos os dias,4
+29/05/2026 12:49:51,raisa mayara dos santos xavier,1° Ano,Hospedagem,2,Salas de Aula,5
+29/05/2026 12:49:51,raisa mayara dos santos xavier,1° Ano,Hospedagem,2,Refeitório,5
+29/05/2026 12:49:51,raisa mayara dos santos xavier,1° Ano,Hospedagem,2,Banheiros,5
+29/05/2026 12:49:51,raisa mayara dos santos xavier,1° Ano,Hospedagem,2,Auditório,5
+29/05/2026 12:49:51,raisa mayara dos santos xavier,1° Ano,Hospedagem,2,Laboratórios,5
+29/05/2026 12:49:51,raisa mayara dos santos xavier,1° Ano,Hospedagem,3,Linguagens,5
+29/05/2026 12:49:51,raisa mayara dos santos xavier,1° Ano,Hospedagem,3,Humanas,5
+29/05/2026 12:49:51,raisa mayara dos santos xavier,1° Ano,Hospedagem,3,Ciências da natureza,5
+29/05/2026 12:49:51,raisa mayara dos santos xavier,1° Ano,Hospedagem,3,Matemática,5
+29/05/2026 12:49:51,raisa mayara dos santos xavier,1° Ano,Hospedagem,4,O quão acolhido você foi na escola ?,5
+29/05/2026 12:49:51,raisa mayara dos santos xavier,1° Ano,Hospedagem,4,O quão respeitado(@) você é nessa escola ?,5
+29/05/2026 12:49:51,raisa mayara dos santos xavier,1° Ano,Hospedagem,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",5
+29/05/2026 12:49:51,raisa mayara dos santos xavier,1° Ano,Hospedagem,4,Qual foi o seu almoço favorito?,QUARTA
+29/05/2026 12:52:04,maria de fátima sobrinho cordeiro,1° Ano,Hospedagem,1,Almoço-Segunda,4
+29/05/2026 12:52:04,maria de fátima sobrinho cordeiro,1° Ano,Hospedagem,1,Almoço-Terça,2
+29/05/2026 12:52:04,maria de fátima sobrinho cordeiro,1° Ano,Hospedagem,1,Almoço-Quarta,4
+29/05/2026 12:52:04,maria de fátima sobrinho cordeiro,1° Ano,Hospedagem,1,Almoço-Quinta,4
+29/05/2026 12:52:04,maria de fátima sobrinho cordeiro,1° Ano,Hospedagem,1,Almoço-Sexta,4
+29/05/2026 12:52:04,maria de fátima sobrinho cordeiro,1° Ano,Hospedagem,1,Merenda da manhã-Todos os dias,4
+29/05/2026 12:52:04,maria de fátima sobrinho cordeiro,1° Ano,Hospedagem,1,Merenda da tarde-Todos os dias,5
+29/05/2026 12:52:04,maria de fátima sobrinho cordeiro,1° Ano,Hospedagem,2,Salas de Aula,5
+29/05/2026 12:52:04,maria de fátima sobrinho cordeiro,1° Ano,Hospedagem,2,Refeitório,4
+29/05/2026 12:52:04,maria de fátima sobrinho cordeiro,1° Ano,Hospedagem,2,Banheiros,4
+29/05/2026 12:52:04,maria de fátima sobrinho cordeiro,1° Ano,Hospedagem,2,Auditório,5
+29/05/2026 12:52:04,maria de fátima sobrinho cordeiro,1° Ano,Hospedagem,2,Laboratórios,5
+29/05/2026 12:52:04,maria de fátima sobrinho cordeiro,1° Ano,Hospedagem,3,Linguagens,5
+29/05/2026 12:52:04,maria de fátima sobrinho cordeiro,1° Ano,Hospedagem,3,Humanas,4
+29/05/2026 12:52:04,maria de fátima sobrinho cordeiro,1° Ano,Hospedagem,3,Ciências da natureza,3
+29/05/2026 12:52:04,maria de fátima sobrinho cordeiro,1° Ano,Hospedagem,3,Matemática,3
+29/05/2026 12:52:04,maria de fátima sobrinho cordeiro,1° Ano,Hospedagem,4,O quão acolhido você foi na escola ?,5
+29/05/2026 12:52:04,maria de fátima sobrinho cordeiro,1° Ano,Hospedagem,4,O quão respeitado(@) você é nessa escola ?,5
+29/05/2026 12:52:04,maria de fátima sobrinho cordeiro,1° Ano,Hospedagem,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",4
+29/05/2026 12:52:04,maria de fátima sobrinho cordeiro,1° Ano,Hospedagem,4,Qual foi o seu almoço favorito?,SEGUNDA
+29/05/2026 12:54:53,Daniela  Nascimento Valentim,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Segunda,4
+29/05/2026 12:54:53,Daniela  Nascimento Valentim,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Terça,4
+29/05/2026 12:54:53,Daniela  Nascimento Valentim,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Quarta,5
+29/05/2026 12:54:53,Daniela  Nascimento Valentim,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Quinta,5
+29/05/2026 12:54:53,Daniela  Nascimento Valentim,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Sexta,4
+29/05/2026 12:54:53,Daniela  Nascimento Valentim,1° Ano,Desenvolvimento de Sistemas,1,Merenda da manhã-Todos os dias,4
+29/05/2026 12:54:53,Daniela  Nascimento Valentim,1° Ano,Desenvolvimento de Sistemas,1,Merenda da tarde-Todos os dias,4
+29/05/2026 12:54:53,Daniela  Nascimento Valentim,1° Ano,Desenvolvimento de Sistemas,2,Salas de Aula,3
+29/05/2026 12:54:53,Daniela  Nascimento Valentim,1° Ano,Desenvolvimento de Sistemas,2,Refeitório,3
+29/05/2026 12:54:53,Daniela  Nascimento Valentim,1° Ano,Desenvolvimento de Sistemas,2,Banheiros,2
+29/05/2026 12:54:53,Daniela  Nascimento Valentim,1° Ano,Desenvolvimento de Sistemas,2,Auditório,5
+29/05/2026 12:54:53,Daniela  Nascimento Valentim,1° Ano,Desenvolvimento de Sistemas,2,Laboratórios,5
+29/05/2026 12:54:53,Daniela  Nascimento Valentim,1° Ano,Desenvolvimento de Sistemas,3,Linguagens,4
+29/05/2026 12:54:53,Daniela  Nascimento Valentim,1° Ano,Desenvolvimento de Sistemas,3,Humanas,5
+29/05/2026 12:54:53,Daniela  Nascimento Valentim,1° Ano,Desenvolvimento de Sistemas,3,Ciências da natureza,4
+29/05/2026 12:54:53,Daniela  Nascimento Valentim,1° Ano,Desenvolvimento de Sistemas,3,Matemática,3
+29/05/2026 12:54:53,Daniela  Nascimento Valentim,1° Ano,Desenvolvimento de Sistemas,4,O quão acolhido você foi na escola ?,5
+29/05/2026 12:54:53,Daniela  Nascimento Valentim,1° Ano,Desenvolvimento de Sistemas,4,O quão respeitado(@) você é nessa escola ?,5
+29/05/2026 12:54:53,Daniela  Nascimento Valentim,1° Ano,Desenvolvimento de Sistemas,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",3
+29/05/2026 12:54:53,Daniela  Nascimento Valentim,1° Ano,Desenvolvimento de Sistemas,4,Qual foi o seu almoço favorito?,QUARTA
+29/05/2026 12:56:58,Isadora Mesquita Brasil,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Segunda,3
+29/05/2026 12:56:58,Isadora Mesquita Brasil,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Terça,3
+29/05/2026 12:56:58,Isadora Mesquita Brasil,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Quarta,5
+29/05/2026 12:56:58,Isadora Mesquita Brasil,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Quinta,3
+29/05/2026 12:56:58,Isadora Mesquita Brasil,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Sexta,5
+29/05/2026 12:56:58,Isadora Mesquita Brasil,1° Ano,Desenvolvimento de Sistemas,1,Merenda da manhã-Todos os dias,3
+29/05/2026 12:56:58,Isadora Mesquita Brasil,1° Ano,Desenvolvimento de Sistemas,1,Merenda da tarde-Todos os dias,4
+29/05/2026 12:56:58,Isadora Mesquita Brasil,1° Ano,Desenvolvimento de Sistemas,2,Salas de Aula,3
+29/05/2026 12:56:58,Isadora Mesquita Brasil,1° Ano,Desenvolvimento de Sistemas,2,Refeitório,5
+29/05/2026 12:56:58,Isadora Mesquita Brasil,1° Ano,Desenvolvimento de Sistemas,2,Banheiros,3
+29/05/2026 12:56:58,Isadora Mesquita Brasil,1° Ano,Desenvolvimento de Sistemas,2,Auditório,3
+29/05/2026 12:56:58,Isadora Mesquita Brasil,1° Ano,Desenvolvimento de Sistemas,2,Laboratórios,3
+29/05/2026 12:56:58,Isadora Mesquita Brasil,1° Ano,Desenvolvimento de Sistemas,3,Linguagens,4
+29/05/2026 12:56:58,Isadora Mesquita Brasil,1° Ano,Desenvolvimento de Sistemas,3,Humanas,4
+29/05/2026 12:56:58,Isadora Mesquita Brasil,1° Ano,Desenvolvimento de Sistemas,3,Ciências da natureza,4
+29/05/2026 12:56:58,Isadora Mesquita Brasil,1° Ano,Desenvolvimento de Sistemas,3,Matemática,4
+29/05/2026 12:56:58,Isadora Mesquita Brasil,1° Ano,Desenvolvimento de Sistemas,4,O quão acolhido você foi na escola ?,4
+29/05/2026 12:56:58,Isadora Mesquita Brasil,1° Ano,Desenvolvimento de Sistemas,4,O quão respeitado(@) você é nessa escola ?,5
+29/05/2026 12:56:58,Isadora Mesquita Brasil,1° Ano,Desenvolvimento de Sistemas,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",4
+29/05/2026 12:56:58,Isadora Mesquita Brasil,1° Ano,Desenvolvimento de Sistemas,4,Qual foi o seu almoço favorito?,QUARTA
+29/05/2026 12:58:21,anonimo,N/A,N/A,1,Almoço-Segunda,1
+29/05/2026 12:58:21,anonimo,N/A,N/A,1,Almoço-Terça,4
+29/05/2026 12:58:21,anonimo,N/A,N/A,1,Almoço-Quarta,5
+29/05/2026 12:58:21,anonimo,N/A,N/A,1,Almoço-Quinta,3
+29/05/2026 12:58:21,anonimo,N/A,N/A,1,Almoço-Sexta,4
+29/05/2026 12:58:21,anonimo,N/A,N/A,1,Merenda da manhã-Todos os dias,4
+29/05/2026 12:58:21,anonimo,N/A,N/A,1,Merenda da tarde-Todos os dias,4
+29/05/2026 12:58:21,anonimo,N/A,N/A,2,Salas de Aula,5
+29/05/2026 12:58:21,anonimo,N/A,N/A,2,Refeitório,2
+29/05/2026 12:58:21,anonimo,N/A,N/A,2,Banheiros,4
+29/05/2026 12:58:21,anonimo,N/A,N/A,2,Auditório,5
+29/05/2026 12:58:21,anonimo,N/A,N/A,2,Laboratórios,5
+29/05/2026 12:58:21,anonimo,N/A,N/A,3,Linguagens,5
+29/05/2026 12:58:21,anonimo,N/A,N/A,3,Humanas,4
+29/05/2026 12:58:21,anonimo,N/A,N/A,3,Ciências da natureza,4
+29/05/2026 12:58:21,anonimo,N/A,N/A,3,Matemática,4
+29/05/2026 12:58:21,anonimo,N/A,N/A,4,O quão acolhido você foi na escola ?,3
+29/05/2026 12:58:21,anonimo,N/A,N/A,4,O quão respeitado(@) você é nessa escola ?,5
+29/05/2026 12:58:21,anonimo,N/A,N/A,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",5
+29/05/2026 12:58:21,anonimo,N/A,N/A,4,Qual foi o seu almoço favorito?,QUARTA
+29/05/2026 13:00:06,anonimo,N/A,N/A,1,Almoço-Segunda,3
+29/05/2026 13:00:06,anonimo,N/A,N/A,1,Almoço-Terça,4
+29/05/2026 13:00:06,anonimo,N/A,N/A,1,Almoço-Quarta,5
+29/05/2026 13:00:06,anonimo,N/A,N/A,1,Almoço-Quinta,2
+29/05/2026 13:00:06,anonimo,N/A,N/A,1,Almoço-Sexta,3
+29/05/2026 13:00:06,anonimo,N/A,N/A,1,Merenda da manhã-Todos os dias,3
+29/05/2026 13:00:06,anonimo,N/A,N/A,1,Merenda da tarde-Todos os dias,4
+29/05/2026 13:00:06,anonimo,N/A,N/A,2,Salas de Aula,3
+29/05/2026 13:00:06,anonimo,N/A,N/A,2,Refeitório,3
+29/05/2026 13:00:06,anonimo,N/A,N/A,2,Banheiros,1
+29/05/2026 13:00:06,anonimo,N/A,N/A,2,Auditório,5
+29/05/2026 13:00:06,anonimo,N/A,N/A,2,Laboratórios,4
+29/05/2026 13:00:06,anonimo,N/A,N/A,3,Linguagens,5
+29/05/2026 13:00:06,anonimo,N/A,N/A,3,Humanas,4
+29/05/2026 13:00:06,anonimo,N/A,N/A,3,Ciências da natureza,5
+29/05/2026 13:00:06,anonimo,N/A,N/A,3,Matemática,4
+29/05/2026 13:00:06,anonimo,N/A,N/A,4,O quão acolhido você foi na escola ?,3
+29/05/2026 13:00:06,anonimo,N/A,N/A,4,O quão respeitado(@) você é nessa escola ?,4
+29/05/2026 13:00:06,anonimo,N/A,N/A,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",3
+29/05/2026 13:00:06,anonimo,N/A,N/A,4,Qual foi o seu almoço favorito?,QUARTA
+29/05/2026 13:01:59,anonimo,N/A,N/A,1,Almoço-Segunda,3
+29/05/2026 13:01:59,anonimo,N/A,N/A,1,Almoço-Terça,4
+29/05/2026 13:01:59,anonimo,N/A,N/A,1,Almoço-Quarta,5
+29/05/2026 13:01:59,anonimo,N/A,N/A,1,Almoço-Quinta,3
+29/05/2026 13:01:59,anonimo,N/A,N/A,1,Almoço-Sexta,3
+29/05/2026 13:01:59,anonimo,N/A,N/A,1,Merenda da manhã-Todos os dias,2
+29/05/2026 13:01:59,anonimo,N/A,N/A,1,Merenda da tarde-Todos os dias,2
+29/05/2026 13:01:59,anonimo,N/A,N/A,2,Salas de Aula,3
+29/05/2026 13:01:59,anonimo,N/A,N/A,2,Refeitório,2
+29/05/2026 13:01:59,anonimo,N/A,N/A,2,Banheiros,2
+29/05/2026 13:01:59,anonimo,N/A,N/A,2,Auditório,5
+29/05/2026 13:01:59,anonimo,N/A,N/A,2,Laboratórios,5
+29/05/2026 13:01:59,anonimo,N/A,N/A,3,Linguagens,5
+29/05/2026 13:01:59,anonimo,N/A,N/A,3,Humanas,5
+29/05/2026 13:01:59,anonimo,N/A,N/A,3,Ciências da natureza,5
+29/05/2026 13:01:59,anonimo,N/A,N/A,3,Matemática,4
+29/05/2026 13:01:59,anonimo,N/A,N/A,4,O quão acolhido você foi na escola ?,3
+29/05/2026 13:01:59,anonimo,N/A,N/A,4,O quão respeitado(@) você é nessa escola ?,3
+29/05/2026 13:01:59,anonimo,N/A,N/A,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",4
+29/05/2026 13:01:59,anonimo,N/A,N/A,4,Qual foi o seu almoço favorito?,QUARTA
+29/05/2026 13:04:59,romario alves sousa,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Segunda,3
+29/05/2026 13:04:59,romario alves sousa,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Terça,2
+29/05/2026 13:04:59,romario alves sousa,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Quarta,5
+29/05/2026 13:04:59,romario alves sousa,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Quinta,1
+29/05/2026 13:04:59,romario alves sousa,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Sexta,2
+29/05/2026 13:04:59,romario alves sousa,1° Ano,Desenvolvimento de Sistemas,1,Merenda da manhã-Todos os dias,2
+29/05/2026 13:04:59,romario alves sousa,1° Ano,Desenvolvimento de Sistemas,1,Merenda da tarde-Todos os dias,4
+29/05/2026 13:04:59,romario alves sousa,1° Ano,Desenvolvimento de Sistemas,2,Salas de Aula,4
+29/05/2026 13:04:59,romario alves sousa,1° Ano,Desenvolvimento de Sistemas,2,Refeitório,5
+29/05/2026 13:04:59,romario alves sousa,1° Ano,Desenvolvimento de Sistemas,2,Banheiros,3
+29/05/2026 13:04:59,romario alves sousa,1° Ano,Desenvolvimento de Sistemas,2,Auditório,5
+29/05/2026 13:04:59,romario alves sousa,1° Ano,Desenvolvimento de Sistemas,2,Laboratórios,5
+29/05/2026 13:04:59,romario alves sousa,1° Ano,Desenvolvimento de Sistemas,3,Linguagens,4
+29/05/2026 13:04:59,romario alves sousa,1° Ano,Desenvolvimento de Sistemas,3,Humanas,4
+29/05/2026 13:04:59,romario alves sousa,1° Ano,Desenvolvimento de Sistemas,3,Ciências da natureza,4
+29/05/2026 13:04:59,romario alves sousa,1° Ano,Desenvolvimento de Sistemas,3,Matemática,5
+29/05/2026 13:04:59,romario alves sousa,1° Ano,Desenvolvimento de Sistemas,4,O quão acolhido você foi na escola ?,5
+29/05/2026 13:04:59,romario alves sousa,1° Ano,Desenvolvimento de Sistemas,4,O quão respeitado(@) você é nessa escola ?,5
+29/05/2026 13:04:59,romario alves sousa,1° Ano,Desenvolvimento de Sistemas,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",4
+29/05/2026 13:04:59,romario alves sousa,1° Ano,Desenvolvimento de Sistemas,4,Qual foi o seu almoço favorito?,QUARTA
+29/05/2026 13:07:32,Diogo Souza Lopes,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Segunda,5
+29/05/2026 13:07:32,Diogo Souza Lopes,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Terça,5
+29/05/2026 13:07:32,Diogo Souza Lopes,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Quarta,5
+29/05/2026 13:07:32,Diogo Souza Lopes,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Quinta,3
+29/05/2026 13:07:32,Diogo Souza Lopes,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Sexta,1
+29/05/2026 13:07:32,Diogo Souza Lopes,1° Ano,Desenvolvimento de Sistemas,1,Merenda da manhã-Todos os dias,5
+29/05/2026 13:07:32,Diogo Souza Lopes,1° Ano,Desenvolvimento de Sistemas,1,Merenda da tarde-Todos os dias,5
+29/05/2026 13:07:32,Diogo Souza Lopes,1° Ano,Desenvolvimento de Sistemas,2,Salas de Aula,5
+29/05/2026 13:07:32,Diogo Souza Lopes,1° Ano,Desenvolvimento de Sistemas,2,Refeitório,5
+29/05/2026 13:07:32,Diogo Souza Lopes,1° Ano,Desenvolvimento de Sistemas,2,Banheiros,5
+29/05/2026 13:07:32,Diogo Souza Lopes,1° Ano,Desenvolvimento de Sistemas,2,Auditório,5
+29/05/2026 13:07:32,Diogo Souza Lopes,1° Ano,Desenvolvimento de Sistemas,2,Laboratórios,5
+29/05/2026 13:07:32,Diogo Souza Lopes,1° Ano,Desenvolvimento de Sistemas,3,Linguagens,5
+29/05/2026 13:07:32,Diogo Souza Lopes,1° Ano,Desenvolvimento de Sistemas,3,Humanas,5
+29/05/2026 13:07:32,Diogo Souza Lopes,1° Ano,Desenvolvimento de Sistemas,3,Ciências da natureza,5
+29/05/2026 13:07:32,Diogo Souza Lopes,1° Ano,Desenvolvimento de Sistemas,3,Matemática,5
+29/05/2026 13:07:32,Diogo Souza Lopes,1° Ano,Desenvolvimento de Sistemas,4,O quão acolhido você foi na escola ?,5
+29/05/2026 13:07:32,Diogo Souza Lopes,1° Ano,Desenvolvimento de Sistemas,4,O quão respeitado(@) você é nessa escola ?,5
+29/05/2026 13:07:32,Diogo Souza Lopes,1° Ano,Desenvolvimento de Sistemas,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",5
+29/05/2026 13:07:32,Diogo Souza Lopes,1° Ano,Desenvolvimento de Sistemas,4,Qual foi o seu almoço favorito?,QUARTA
+29/05/2026 13:09:49,anonimo,N/A,N/A,1,Almoço-Segunda,2
+29/05/2026 13:09:49,anonimo,N/A,N/A,1,Almoço-Terça,3
+29/05/2026 13:09:49,anonimo,N/A,N/A,1,Almoço-Quarta,5
+29/05/2026 13:09:49,anonimo,N/A,N/A,1,Almoço-Quinta,1
+29/05/2026 13:09:49,anonimo,N/A,N/A,1,Almoço-Sexta,4
+29/05/2026 13:09:49,anonimo,N/A,N/A,1,Merenda da manhã-Todos os dias,2
+29/05/2026 13:09:49,anonimo,N/A,N/A,1,Merenda da tarde-Todos os dias,5
+29/05/2026 13:09:49,anonimo,N/A,N/A,2,Salas de Aula,4
+29/05/2026 13:09:49,anonimo,N/A,N/A,2,Refeitório,5
+29/05/2026 13:09:49,anonimo,N/A,N/A,2,Banheiros,2
+29/05/2026 13:09:49,anonimo,N/A,N/A,2,Auditório,5
+29/05/2026 13:09:49,anonimo,N/A,N/A,2,Laboratórios,5
+29/05/2026 13:09:49,anonimo,N/A,N/A,3,Linguagens,3
+29/05/2026 13:09:49,anonimo,N/A,N/A,3,Humanas,5
+29/05/2026 13:09:49,anonimo,N/A,N/A,3,Ciências da natureza,3
+29/05/2026 13:09:49,anonimo,N/A,N/A,3,Matemática,4
+29/05/2026 13:09:49,anonimo,N/A,N/A,4,O quão acolhido você foi na escola ?,5
+29/05/2026 13:09:49,anonimo,N/A,N/A,4,O quão respeitado(@) você é nessa escola ?,5
+29/05/2026 13:09:49,anonimo,N/A,N/A,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",4
+29/05/2026 13:09:49,anonimo,N/A,N/A,4,Qual foi o seu almoço favorito?,QUARTA
+29/05/2026 13:11:38,Carlos Eduardo Paixão de Lima,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Segunda,1
+29/05/2026 13:11:38,Carlos Eduardo Paixão de Lima,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Terça,1
+29/05/2026 13:11:38,Carlos Eduardo Paixão de Lima,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Quarta,1
+29/05/2026 13:11:38,Carlos Eduardo Paixão de Lima,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Quinta,1
+29/05/2026 13:11:38,Carlos Eduardo Paixão de Lima,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Sexta,1
+29/05/2026 13:11:38,Carlos Eduardo Paixão de Lima,1° Ano,Desenvolvimento de Sistemas,1,Merenda da manhã-Todos os dias,1
+29/05/2026 13:11:38,Carlos Eduardo Paixão de Lima,1° Ano,Desenvolvimento de Sistemas,1,Merenda da tarde-Todos os dias,1
+29/05/2026 13:11:38,Carlos Eduardo Paixão de Lima,1° Ano,Desenvolvimento de Sistemas,2,Salas de Aula,1
+29/05/2026 13:11:38,Carlos Eduardo Paixão de Lima,1° Ano,Desenvolvimento de Sistemas,2,Refeitório,1
+29/05/2026 13:11:38,Carlos Eduardo Paixão de Lima,1° Ano,Desenvolvimento de Sistemas,2,Banheiros,1
+29/05/2026 13:11:38,Carlos Eduardo Paixão de Lima,1° Ano,Desenvolvimento de Sistemas,2,Auditório,1
+29/05/2026 13:11:38,Carlos Eduardo Paixão de Lima,1° Ano,Desenvolvimento de Sistemas,2,Laboratórios,1
+29/05/2026 13:11:38,Carlos Eduardo Paixão de Lima,1° Ano,Desenvolvimento de Sistemas,3,Linguagens,1
+29/05/2026 13:11:38,Carlos Eduardo Paixão de Lima,1° Ano,Desenvolvimento de Sistemas,3,Humanas,1
+29/05/2026 13:11:38,Carlos Eduardo Paixão de Lima,1° Ano,Desenvolvimento de Sistemas,3,Ciências da natureza,1
+29/05/2026 13:11:38,Carlos Eduardo Paixão de Lima,1° Ano,Desenvolvimento de Sistemas,3,Matemática,5
+29/05/2026 13:11:38,Carlos Eduardo Paixão de Lima,1° Ano,Desenvolvimento de Sistemas,4,O quão acolhido você foi na escola ?,1
+29/05/2026 13:11:38,Carlos Eduardo Paixão de Lima,1° Ano,Desenvolvimento de Sistemas,4,O quão respeitado(@) você é nessa escola ?,1
+29/05/2026 13:11:38,Carlos Eduardo Paixão de Lima,1° Ano,Desenvolvimento de Sistemas,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",1
+29/05/2026 13:11:38,Carlos Eduardo Paixão de Lima,1° Ano,Desenvolvimento de Sistemas,4,Qual foi o seu almoço favorito?,Nenhum
+29/05/2026 13:14:16,Levi da silva nobrega,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Segunda,5
+29/05/2026 13:14:16,Levi da silva nobrega,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Terça,4
+29/05/2026 13:14:16,Levi da silva nobrega,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Quarta,5
+29/05/2026 13:14:16,Levi da silva nobrega,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Quinta,4
+29/05/2026 13:14:16,Levi da silva nobrega,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Sexta,5
+29/05/2026 13:14:16,Levi da silva nobrega,1° Ano,Desenvolvimento de Sistemas,1,Merenda da manhã-Todos os dias,2
+29/05/2026 13:14:16,Levi da silva nobrega,1° Ano,Desenvolvimento de Sistemas,1,Merenda da tarde-Todos os dias,4
+29/05/2026 13:14:16,Levi da silva nobrega,1° Ano,Desenvolvimento de Sistemas,2,Salas de Aula,5
+29/05/2026 13:14:16,Levi da silva nobrega,1° Ano,Desenvolvimento de Sistemas,2,Refeitório,5
+29/05/2026 13:14:16,Levi da silva nobrega,1° Ano,Desenvolvimento de Sistemas,2,Banheiros,5
+29/05/2026 13:14:16,Levi da silva nobrega,1° Ano,Desenvolvimento de Sistemas,2,Auditório,5
+29/05/2026 13:14:16,Levi da silva nobrega,1° Ano,Desenvolvimento de Sistemas,2,Laboratórios,5
+29/05/2026 13:14:16,Levi da silva nobrega,1° Ano,Desenvolvimento de Sistemas,3,Linguagens,2
+29/05/2026 13:14:16,Levi da silva nobrega,1° Ano,Desenvolvimento de Sistemas,3,Humanas,5
+29/05/2026 13:14:16,Levi da silva nobrega,1° Ano,Desenvolvimento de Sistemas,3,Ciências da natureza,1
+29/05/2026 13:14:16,Levi da silva nobrega,1° Ano,Desenvolvimento de Sistemas,3,Matemática,3
+29/05/2026 13:14:16,Levi da silva nobrega,1° Ano,Desenvolvimento de Sistemas,4,O quão acolhido você foi na escola ?,5
+29/05/2026 13:14:16,Levi da silva nobrega,1° Ano,Desenvolvimento de Sistemas,4,O quão respeitado(@) você é nessa escola ?,5
+29/05/2026 13:14:16,Levi da silva nobrega,1° Ano,Desenvolvimento de Sistemas,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",4
+29/05/2026 13:14:16,Levi da silva nobrega,1° Ano,Desenvolvimento de Sistemas,4,Qual foi o seu almoço favorito?,QUARTA

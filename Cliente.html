@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>MARWIN — Cliente Web</title>
+<!-- jsQR (CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<style>
+:root{
+  --bg-main:#f2f8f2; --bg-card:#ffffff; --accent-vibrant:#1b5e20; --accent-soft:#388e3c;
+  --fg-text:#1a2a1a; --border-grid:#c8e6c9; --highlight-yellow:#f9a825; --obs-bg:#e8f5e9;
+  --btn-cardapio:#2e7d32; --frase-fg:#4a7a4a; --entry-bg:#f0f8f0; --btn-voltar:#1b5e20;
+}
+*{box-sizing:border-box;font-family:Segoe UI, Arial, sans-serif}
+html,body{height:100%;margin:0;background:var(--bg-main);color:var(--fg-text)}
+.header{background:var(--accent-vibrant);color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between}
+.header .title{font-weight:700;font-size:20px}
+.header .subtitle{font-size:12px;color:#b2dfb4}
+.yellow-line{height:4px;background:var(--highlight-yellow)}
+.container{min-height:calc(100vh - 80px);display:flex;align-items:center;justify-content:center;padding:24px}
+.center{max-width:1100px;text-align:center}
+.huge{font-size:44px;font-weight:800;color:var(--accent-vibrant);margin:6px 0}
+.lead{color:var(--frase-fg);margin-bottom:18px}
+.btn{display:inline-block;padding:16px 36px;border:0;border-radius:6px;cursor:pointer;font-weight:700}
+.primary{background:var(--accent-vibrant);color:#fff}
+.card-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px}
+.card{background:var(--bg-card);padding:20px;border:1px solid var(--border-grid);cursor:pointer}
+.small{font-size:14px;font-weight:700;color:var(--accent-vibrant)}
+.footer-note{margin-top:18px;font-style:italic;color:var(--frase-fg)}
+.theme-toggle{background:transparent;border:1px solid rgba(255,255,255,0.1);color:#b2dfb4;padding:8px 12px;border-radius:6px;cursor:pointer}
+/* Modals */
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.35);z-index:40}
+.modal .sheet{width:92%;max-width:1100px;background:var(--bg-main);padding:18px;border-radius:8px;max-height:90vh;overflow:auto}
+.topbar{background:var(--accent-vibrant);color:white;padding:12px 16px;border-radius:6px}
+.status{display:flex;justify-content:space-between;align-items:center;padding:10px 0}
+.table-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-top:12px}
+.table-grid .cell{background:var(--bg-card);padding:12px;border:1px solid var(--border-grid)}
+.calendar-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px}
+.month-card{background:var(--bg-card);padding:12px;border:1px solid var(--border-grid)}
+.month-title{background:var(--accent-vibrant);color:white;padding:8px;border-radius:4px}
+.canvas-preview{background:#111;border:4px solid var(--accent-vibrant);width:100%;max-width:720px;height:480px;display:block;margin:12px auto}
+.side-panel{width:320px}
+.panel-card{background:var(--entry-bg);padding:12px;margin-bottom:8px;border-radius:6px}
+.panel-card h4{margin:0 0 6px 0}
+.pulse{animation:pulse 1.6s infinite}
+@keyframes pulse{0%{opacity:1}50%{opacity:.6}100%{opacity:1}}
+/* Responsive */
+@media(max-width:880px){.card-row{grid-template-columns:1fr}} 
+/* stars */
+.stars button{background:transparent;border:0;font-size:26px;cursor:pointer;padding:4px}
+.input,select{padding:10px;border:1px solid var(--border-grid);border-radius:6px;background:var(--entry-bg);width:100%}
+.small-muted{font-size:13px;color:var(--frase-fg)}
+#ref-list{max-height:160px;overflow:auto}
+</style>
+</head>
+<body>
+<div class="header">
+  <div style="display:flex;gap:16px;align-items:center">
+    <div class="title">EEE P MARWIN</div>
+    <div class="subtitle">Sistema Escolar Integrado</div>
+  </div>
+  <div>
+    <button id="btnTheme" class="theme-toggle">&#127769; Tema</button>
+  </div>
+</div>
+<div class="yellow-line"></div>
+<div class="container">
+  <div class="center">
+    <img src="dados/e2a3f585-9a55-4022-b6be-653e188afb6f-1000236903.png" width="300px">
+    <div style="font-size:13px;color:var(--frase-fg)">Escola Estadual de Educa&ccedil;&atilde;o Profissional</div>
+    <div class="huge">MARWIN</div>
+    <div class="lead">Sistema de Avalia&ccedil;&atilde;o Escolar</div>
+    <button id="btnStart" class="btn primary" onclick="openIdentificacao()">INICIAR AVALIA&Ccedil;&Atilde;O</button>
+    <div class="card-row">
+      <div class="card" onclick="openCardapio()"><div class="small">&#128203; Card&aacute;pio</div><div class="small-muted">Ver o card&aacute;pio semanal</div></div>
+      <div class="card" onclick="openEventos()"><div class="small">&#128197; Eventos</div><div class="small-muted">Calend&aacute;rio escolar</div></div>
+      <div class="card" onclick="openFrequencia()"><div class="small">&#128203; Frequ&ecirc;ncia</div><div class="small-muted">Registrar presen&ccedil;a</div></div>
+    </div>
+    <div class="card-row" style="margin-top:12px">
+      <div class="card" onclick="openRefeitorio()" style="grid-column:1"><div class="small">&#127869; Refeit&oacute;rio</div><div class="small-muted">Confirma&ccedil;&atilde;o de almo&ccedil;o</div></div>
+    </div>
+    <div class="footer-note">Sua participa&ccedil;&atilde;o &eacute; fundamental para melhorarmos juntos.</div>
+  </div>
+</div>
+
+<!-- Cardápio Modal -->
+<div id="modalCardapio" class="modal">
+  <div class="sheet">
+    <div class="topbar">🍴 Cardápio Semanal <button style="float:right" onclick="closeModal('modalCardapio')">Fechar</button></div>
+    <div class="status"><div>Escola Estadual de Educação Profissional Marwin</div><div id="cardapioStatus">⏳ Buscando cardápio...</div></div>
+    <div id="cardapioTable" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<!-- Eventos Modal -->
+<div id="modalEventos" class="modal">
+  <div class="sheet">
+    <div class="topbar">📅 Calendário Escolar 2026 <button style="float:right" onclick="closeModal('modalEventos')">Fechar</button></div>
+    <div class="status"><div>Clique nos dias destacados para ver os eventos</div><div id="eventosStatus">⏳ Buscando eventos...</div></div>
+    <div id="calendars" style="margin-top:12px"></div>
+    <div style="margin-top:12px;background:var(--bg-card);padding:12px;border:1px solid var(--border-grid)">
+      <h3 id="evtTitulo">📌 SELECIONE UM DIA MARCADO</h3>
+      <div id="evtTexto">Clique nos dias com círculos verdes</div>
+    </div>
+  </div>
+</div>
+
+<!-- Identificação / Avaliação Modal -->
+<div id="modalIdentificacao" class="modal">
+  <div class="sheet">
+    <div class="topbar">🎓 Identificação do Aluno <button style="float:right" onclick="closeModal('modalIdentificacao')">Fechar</button></div>
+    <div style="background:var(--bg-card);padding:18px;border:1px solid var(--border-grid);margin-top:12px">
+      <h2>IDENTIFICAÇÃO DO ALUNO</h2>
+      <p class="small-muted">Preencha seus dados para iniciar a avaliação</p>
+      <div style="margin-top:12px">
+        <label>NOME COMPLETO</label><input id="nomeAluno" class="input" />
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <div style="flex:1"><label>SÉRIE</label><select id="serieAluno" class="input"><option>1° Ano</option><option>2° Ano</option><option>3° Ano</option></select></div>
+        <div style="flex:1"><label>CURSO</label><select id="cursoAluno" class="input"><option>Desenvolvimento de Sistemas</option><option>Enfermagem</option><option>Hospedagem</option><option>Modelagem</option></select></div>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button class="btn primary" onclick="continuarIdentificacao()">CONTINUAR →</button>
+        <button class="btn" style="background:var(--obs-bg);color:var(--accent-vibrant)" onclick="avaliarAnonimo()">AVALIAR ANONIMAMENTE</button>
+      </div>
+      <div style="margin-top:8px" class="small-muted">Ou pressione Ctrl+M para entrada manual</div>
+    </div>
+  </div>
+</div>
+
+<!-- Avaliação Modal (wizard) -->
+<div id="modalAvaliacao" class="modal">
+  <div class="sheet">
+    <div class="topbar" id="avaliTop">📋 Avaliação Escolar <button style="float:right" onclick="closeModal('modalAvaliacao')">Fechar</button></div>
+    <div id="avaliContent" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<!-- Frequência Modal -->
+<div id="modalFrequencia" class="modal">
+  <div class="sheet" style="display:flex;gap:12px">
+    <div style="flex:1">
+      <div class="topbar">📋 Frequência — Registrar Presença <button style="float:right" onclick="closeModal('modalFrequencia')">Fechar</button></div>
+      <div class="status"><div id="camStatusFreq">🔄 Aguardando câmera</div><div id="serverStatusFreq">Servidor: aguardando</div></div>
+      <video id="videoFrequencia" class="canvas-preview" autoplay muted playsinline></video>
+      <canvas id="canvasFrequencia" style="display:none"></canvas>
+      <div style="text-align:center;margin-top:8px">
+        <div id="cardFrequencia" style="background:var(--bg-card);padding:18px;border:1px solid var(--border-grid);display:inline-block;min-width:320px">
+          <div id="cardIconFreq" style="font-size:48px">⏳</div>
+          <div id="cardMainFreq" style="font-size:22px;font-weight:700;color:var(--frase-fg)">Aguardando leitura do QR...</div>
+          <div id="cardSubFreq" style="color:var(--frase-fg)"></div>
+          <div style="margin-top:12px;display:flex;gap:8px;justify-content:center">
+            <div id="cardHoraFreq" style="background:var(--obs-bg);padding:8px 16px;border-radius:6px;font-weight:700;color:var(--accent-vibrant);font-size:14px"></div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:12px;text-align:center">
+        <input id="manualInputFrequencia" class="input" placeholder='Cole aqui o conteúdo do QR ou digite matrícula e pressione Enter' />
+      </div>
+    </div>
+    <div class="side-panel">
+      <div class="panel-card"><h4>Painel de Fluxo</h4></div>
+      <div class="panel-card"><div>Presentes Hoje</div><div id="presentesFreq" style="font-size:26px;font-weight:700;color:var(--accent-vibrant)">0</div></div>
+      <div class="panel-card"><div>MODO DE LEITURA</div><div id="modoLeituraFreq">📷 Webcam Ativa</div></div>
+      <div class="panel-card"><div>Últimos Registros</div><div id="freq-list"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Refeitório Modal -->
+<div id="modalRefeitorio" class="modal">
+  <div class="sheet" style="display:flex;gap:12px">
+    <div style="flex:1">
+      <div class="topbar">🍽️ Refeitório — Confirmação de Almoço <button style="float:right" onclick="closeModal('modalRefeitorio')">Fechar</button></div>
+      <div class="status"><div id="camStatus">🔄 Aguardando câmera</div><div id="serverStatus">Servidor: aguardando</div></div>
+      <video id="video" class="canvas-preview" autoplay muted playsinline></video>
+      <canvas id="canvas" style="display:none"></canvas>
+      <div style="text-align:center;margin-top:8px">
+        <div id="cardNome" style="background:var(--bg-card);padding:18px;border:1px solid var(--border-grid);display:inline-block;min-width:320px">
+          <div id="cardIcon" style="font-size:48px">⏳</div>
+          <div id="cardMain" style="font-size:22px;font-weight:700;color:var(--frase-fg)">Aguardando leitura do QR...</div>
+          <div id="cardSub" style="color:var(--frase-fg)"></div>
+          <div style="margin-top:12px;display:flex;gap:8px;justify-content:center">
+            <button id="btnVai" class="btn" style="background:#2e7d32;color:white;display:none" onclick="registrarRef('almoco')">✔ VAI ALMOÇAR</button>
+            <button id="btnNao" class="btn" style="background:#c62828;color:white;display:none" onclick="registrarRef('nao_almoco')">✘ NÃO VAI</button>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:12px;text-align:center">
+        <input id="manualInput" class="input" placeholder='Cole aqui o conteúdo do QR ou digite matrícula e pressione Enter' />
+      </div>
+    </div>
+    <div class="side-panel">
+      <div class="panel-card"><h4>Painel de Fluxo</h4></div>
+      <div class="panel-card"><div>Presentes Hoje</div><div id="presentes" style="font-size:26px;font-weight:700;color:var(--accent-vibrant)">0</div></div>
+      <div class="panel-card"><div>Refeições Confirmadas</div><div id="refConfirmadas" style="font-size:26px;font-weight:700;color:#4caf50">0</div></div>
+      <div class="panel-card"><div>MODO DE LEITURA</div><div id="modoLeitura">📷 Webcam Ativa</div></div>
+      <div class="panel-card"><div>Últimos Registros</div><div id="ref-list"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---------- Configuração inicial ----------
+// Detecta automaticamente a URL do servidor (localhost, IP da escola, ou ngrok)
+let SERVER_URL = window.location.origin;
+// Tema
+const TEMAS = {
+  claro: {BG_MAIN:"#f2f8f2",BG_CARD:"#ffffff",ACCENT_VIBRANT:"#1b5e20",ACCENT_SOFT:"#388e3c",FG_TEXT:"#1a2a1a",BORDER_GRID:"#c8e6c9",HIGHLIGHT_YELLOW:"#f9a825",OBS_BG:"#e8f5e9",BTN_CARDAPIO:"#2e7d32",FRASE_FG:"#4a7a4a",ENTRY_BG:"#f0f8f0",BTN_VOLTAR:"#1b5e20"},
+  escuro: {BG_MAIN:"#0a1a0a",BG_CARD:"#142014",ACCENT_VIBRANT:"#4caf50",ACCENT_SOFT:"#388e3c",FG_TEXT:"#c8e6c9",BORDER_GRID:"#2e5e2e",HIGHLIGHT_YELLOW:"#f9a825",OBS_BG:"#1a3a1a",BTN_CARDAPIO:"#2e7d32",FRASE_FG:"#81c784",ENTRY_BG:"#1a2e1a",BTN_VOLTAR:"#1b5e20"}
+};
+let temaAtual = localStorage.getItem('MARWIN_TEMA') || 'claro';
+function aplicarTema(t){
+  const tema = TEMAS[t] || TEMAS.claro;
+  Object.keys(tema).forEach(k=> document.documentElement.style.setProperty('--' + k.replace('_','-').toLowerCase(), tema[k]));
+  document.getElementById('btnTheme').textContent = (t==='claro')? '\u{1F319} Tema' : '\u{2600} Tema';
+}
+aplicarTema(temaAtual);
+
+document.getElementById('btnTheme').addEventListener('click', ()=>{ temaAtual = temaAtual==='claro'?'escuro':'claro'; localStorage.setItem('MARWIN_TEMA', temaAtual); aplicarTema(temaAtual); });
+
+// ---------- util API (fetch) ----------
+const TIMEOUT = 10000;
+async function apiGet(route, padrao=null){
+  try{
+    const ctrl = new AbortController();
+    const id = setTimeout(()=>ctrl.abort(), TIMEOUT);
+    const r = await fetch(SERVER_URL + route, {method:'GET', signal:ctrl.signal});
+    clearTimeout(id);
+    if(!r.ok) return padrao;
+    return await r.json();
+  }catch(e){ console.warn('GET',route,e); return padrao; }
+}
+async function apiPost(route, data){
+  try{
+    const ctrl = new AbortController();
+    const id = setTimeout(()=>ctrl.abort(), TIMEOUT);
+    const r = await fetch(SERVER_URL + route, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data),signal:ctrl.signal});
+    clearTimeout(id);
+    if(!r.ok) return null; return await r.json();
+  }catch(e){ console.warn('POST',route,e); return null; }
+}
+
+// ---------- Cardápio ----------
+async function openCardapio(){ document.getElementById('modalCardapio').style.display='flex'; loadCardapio(); }
+function closeModal(id){document.getElementById(id).style.display='none'}
+async function loadCardapio(){
+  const status = document.getElementById('cardapioStatus'); status.textContent='⏳ Buscando cardápio...';
+  const data = await apiGet('/cardapio', {});
+  const table = document.getElementById('cardapioTable'); table.innerHTML='';
+  if(!data){ status.textContent='⚠️ Sem conexão — dados indisponíveis'; return }
+  status.textContent='✅ Cardápio atualizado';
+  const dias = ['SEGUNDA','TERCA','QUARTA','QUINTA','SEXTA'];
+  const headers = ['DIA','MERENDA MANHÃ','ALMOÇO','MERENDA TARDE'];
+  const hdr = document.createElement('div'); hdr.style.display='grid'; hdr.style.gridTemplateColumns='1fr 1fr 1fr 1fr'; hdr.style.gap='6px';
+  headers.forEach(h=>{ const c=document.createElement('div'); c.className='cell'; c.style.background='var(--accent-vibrant)'; c.style.color='white'; c.style.fontWeight='700'; c.style.padding='12px'; c.textContent=h; hdr.appendChild(c)});
+  table.appendChild(hdr);
+  dias.forEach(d=>{
+    const row = document.createElement('div'); row.style.display='grid'; row.style.gridTemplateColumns='1fr 1fr 1fr 1fr'; row.style.gap='6px'; row.style.marginTop='6px';
+    const c0=document.createElement('div'); c0.className='cell'; c0.textContent=d; row.appendChild(c0);
+    const pratos = data[d] || ['—','—','—'];
+    pratos.forEach(p=>{ const c=document.createElement('div'); c.className='cell'; c.textContent=p; row.appendChild(c)});
+    table.appendChild(row);
+  });
+}
+
+// ---------- Eventos (calendário) ----------
+async function openEventos(){ document.getElementById('modalEventos').style.display='flex'; loadEventos(); }
+async function loadEventos(){
+  const status = document.getElementById('eventosStatus'); status.textContent='⏳ Buscando eventos...';
+  const eventos = await apiGet('/eventos', []);
+  if(!eventos){ status.textContent='⚠️ Sem conexão — eventos indisponíveis'; return }
+  status.textContent='✅ Eventos atualizados';
+  // Map eventos to dict (d,m)->texto
+  const map = {};
+  eventos.forEach(ev=>{ const parts = (ev.data||'').split('/'); if(parts.length>=2){ map[parts[0]+'/'+parts[1]] = ev.evento }});
+  const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const container = document.getElementById('calendars'); container.innerHTML='';
+  for(let m=1;m<=12;m++){
+    const card = document.createElement('div'); card.className='month-card';
+    const title = document.createElement('div'); title.className='month-title'; title.textContent = meses[m-1].toUpperCase(); card.appendChild(title);
+    // day names
+    const diasSemana = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+    const daysRow = document.createElement('div'); daysRow.style.display='flex'; daysRow.style.gap='4px'; daysRow.style.marginTop='6px';
+    diasSemana.forEach(dn=>{ const sp=document.createElement('div'); sp.style.flex='1'; sp.style.fontSize='12px'; sp.style.color='var(--frase-fg)'; sp.textContent=dn; daysRow.appendChild(sp)});
+    card.appendChild(daysRow);
+    // month grid
+    const grid = document.createElement('div'); grid.style.display='grid'; grid.style.gridTemplateColumns='repeat(7,1fr)'; grid.style.gap='4px'; grid.style.marginTop='6px';
+    const first = new Date(2026,m-1,1); const last = new Date(2026,m,0);
+    const startWeekday = first.getDay();
+    for(let i=0;i<startWeekday;i++){ const e=document.createElement('div'); grid.appendChild(e) }
+    for(let d=1; d<= last.getDate(); d++){
+      const cell = document.createElement('div'); cell.style.padding='6px'; cell.style.textAlign='center'; cell.style.cursor='pointer';
+      const key = (d.toString().padStart(2,'0'))+'/'+(m.toString().padStart(2,'0'));
+      if(map[key]){ cell.style.background='var(--accent-soft)'; cell.style.color='white'; cell.style.borderRadius='6px'; cell.textContent=d; cell.onclick = ()=>{ document.getElementById('evtTitulo').textContent = `📅 ${String(d).padStart(2,'0')} DE ${meses[m-1].toUpperCase()}`; document.getElementById('evtTexto').textContent = `✨ ${map[key]}` } }
+      else{ cell.textContent=d }
+      grid.appendChild(cell);
+    }
+    card.appendChild(grid); container.appendChild(card);
+  }
+}
+
+// ---------- Avaliação (wizard) ----------
+const AVAL_ITENS = {
+  1: ["Almoço-Segunda","Almoço-Terça","Almoço-Quarta","Almoço-Quinta","Almoço-Sexta","Merenda da manhã-Todos os dias","Merenda da tarde-Todos os dias"],
+  2: ["Salas de Aula","Refeitório","Banheiros","Auditório","Laboratórios"],
+  3: ["Linguagens","Humanas","Ciências da natureza","Matemática"],
+  4: ["O quão acolhido você foi na escola ?","O quão respeitado(@) você é nessa escola ?","Se você precisou de ajuda da coordenação,\ncomo avalia a rapidez e a atenção do atendimento?","Qual foi o melhor almoço da semana?"]
+};
+const TITULOS = {1:"🍽️ COMIDA",2:"🧹 LIMPEZA",3:"📚 ENSINO",4:"✨ EXPERIÊNCIA"};
+const SUB = {1:"Avalie a qualidade das refeições",2:"Avalie a higiene dos ambientes",3:"Avalie a qualidade do ensino",4:"Conte-nos como você se sentiu nesta semana"};
+let avaliacaoState = {nome:'',serie:'',curso:'',estagio:1,respostas:{}};
+function openIdentificacao(){ document.getElementById('modalIdentificacao').style.display='flex'; }
+function avaliarAnonimo(){ avaliacaoState = {nome:'anonimo',serie:'N/A',curso:'N/A',estagio:1,respostas:{}}; document.getElementById('modalIdentificacao').style.display='none'; openAvaliacao(); }
+async function continuarIdentificacao(){ const nome=document.getElementById('nomeAluno').value.trim(); const serie=document.getElementById('serieAluno').value; const curso=document.getElementById('cursoAluno').value; if(!nome || !serie || !curso){ alert('Preencha todos os campos!'); return }
+  // verificar se já avaliou
+  const resp = await apiGet(`/avaliacao/verificar?nome=${encodeURIComponent(nome)}`, {ja_avaliou:false});
+  if(resp && resp.ja_avaliou){ alert('Você já avaliou esta semana!'); return }
+  avaliacaoState = {nome,serie,curso,estagio:1,respostas:{}}; document.getElementById('modalIdentificacao').style.display='none'; openAvaliacao(); }
+
+function openAvaliacao(){ document.getElementById('modalAvaliacao').style.display='flex'; renderAvaliacao(); }
+function renderAvaliacao(){ const cont = document.getElementById('avaliContent'); cont.innerHTML='';
+  const top = document.getElementById('avaliTop'); top.innerHTML = `📋 Avaliação Escolar — ${avaliacaoState.nome} <button style="float:right" onclick="closeModal('modalAvaliacao')">Fechar</button>`;
+  const header = document.createElement('div'); header.innerHTML = `<h2>${TITULOS[avaliacaoState.estagio]}</h2><div class='small-muted'>${SUB[avaliacaoState.estagio]}</div><hr/>`;
+  cont.appendChild(header);
+  const container = document.createElement('div'); container.style.padding='12px';
+  AVAL_ITENS[avaliacaoState.estagio].forEach(item=>{
+    const card = document.createElement('div'); card.style.background='var(--bg-card)'; card.style.padding='12px'; card.style.margin='8px 0'; card.style.border='1px solid var(--border-grid)';
+    const lbl = document.createElement('div'); lbl.style.fontWeight='700'; lbl.textContent = item; card.appendChild(lbl);
+    const right = document.createElement('div'); right.style.marginTop='8px';
+    if(avaliacaoState.estagio===4 && /melhor almoço da semana/i.test(item)){
+      const sel = document.createElement('select'); sel.className='input';
+      const defaultOption = document.createElement('option');
+      defaultOption.value = '';
+      defaultOption.textContent = 'Selecione um dia';
+      sel.appendChild(defaultOption);
+      ['Segunda','Terça','Quarta','Quinta','Sexta','Nenhum'].forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o)});
+      sel.value = avaliacaoState.respostas[`${avaliacaoState.estagio}|${item}`] || '';
+      sel.onchange = ()=> avaliacaoState.respostas[`${avaliacaoState.estagio}|${item}`]=sel.value;
+      right.appendChild(sel);
+    }else{
+      const stars = document.createElement('div'); stars.className='stars'; for(let i=1;i<=5;i++){ const b=document.createElement('button'); b.innerHTML='☆'; b.onclick = ()=>{ avaliacaoState.respostas[`${avaliacaoState.estagio}|${item}`]=i; updateStars(stars,i); }; stars.appendChild(b); }
+      // init to 3
+      if(!avaliacaoState.respostas[`${avaliacaoState.estagio}|${item}`]) avaliacaoState.respostas[`${avaliacaoState.estagio}|${item}`]=3; updateStars(stars,avaliacaoState.respostas[`${avaliacaoState.estagio}|${item}`]); right.appendChild(stars);
+    }
+    card.appendChild(right); container.appendChild(card);
+  });
+  cont.appendChild(container);
+  const actions = document.createElement('div'); actions.style.display='flex'; actions.style.justifyContent='space-between'; actions.style.marginTop='12px';
+  if(avaliacaoState.estagio>1){ const b=document.createElement('button'); b.className='btn'; b.textContent='← VOLTAR'; b.onclick=()=>{avaliacaoState.estagio--; renderAvaliacao()}; actions.appendChild(b)}
+  const rightBox = document.createElement('div'); if(avaliacaoState.estagio<4){ const p=document.createElement('button'); p.className='btn primary'; p.textContent='PRÓXIMO →'; p.onclick=()=>{avaliacaoState.estagio++; renderAvaliacao()}; rightBox.appendChild(p)}else{ const f=document.createElement('button'); f.className='btn primary'; f.textContent='✓ FINALIZAR'; f.onclick=finalizarAvaliacao; rightBox.appendChild(f)}
+  actions.appendChild(rightBox); cont.appendChild(actions);
+}
+function updateStars(container,val){ Array.from(container.children).forEach((b,i)=> b.innerHTML = (i<val)?'★':'☆' ); }
+
+async function finalizarAvaliacao(){
+  // enviar payload
+  const payload = {nome:avaliacaoState.nome, serie:avaliacaoState.serie, curso:avaliacaoState.curso, respostas:{}};
+  for(const k in avaliacaoState.respostas) payload.respostas[k]=avaliacaoState.respostas[k];
+  const resp = await apiPost('/avaliacao', payload);
+  if(resp===null){ alert('Não foi possível enviar a avaliação.'); return }
+  if(resp.status==='ja_avaliou'){ alert(resp.mensagem || 'Você já avaliou esta semana.'); return }
+  closeModal('modalAvaliacao'); alert('Obrigado pela contribuição!');
+}
+
+// ---------- Refeitório (camera + jsQR) ----------
+let video = document.getElementById('video'); let canvas = document.getElementById('canvas'); let ctx = canvas.getContext('2d');
+let scanning = false; let lastScan = null; let pending = null; let stats = {presentes:0, refeicoes:0, ultimos:[]};
+// ---------- Frequência (camera + jsQR) ----------
+let videoFreq = document.getElementById('videoFrequencia');
+let canvasFreq = document.getElementById('canvasFrequencia');
+let ctxFreq = canvasFreq.getContext('2d');
+let scanningFreq = false;
+let lastScanFreq = null;
+let pendingFreq = null;
+let statsFreq = {presentes:0, ultimos:[]};
+
+async function openFrequencia(){ document.getElementById('modalFrequencia').style.display='flex'; startCameraFrequencia(); loadFreqStats(); }
+function closeFrequencia(){ stopCameraFrequencia(); closeModal('modalFrequencia') }
+
+async function startCameraFrequencia(){
+  try{ const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}); videoFreq.srcObject = stream; videoFreq.play(); document.getElementById('camStatusFreq').textContent = '🟢 Câmera ativa — aponte o QR Code'; scanningFreq=true; tickScanFrequencia(); }catch(e){ console.warn(e); document.getElementById('camStatusFreq').textContent = '⚠️ Câmera não disponível — use entrada manual'; scanningFreq=false; }
+}
+function stopCameraFrequencia(){ scanningFreq=false; try{ const s = videoFreq.srcObject; if(s){ s.getTracks().forEach(t=>t.stop()); videoFreq.srcObject=null }}catch(e){} }
+function tickScanFrequencia(){ if(!scanningFreq) return; if(videoFreq.readyState===videoFreq.HAVE_ENOUGH_DATA){ canvasFreq.width = videoFreq.videoWidth; canvasFreq.height = videoFreq.videoHeight; ctxFreq.drawImage(videoFreq,0,0,canvasFreq.width,canvasFreq.height); const img = ctxFreq.getImageData(0,0,canvasFreq.width,canvasFreq.height); const code = jsQR(img.data, img.width, img.height); if(code && code.data){ processScanFrequencia(code.data); } }
+  requestAnimationFrame(tickScanFrequencia);
+}
+
+function processScanFrequencia(text){ if(!text || text===lastScanFreq) return; lastScanFreq = text; let data=null; try{ data = JSON.parse(text) }catch(e){ data = extractFields(text) }
+  if(!data) return; if(!data.nome) data.nome = data.matricula||'Desconhecido';
+  if(!data.matricula){ showCardFrequencia({nome:data.nome, serie:data.serie||'', curso:data.curso||''}, false); return; }
+  showCardFrequencia(data, false); registrarFrequencia();
+}
+
+function showCardFrequencia(data, duplicado=false){ pendingFreq = data; document.getElementById('cardIconFreq').textContent = duplicado? '⚠️' : '✅'; document.getElementById('cardMainFreq').textContent = data.nome; document.getElementById('cardSubFreq').textContent = (data.serie||'') + (data.curso? ' • '+data.curso : ''); const now = new Date(); const hora = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0'); document.getElementById('cardHoraFreq').textContent = hora; }
+
+async function registrarFrequencia(){ if(!pendingFreq) return; const payload = {matricula: pendingFreq.matricula||'', nome: pendingFreq.nome||'Desconhecido', serie: pendingFreq.serie||'N/A', curso: pendingFreq.curso||'N/A'}; const resp = await apiPost('/frequencia/registrar', payload); if(resp===null){ document.getElementById('serverStatusFreq').textContent = '✘ Servidor offline'; alert('Não foi possível registrar a frequência'); return }
+  if(resp.status==='ja_registrado'){ document.getElementById('cardIconFreq').textContent='⚠️'; document.getElementById('cardMainFreq').textContent = resp.nome || pendingFreq.nome; document.getElementById('cardSubFreq').textContent = `Já registrado às ${resp.hora || '?'}`; setTimeout(()=>{ resetCardFrequencia(); }, 2500); return }
+  document.getElementById('presentesFreq').textContent = resp.total_hoje || 0; statsFreq.ultimos.unshift(`${resp.nome} — ${payload.serie} — ${resp.hora}`); if(statsFreq.ultimos.length>8) statsFreq.ultimos.pop(); refreshFreqList(); resetCardFrequencia(); setTimeout(()=>{ resetCardFrequencia(); }, 2500); }
+
+function resetCardFrequencia(){ pendingFreq=null; document.getElementById('cardIconFreq').textContent='⏳'; document.getElementById('cardMainFreq').textContent='Aguardando leitura do QR...'; document.getElementById('cardSubFreq').textContent=''; document.getElementById('cardHoraFreq').textContent=''; }
+
+function refreshFreqList(){ const el = document.getElementById('freq-list'); el.innerHTML=''; statsFreq.ultimos.slice(0,8).forEach(s=>{ const d = document.createElement('div'); d.textContent=s; d.style.padding='6px 0'; el.appendChild(d) }); }
+
+async function loadFreqStats(){ document.getElementById('presentesFreq').textContent = statsFreq.presentes; refreshFreqList(); }
+
+let usbHidBufferFreq = [];
+let usbHidTimeoutFreq = null;
+function resetUsbHidBufferFreq(){ usbHidBufferFreq = []; if(usbHidTimeoutFreq){ clearTimeout(usbHidTimeoutFreq); usbHidTimeoutFreq = null; } }
+function scheduleUsbHidResetFreq(){ if(usbHidTimeoutFreq){ clearTimeout(usbHidTimeoutFreq); }
+  usbHidTimeoutFreq = setTimeout(resetUsbHidBufferFreq, 500);
+}
+function isFrequenciaActive(){ return document.getElementById('modalFrequencia').style.display === 'flex'; }
+
+let freqKeyListener = (e)=>{
+  if(!isFrequenciaActive()) return;
+  if(document.activeElement === document.getElementById('manualInputFrequencia')) return;
+  if(e.key === 'Enter'){
+    const texto = usbHidBufferFreq.join('').trim();
+    resetUsbHidBufferFreq();
+    if(texto){ processScanFrequencia(texto); }
+    return;
+  }
+  if(e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey){
+    usbHidBufferFreq.push(e.key);
+    scheduleUsbHidResetFreq();
+  }
+};
+
+window.addEventListener('keydown', freqKeyListener);
+document.getElementById('manualInputFrequencia').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ const v = e.target.value.trim(); e.target.value=''; processScanFrequencia(v); } });
+
+async function openRefeitorio(){ document.getElementById('modalRefeitorio').style.display='flex'; startCamera(); loadRefStats(); }
+function closeRefeitorio(){ stopCamera(); closeModal('modalRefeitorio') }
+async function startCamera(){
+  try{ const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}); video.srcObject = stream; video.play(); document.getElementById('camStatus').textContent = '🟢 Câmera ativa — aponte o QR Code'; scanning=true; tickScan(); }catch(e){ console.warn(e); document.getElementById('camStatus').textContent = '⚠️ Câmera não disponível — use entrada manual'; scanning=false; }
+}
+function stopCamera(){ scanning=false; try{ const s = video.srcObject; if(s){ s.getTracks().forEach(t=>t.stop()); video.srcObject=null }}catch(e){} }
+function tickScan(){ if(!scanning) return; if(video.readyState===video.HAVE_ENOUGH_DATA){ canvas.width = video.videoWidth; canvas.height = video.videoHeight; ctx.drawImage(video,0,0,canvas.width,canvas.height); const img = ctx.getImageData(0,0,canvas.width,canvas.height); const code = jsQR(img.data, img.width, img.height); if(code && code.data){ processScan(code.data); } }
+  requestAnimationFrame(tickScan);
+}
+
+function extractFields(text){ try{ const cleaned = text.replace(/^\^Ç/g, ':').replace(/\^{/g,'{').replace(/\^}/g,'}').replace(/\^/g,''); const j = JSON.parse(cleaned); return j; }catch(e){}
+  const fields = {}; const patterns = ['matricula','nome','serie','curso']; patterns.forEach(k=>{ const re = new RegExp(k+'\s*[:=]?\s*([^,\{\n]+)','i'); const m = text.match(re); if(m) fields[k]= m[1].trim().replace(/["'\n]/g,''); });
+  if(!fields.matricula && text.toLowerCase().includes('nome')){ const m = text.match(/nome\s*[:=]?\s*([^,\{\n]+)/i); if(m) fields.nome = m[1].trim(); }
+  return fields;
+}
+
+function processScan(text){ if(!text || text===lastScan) return; lastScan = text; let data=null; try{ data = JSON.parse(text) }catch(e){ data = extractFields(text) }
+  if(!data) return; if(!data.nome) data.nome = data.matricula||'Desconhecido';
+  if(!data.matricula){ // show simple card
+    showCard({nome:data.nome, serie:data.serie||'', curso:data.curso||''}, false); return;
+  }
+  showCard(data, false);
+}
+function showCard(data, duplicado=false){ pending = data; document.getElementById('cardIcon').textContent = duplicado? '⚠️' : '🎓'; document.getElementById('cardMain').textContent = data.nome; document.getElementById('cardSub').textContent = (data.serie||'') + (data.curso? ' • '+data.curso : ''); document.getElementById('btnVai').style.display = duplicado? 'none':'inline-block'; document.getElementById('btnNao').style.display = duplicado? 'none':'inline-block'; }
+
+async function registrarRef(refeicao){ if(!pending) return; const payload = {matricula: pending.matricula||'', nome: pending.nome||'Desconhecido', serie: pending.serie||'N/A', curso: pending.curso||'N/A', refeicao}; const resp = await apiPost('/refeitorio/registrar', payload); if(resp===null){ document.getElementById('serverStatus').textContent = '✘ Servidor offline'; alert('Não foi possível registrar a refeição'); return }
+  if(resp.status==='ja_registrado'){ document.getElementById('cardIcon').textContent='⚠️'; document.getElementById('cardMain').textContent = resp.nome || pending.nome; document.getElementById('cardSub').textContent = `Já registrado às ${resp.hora || resp.hora_ant || '?'} — hoje: ${resp.total_hoje || ''}`; setTimeout(()=>{ resetCard(); },3000); return }
+  // success
+  document.getElementById('presentes').textContent = resp.total_hoje || 0; document.getElementById('refConfirmadas').textContent = resp.total_refeicao || 0; stats.ultimos.unshift(`${resp.nome} — ${payload.serie} — ${refeicao==='almoco'?'ALMOÇO':'SEM ALMOÇO'}`); if(stats.ultimos.length>8) stats.ultimos.pop(); refreshRefList(); resetCard(); }
+
+function resetCard(){ pending=null; document.getElementById('cardIcon').textContent='⏳'; document.getElementById('cardMain').textContent='Aguardando leitura do QR...'; document.getElementById('cardSub').textContent=''; document.getElementById('btnVai').style.display='none'; document.getElementById('btnNao').style.display='none'; }
+
+function refreshRefList(){ const el = document.getElementById('ref-list'); el.innerHTML=''; stats.ultimos.slice(0,8).forEach(s=>{ const d = document.createElement('div'); d.textContent=s; d.style.padding='6px 0'; el.appendChild(d) }); }
+
+async function loadRefStats(){ // no admin privileges route exists for public; we start with defaults
+  document.getElementById('presentes').textContent = stats.presentes; document.getElementById('refConfirmadas').textContent = stats.refeicoes; refreshRefList(); }
+
+let usbHidBuffer = [];
+let usbHidTimeout = null;
+function resetUsbHidBuffer(){ usbHidBuffer = []; if(usbHidTimeout){ clearTimeout(usbHidTimeout); usbHidTimeout = null; } }
+function scheduleUsbHidReset(){ if(usbHidTimeout){ clearTimeout(usbHidTimeout); }
+  usbHidTimeout = setTimeout(resetUsbHidBuffer, 500);
+}
+function isRefeitorioActive(){ return document.getElementById('modalRefeitorio').style.display === 'flex'; }
+window.addEventListener('keydown', (e)=>{
+  if(!isRefeitorioActive()) return;
+  if(document.activeElement === document.getElementById('manualInput')) return;
+  if(e.key === 'Enter'){
+    const texto = usbHidBuffer.join('').trim();
+    resetUsbHidBuffer();
+    if(texto){ processScan(texto); e.preventDefault(); }
+    return;
+  }
+  if(e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey){
+    usbHidBuffer.push(e.key);
+    scheduleUsbHidReset();
+  }
+});
+
+// manual input handling
+document.getElementById('manualInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ const v = e.target.value.trim(); e.target.value=''; processScan(v); } });
+// Ctrl+M manual entry for identification form
+window.addEventListener('keydown',(e)=>{ if(e.ctrlKey && e.key.toLowerCase()==='m'){ const m = prompt('Entrada manual — matrícula:'); if(!m) return; const nome = prompt('Nome (opcional):') || ''; const serie = prompt('Série (opcional):') || ''; const curso = prompt('Curso (opcional):') || ''; const payload = JSON.stringify({matricula:m,nome,serie,curso}); processScan(payload); } });
+
+// CONFIG: A URL do servidor agora é detectada automaticamente via window.location.origin
+// Remover o prompt manual, pois o cliente sempre conecta à mesma origem
+
+// Close modals on backdrop click
+document.querySelectorAll('.modal').forEach(m=> m.addEventListener('click', (e)=>{ if(e.target===m) m.style.display='none' }));
+
+// Expose some functions to global for button onclick in markup
+window.openCardapio = openCardapio; window.openEventos = openEventos; window.openFrequencia = openFrequencia; window.openRefeitorio = openRefeitorio; window.openIdentificacao = openIdentificacao; window.closeModal = closeModal; window.continuarIdentificacao = continuarIdentificacao; window.avaliarAnonimo = avaliarAnonimo; window.registrarRef = registrarRef;
+</script>
+</body>
+</html>

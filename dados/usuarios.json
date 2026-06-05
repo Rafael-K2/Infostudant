@@ -1,0 +1,24 @@
+{
+  "usuarios": [
+    {
+      "usuario": "refeitorio",
+      "senha": "1234",
+      "perfil": "refeitorio"
+    },
+    {
+      "usuario": "secretaria",
+      "senha": "1234",
+      "perfil": "secretaria"
+    },
+    {
+      "usuario": "coordenacao",
+      "senha": "1234",
+      "perfil": "coordenacao"
+    },
+    {
+      "usuario": "admin",
+      "senha": "admin123",
+      "perfil": "admin"
+    }
+  ]
+}

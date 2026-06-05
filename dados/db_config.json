@@ -1,0 +1,3 @@
+{
+  "connection_string": "postgresql://neondb_owner:npg_ydP7rqBR0ZoQ@ep-broad-mountain-apatc77i-pooler.c-7.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+}

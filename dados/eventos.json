@@ -1,0 +1,38 @@
+[
+  {
+    "data": "03/02",
+    "evento": "Inicio das Aulas"
+  },
+  {
+    "data": "01/05",
+    "evento": "Feriado: Dia do Trabalhador"
+  },
+  {
+    "data": "24/06",
+    "evento": "Arraia do Marwin"
+  },
+  {
+    "data": "07/09",
+    "evento": "Feriado: Independencia do Brasil"
+  },
+  {
+    "data": "15/10",
+    "evento": "Dia do Professor"
+  },
+  {
+    "data": "25/12",
+    "evento": "Natal"
+  },
+  {
+    "data": "01/06",
+    "evento": "Abertura das feiras"
+  },
+  {
+    "data": "02/06",
+    "evento": "Feira Científica"
+  },
+  {
+    "data": "03/06",
+    "evento": "Feira Cultural"
+  }
+]

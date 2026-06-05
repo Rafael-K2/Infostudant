@@ -1,0 +1,85 @@
+Data,Aluno,Serie,Curso,Estagio,Item,Nota
+02/06/2026 18:51:11,anonimo,N/A,N/A,1,Almoço-Segunda,1
+02/06/2026 18:51:11,anonimo,N/A,N/A,1,Almoço-Terça,1
+02/06/2026 18:51:11,anonimo,N/A,N/A,1,Almoço-Quarta,1
+02/06/2026 18:51:11,anonimo,N/A,N/A,1,Almoço-Quinta,1
+02/06/2026 18:51:11,anonimo,N/A,N/A,1,Almoço-Sexta,1
+02/06/2026 18:51:11,anonimo,N/A,N/A,1,Merenda da manhã-Todos os dias,1
+02/06/2026 18:51:11,anonimo,N/A,N/A,1,Merenda da tarde-Todos os dias,1
+02/06/2026 18:51:11,anonimo,N/A,N/A,2,Salas de Aula,4
+02/06/2026 18:51:11,anonimo,N/A,N/A,2,Refeitório,3
+02/06/2026 18:51:11,anonimo,N/A,N/A,2,Banheiros,1
+02/06/2026 18:51:11,anonimo,N/A,N/A,2,Auditório,5
+02/06/2026 18:51:11,anonimo,N/A,N/A,2,Laboratórios,5
+02/06/2026 18:51:11,anonimo,N/A,N/A,3,Linguagens,1
+02/06/2026 18:51:11,anonimo,N/A,N/A,3,Humanas,1
+02/06/2026 18:51:11,anonimo,N/A,N/A,3,Ciências da natureza,5
+02/06/2026 18:51:11,anonimo,N/A,N/A,3,Matemática,5
+02/06/2026 18:51:11,anonimo,N/A,N/A,4,O quão acolhido você foi na escola ?,1
+02/06/2026 18:51:11,anonimo,N/A,N/A,4,O quão respeitado(@) você é nessa escola ?,1
+02/06/2026 18:51:11,anonimo,N/A,N/A,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",4
+02/06/2026 18:51:11,anonimo,N/A,N/A,4,Qual foi o seu almoço favorito?,1
+02/06/2026 18:51:47,Antonio clebio,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Segunda,4
+02/06/2026 18:51:47,Antonio clebio,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Terça,3
+02/06/2026 18:51:47,Antonio clebio,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Quarta,5
+02/06/2026 18:51:47,Antonio clebio,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Quinta,3
+02/06/2026 18:51:47,Antonio clebio,1° Ano,Desenvolvimento de Sistemas,1,Almoço-Sexta,3
+02/06/2026 18:51:47,Antonio clebio,1° Ano,Desenvolvimento de Sistemas,1,Merenda da manhã-Todos os dias,2
+02/06/2026 18:51:47,Antonio clebio,1° Ano,Desenvolvimento de Sistemas,1,Merenda da tarde-Todos os dias,3
+02/06/2026 18:51:47,Antonio clebio,1° Ano,Desenvolvimento de Sistemas,2,Salas de Aula,4
+02/06/2026 18:51:47,Antonio clebio,1° Ano,Desenvolvimento de Sistemas,2,Refeitório,2
+02/06/2026 18:51:47,Antonio clebio,1° Ano,Desenvolvimento de Sistemas,2,Banheiros,1
+02/06/2026 18:51:47,Antonio clebio,1° Ano,Desenvolvimento de Sistemas,2,Auditório,3
+02/06/2026 18:51:47,Antonio clebio,1° Ano,Desenvolvimento de Sistemas,2,Laboratórios,3
+02/06/2026 18:51:47,Antonio clebio,1° Ano,Desenvolvimento de Sistemas,3,Linguagens,3
+02/06/2026 18:51:47,Antonio clebio,1° Ano,Desenvolvimento de Sistemas,3,Humanas,3
+02/06/2026 18:51:47,Antonio clebio,1° Ano,Desenvolvimento de Sistemas,3,Ciências da natureza,3
+02/06/2026 18:51:47,Antonio clebio,1° Ano,Desenvolvimento de Sistemas,3,Matemática,3
+02/06/2026 18:51:47,Antonio clebio,1° Ano,Desenvolvimento de Sistemas,4,O quão acolhido você foi na escola ?,5
+02/06/2026 18:51:47,Antonio clebio,1° Ano,Desenvolvimento de Sistemas,4,O quão respeitado(@) você é nessa escola ?,4
+02/06/2026 18:51:47,Antonio clebio,1° Ano,Desenvolvimento de Sistemas,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",5
+02/06/2026 18:51:47,Antonio clebio,1° Ano,Desenvolvimento de Sistemas,4,Qual foi o seu almoço favorito?,5
+02/06/2026 18:54:59,anonimo,N/A,N/A,1,Almoço-Segunda,3
+02/06/2026 18:54:59,anonimo,N/A,N/A,1,Almoço-Terça,3
+02/06/2026 18:54:59,anonimo,N/A,N/A,1,Almoço-Quarta,3
+02/06/2026 18:54:59,anonimo,N/A,N/A,1,Almoço-Quinta,3
+02/06/2026 18:54:59,anonimo,N/A,N/A,1,Almoço-Sexta,3
+02/06/2026 18:54:59,anonimo,N/A,N/A,1,Merenda da manhã-Todos os dias,3
+02/06/2026 18:54:59,anonimo,N/A,N/A,1,Merenda da tarde-Todos os dias,3
+02/06/2026 18:54:59,anonimo,N/A,N/A,2,Salas de Aula,3
+02/06/2026 18:54:59,anonimo,N/A,N/A,2,Refeitório,3
+02/06/2026 18:54:59,anonimo,N/A,N/A,2,Banheiros,3
+02/06/2026 18:54:59,anonimo,N/A,N/A,2,Auditório,3
+02/06/2026 18:54:59,anonimo,N/A,N/A,2,Laboratórios,3
+02/06/2026 18:54:59,anonimo,N/A,N/A,3,Linguagens,3
+02/06/2026 18:54:59,anonimo,N/A,N/A,3,Humanas,3
+02/06/2026 18:54:59,anonimo,N/A,N/A,3,Ciências da natureza,3
+02/06/2026 18:54:59,anonimo,N/A,N/A,3,Matemática,3
+02/06/2026 18:54:59,anonimo,N/A,N/A,4,O quão acolhido você foi na escola ?,3
+02/06/2026 18:54:59,anonimo,N/A,N/A,4,O quão respeitado(@) você é nessa escola ?,3
+02/06/2026 18:54:59,anonimo,N/A,N/A,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",3
+02/06/2026 18:54:59,anonimo,N/A,N/A,4,Qual foi o seu almoço favorito?,5
+02/06/2026 18:58:11,anonimo,N/A,N/A,1,Almoço-Segunda,1
+02/06/2026 18:58:11,anonimo,N/A,N/A,1,Almoço-Terça,4
+02/06/2026 18:58:11,anonimo,N/A,N/A,1,Almoço-Quarta,5
+02/06/2026 18:58:11,anonimo,N/A,N/A,1,Almoço-Quinta,4
+02/06/2026 18:58:11,anonimo,N/A,N/A,1,Almoço-Sexta,4
+02/06/2026 18:58:11,anonimo,N/A,N/A,1,Merenda da manhã-Todos os dias,4
+02/06/2026 18:58:11,anonimo,N/A,N/A,1,Merenda da tarde-Todos os dias,4
+02/06/2026 18:58:11,anonimo,N/A,N/A,2,Salas de Aula,4
+02/06/2026 18:58:11,anonimo,N/A,N/A,2,Refeitório,4
+02/06/2026 18:58:11,anonimo,N/A,N/A,2,Banheiros,5
+02/06/2026 18:58:11,anonimo,N/A,N/A,2,Auditório,3
+02/06/2026 18:58:11,anonimo,N/A,N/A,2,Laboratórios,5
+02/06/2026 18:58:11,anonimo,N/A,N/A,3,Linguagens,5
+02/06/2026 18:58:11,anonimo,N/A,N/A,3,Humanas,5
+02/06/2026 18:58:11,anonimo,N/A,N/A,3,Ciências da natureza,5
+02/06/2026 18:58:11,anonimo,N/A,N/A,3,Matemática,5
+02/06/2026 18:58:11,anonimo,N/A,N/A,4,O quão acolhido você foi na escola ?,1
+02/06/2026 18:58:11,anonimo,N/A,N/A,4,O quão respeitado(@) você é nessa escola ?,1
+02/06/2026 18:58:11,anonimo,N/A,N/A,4,"Se você precisou de ajuda da coordenação,
+como avalia a rapidez e a atenção do atendimento?",5
+02/06/2026 18:58:11,anonimo,N/A,N/A,4,Qual foi o seu almoço favorito?,1
