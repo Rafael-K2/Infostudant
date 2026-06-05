@@ -1,150 +1,17 @@
-04/06/2026 10:07:35 - INFO - Servidor iniciado com ngrok token existente
-04/06/2026 10:07:37 - INFO - Backup local criado com timestamp 20260604_100737
-04/06/2026 10:07:39 - INFO - Servidor MARWIN iniciado em https://python-shifter-ripening.ngrok-free.dev
-04/06/2026 10:07:45 - INFO - Painel admin aberto com sucesso
-04/06/2026 10:09:13 - INFO - Refeição registrada: ÂNA KELLY VIEIRA MENDES (3282472) - nao_almoco
-04/06/2026 10:09:38 - INFO - Refeição registrada: CARLOS RAFAEL SILVA SOARES (5565176) - almoco
-04/06/2026 10:23:21 - INFO - Avaliação recebida de pedro renan mesquita brasil (20 itens)
-04/06/2026 10:32:43 - INFO - Refeição registrada: ÂNA KELLY VIEIRA MENDES (3282472) - almoco
-04/06/2026 11:00:27 - INFO - Painel admin aberto com sucesso
-04/06/2026 11:25:30 - INFO - Servidor iniciado com ngrok token existente
-04/06/2026 11:25:30 - INFO - Backup local criado com timestamp 20260604_112530
-04/06/2026 11:25:33 - INFO - Servidor MARWIN iniciado em https://python-shifter-ripening.ngrok-free.dev
-04/06/2026 11:25:40 - INFO - Painel admin aberto com sucesso
-04/06/2026 11:26:50 - INFO - Servidor iniciado com ngrok token existente
-04/06/2026 11:26:50 - INFO - Backup local criado com timestamp 20260604_112650
-04/06/2026 11:26:52 - INFO - Servidor MARWIN iniciado em https://python-shifter-ripening.ngrok-free.dev
-04/06/2026 11:27:03 - INFO - Painel admin aberto com sucesso
-04/06/2026 11:31:05 - INFO - Painel admin aberto com sucesso
-04/06/2026 11:32:15 - INFO - Frequência registrada: CARLOS RAFAEL SILVA SOARES (5565176)
-04/06/2026 11:32:28 - INFO - Frequência registrada: ÂNA KELLY VIEIRA MENDES (3282472)
-04/06/2026 11:32:44 - INFO - Frequência registrada: ÂNA ESTER MARTINS LIMA (4003455)
-04/06/2026 11:34:43 - INFO - Servidor iniciado com ngrok token existente
-04/06/2026 11:34:43 - INFO - Backup local criado com timestamp 20260604_113443
-04/06/2026 11:34:45 - INFO - Servidor MARWIN iniciado em https://python-shifter-ripening.ngrok-free.dev
-04/06/2026 11:34:52 - INFO - Painel admin aberto com sucesso
-04/06/2026 11:35:45 - INFO - Servidor iniciado com ngrok token existente
-04/06/2026 11:35:45 - INFO - Backup local criado com timestamp 20260604_113545
-04/06/2026 11:35:47 - INFO - Servidor MARWIN iniciado em https://python-shifter-ripening.ngrok-free.dev
-04/06/2026 11:36:13 - INFO - Painel admin aberto com sucesso
-04/06/2026 11:55:39 - INFO - Backup mensal local criado em D:\Programação\Feira cientifica. Versões\dados\backups\2026_06
-04/06/2026 11:55:41 - INFO - Pool PostgreSQL inicializado
-04/06/2026 11:55:41 - INFO - Tabelas Neon verificadas/criadas
-04/06/2026 11:55:42 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
-04/06/2026 11:56:30 - INFO - Painel admin aberto com sucesso
-04/06/2026 11:57:52 - INFO - Backup mensal local criado em D:\Programação\Feira cientifica. Versões\dados\backups\2026_06
-04/06/2026 11:57:53 - INFO - Pool PostgreSQL inicializado
-04/06/2026 11:57:53 - INFO - Tabelas Neon verificadas/criadas
-04/06/2026 11:57:54 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
-04/06/2026 12:04:52 - ERROR - Erro PostgreSQL
-04/06/2026 12:04:52 - INFO - Frequência registrada: ÂNTONIO CLEBIO DOS SANTOS FILHO (5561994)
-04/06/2026 12:04:58 - INFO - Frequência registrada: ÂNA RAFAELA BARROS DE OLIVEIRA (5559874)
-04/06/2026 12:04:59 - INFO - Frequência registrada: KAUA JONAS MOTTA DA SILVA (5580816)
-04/06/2026 12:05:05 - INFO - Painel admin aberto com sucesso
-04/06/2026 12:06:37 - INFO - Backup mensal local criado em D:\Programação\Feira cientifica. Versões\dados\backups\2026_06
-04/06/2026 12:16:58 - INFO - Backup mensal local criado em D:\Programação\Feira cientifica. Versões\dados\backups\2026_06
-04/06/2026 12:16:59 - INFO - Pool PostgreSQL inicializado
-04/06/2026 12:17:00 - INFO - Tabelas Neon verificadas/criadas
-04/06/2026 12:17:01 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
-04/06/2026 12:19:36 - INFO - Painel admin aberto com sucesso
-04/06/2026 12:20:12 - INFO - Avaliação recebida de anonimo (20 itens)
-04/06/2026 12:20:29 - INFO - Avaliação recebida de anonimo (20 itens)
-04/06/2026 12:20:29 - INFO - Avaliação recebida de anonimo (20 itens)
-04/06/2026 12:20:31 - INFO - Avaliação recebida de anonimo (20 itens)
-04/06/2026 12:20:32 - INFO - Avaliação recebida de anonimo (20 itens)
-04/06/2026 12:20:33 - INFO - Avaliação recebida de anonimo (20 itens)
-04/06/2026 12:21:04 - INFO - Frequência registrada: CARLOS RAFAEL SILVA SOARES (5565176)
-04/06/2026 12:21:14 - INFO - Frequência registrada: KAUA JONAS MOTTA DA SILVA (5580816)
-04/06/2026 12:21:16 - INFO - Frequência registrada: ÂNA RAFAELA BARROS DE OLIVEIRA (5559874)
-04/06/2026 12:21:17 - INFO - Frequência registrada: ÂNTONIO CLEBIO DOS SANTOS FILHO (5561994)
-04/06/2026 12:21:19 - INFO - Frequência registrada: ÂNA ESTER MARTINS LIMA (4003455)
-04/06/2026 12:21:23 - INFO - Frequência registrada: ÂNA KELLY VIEIRA MENDES (3282472)
-04/06/2026 12:26:15 - INFO - Backup mensal local criado em D:\Programação\Feira cientifica. Versões\dados\backups\2026_06
-04/06/2026 12:26:16 - INFO - Pool PostgreSQL inicializado
-04/06/2026 12:26:16 - INFO - Tabelas Neon verificadas/criadas
-04/06/2026 12:26:17 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
-04/06/2026 12:26:42 - INFO - Painel admin aberto com sucesso
-04/06/2026 12:32:19 - INFO - Backup mensal local criado em D:\Programação\Feira cientifica. Versões\dados\backups\2026_06
-04/06/2026 12:32:20 - INFO - Pool PostgreSQL inicializado
-04/06/2026 12:32:20 - INFO - Tabelas Neon verificadas/criadas
-04/06/2026 12:32:21 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
-04/06/2026 12:32:26 - INFO - Painel admin aberto com sucesso
-04/06/2026 12:34:57 - INFO - Avaliação recebida de anonimo (20 itens)
-04/06/2026 13:02:00 - INFO - Backup mensal local criado em D:\Programação\Feira cientifica. Versões\dados\backups\2026_06
-04/06/2026 13:02:01 - INFO - Pool PostgreSQL inicializado
-04/06/2026 13:02:02 - INFO - Tabelas Neon verificadas/criadas
-04/06/2026 13:02:03 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
-04/06/2026 13:02:15 - INFO - Painel admin aberto com sucesso
-04/06/2026 13:04:39 - INFO - Backup mensal local criado em D:\Programação\Feira cientifica. Versões\dados\backups\2026_06
-04/06/2026 13:04:40 - INFO - Pool PostgreSQL inicializado
-04/06/2026 13:04:40 - INFO - Tabelas Neon verificadas/criadas
-04/06/2026 13:04:41 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
-04/06/2026 13:04:48 - INFO - Painel admin aberto com sucesso
-04/06/2026 13:05:41 - INFO - Frequência registrada: CARLOS RAFAEL SILVA SOARES (5565176)
-04/06/2026 13:05:43 - INFO - Frequência registrada: ÂNA KELLY VIEIRA MENDES (3282472)
-04/06/2026 13:05:47 - INFO - Frequência registrada: ÂNA ESTER MARTINS LIMA (4003455)
-04/06/2026 13:05:49 - INFO - Frequência registrada: ÂNTONIO CLEBIO DOS SANTOS FILHO (5561994)
-04/06/2026 13:05:51 - INFO - Frequência registrada: ÂNA RAFAELA BARROS DE OLIVEIRA (5559874)
-04/06/2026 13:05:54 - INFO - Frequência registrada: KAUA JONAS MOTTA DA SILVA (5580816)
-04/06/2026 13:08:05 - INFO - Backup mensal local criado em D:\Programação\Feira cientifica. Versões\dados\backups\2026_06
-04/06/2026 13:08:06 - INFO - Pool PostgreSQL inicializado
-04/06/2026 13:08:07 - INFO - Tabelas Neon verificadas/criadas
-04/06/2026 13:08:08 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
-04/06/2026 13:08:20 - INFO - Painel admin aberto com sucesso
-04/06/2026 13:09:03 - WARNING - Falha ao obter conexão PostgreSQL
-04/06/2026 13:09:03 - WARNING - Falha ao obter conexão PostgreSQL
-04/06/2026 13:09:03 - ERROR - Erro PostgreSQL
-04/06/2026 13:09:03 - WARNING - Falha ao obter conexão PostgreSQL
-04/06/2026 13:09:03 - ERROR - Erro PostgreSQL
-04/06/2026 13:09:03 - INFO - Avaliação recebida de anonimo (19 itens)
-04/06/2026 13:09:03 - ERROR - Erro PostgreSQL
-04/06/2026 13:09:03 - INFO - Avaliação recebida de anonimo (19 itens)
-04/06/2026 13:09:03 - INFO - Avaliação recebida de anonimo (19 itens)
-04/06/2026 13:09:45 - INFO - Avaliação recebida de anonimo (19 itens)
-04/06/2026 13:09:53 - INFO - Avaliação recebida de anonimo (19 itens)
-04/06/2026 13:09:53 - INFO - Avaliação recebida de anonimo (19 itens)
-04/06/2026 13:09:55 - INFO - Avaliação recebida de anonimo (19 itens)
-04/06/2026 13:09:56 - INFO - Avaliação recebida de anonimo (19 itens)
-04/06/2026 13:09:58 - INFO - Avaliação recebida de anonimo (19 itens)
-04/06/2026 13:10:01 - INFO - Avaliação recebida de anonimo (19 itens)
-04/06/2026 13:10:09 - INFO - Avaliação recebida de anonimo (19 itens)
-04/06/2026 13:10:09 - INFO - Avaliação recebida de anonimo (19 itens)
-04/06/2026 13:10:09 - INFO - Avaliação recebida de anonimo (19 itens)
-04/06/2026 13:10:10 - INFO - Avaliação recebida de anonimo (19 itens)
-04/06/2026 13:10:10 - INFO - Avaliação recebida de anonimo (19 itens)
-04/06/2026 13:10:11 - INFO - Avaliação recebida de anonimo (19 itens)
-04/06/2026 14:47:13 - INFO - Backup mensal local criado em D:\Programação\Feira cientifica. Versões\dados\backups\2026_06
-04/06/2026 14:47:14 - INFO - Pool PostgreSQL inicializado
-04/06/2026 14:47:15 - INFO - Tabelas Neon verificadas/criadas
-04/06/2026 14:47:16 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
-04/06/2026 14:47:57 - INFO - Backup mensal local criado em D:\Programação\Feira cientifica. Versões\dados\backups\2026_06
-04/06/2026 14:47:58 - INFO - Pool PostgreSQL inicializado
-04/06/2026 14:47:58 - INFO - Tabelas Neon verificadas/criadas
-04/06/2026 14:47:59 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
-04/06/2026 14:48:13 - INFO - Painel admin aberto com sucesso
-04/06/2026 14:49:30 - INFO - Backup mensal local criado em D:\Programação\Feira cientifica. Versões\dados\backups\2026_06
-04/06/2026 14:49:31 - INFO - Pool PostgreSQL inicializado
-04/06/2026 14:49:32 - INFO - Tabelas Neon verificadas/criadas
-04/06/2026 14:49:33 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
-04/06/2026 14:49:44 - INFO - Painel admin aberto com sucesso
-04/06/2026 14:56:50 - INFO - Backup mensal local criado em D:\Programação\Feira cientifica. Versões\dados\backups\2026_06
-04/06/2026 14:56:52 - INFO - Pool PostgreSQL inicializado
-04/06/2026 14:56:52 - INFO - Tabelas Neon verificadas/criadas
-04/06/2026 14:56:53 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
-04/06/2026 14:57:00 - INFO - Painel admin aberto com sucesso
-04/06/2026 14:57:35 - INFO - Backup mensal local criado em D:\Programação\Feira cientifica. Versões\dados\backups\2026_06
-04/06/2026 14:57:35 - INFO - Pool PostgreSQL inicializado
-04/06/2026 14:57:36 - INFO - Tabelas Neon verificadas/criadas
-04/06/2026 14:57:37 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
-04/06/2026 14:57:42 - INFO - Painel admin aberto com sucesso
-04/06/2026 14:58:11 - INFO - Backup mensal local criado em D:\Programação\Feira cientifica. Versões\dados\backups\2026_06
-04/06/2026 14:58:12 - INFO - Pool PostgreSQL inicializado
-04/06/2026 14:58:12 - INFO - Tabelas Neon verificadas/criadas
-04/06/2026 14:58:13 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
-04/06/2026 14:58:25 - INFO - Painel admin aberto com sucesso
-04/06/2026 21:37:09 - INFO - Backup mensal local criado em D:\Programação\Feira cientifica. Versões\dados\backups\2026_06
-04/06/2026 21:37:10 - INFO - Pool PostgreSQL inicializado
-04/06/2026 21:37:11 - INFO - Tabelas Neon verificadas/criadas
-04/06/2026 21:37:12 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
-04/06/2026 21:38:12 - INFO - Painel admin aberto com sucesso
-04/06/2026 21:40:49 - INFO - Painel admin aberto com sucesso
+05/06/2026 09:08:02 - INFO - Backup mensal local criado em D:\Programação\Feira cientifica. Versões\dados\backups\2026_06
+05/06/2026 09:08:04 - INFO - Pool PostgreSQL inicializado
+05/06/2026 09:08:04 - INFO - Tabelas Neon verificadas/criadas
+05/06/2026 09:08:05 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
+05/06/2026 09:08:17 - INFO - Painel admin aberto com sucesso
+05/06/2026 09:09:09 - INFO - Frequência registrada: CARLOS RAFAEL SILVA SOARES (5565176)
+05/06/2026 09:09:17 - INFO - Painel admin aberto com sucesso
+05/06/2026 09:09:44 - INFO - Frequência registrada: KAUA JONAS MOTTA DA SILVA (5580816)
+05/06/2026 09:09:48 - INFO - Frequência registrada: ÂNA RAFAELA BARROS DE OLIVEIRA (5559874)
+05/06/2026 09:09:50 - INFO - Frequência registrada: ÂNTONIO CLEBIO DOS SANTOS FILHO (5561994)
+05/06/2026 09:09:52 - INFO - Frequência registrada: ÂNA ESTER MARTINS LIMA (4003455)
+05/06/2026 09:09:56 - INFO - Frequência registrada: ÂNA KELLY VIEIRA MENDES (3282472)
+05/06/2026 09:09:57 - INFO - Frequência registrada: JOSE LEVY ALVES FEITOSA (5579263)
+05/06/2026 09:25:01 - INFO - Backup mensal local criado em D:\Programação\Feira cientifica. Versões\dados\backups\2026_06
+05/06/2026 09:25:02 - INFO - Pool PostgreSQL inicializado
+05/06/2026 09:25:03 - INFO - Tabelas Neon verificadas/criadas
+05/06/2026 09:25:04 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
