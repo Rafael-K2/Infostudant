@@ -11,7 +11,8 @@ O que ele faz ao iniciar:
 Instalação (uma vez só):
   pip install flask flask-cors fpdf2 qrcode pillow psycopg2-binary
 
-O Cliente.html usa window.location.origin e deve acessar o servidor pela rede local.
+O index.html pode usar a API na nuvem (ApiNuvem.py) — configure dados/cloud_config.json.
+O painel admin sincroniza cardápio/eventos/config com a nuvem automaticamente.
 
 Organização dos QR Codes: qrcodes_marwin/
     1 Ano - Desenvolvimento de Sistemas/
@@ -85,6 +86,7 @@ CONFIG_FILE      = os.path.join(DADOS_DIR, "config_sistema.json")
 TEMA_FILE        = os.path.join(DADOS_DIR, "tema_config.json")
 LISTA_ALUNOS_FILE = os.path.join(DADOS_DIR, "lista_alunos.json")
 DB_CONFIG_FILE   = os.path.join(DADOS_DIR, "db_config.json")
+CLOUD_CONFIG_FILE = os.path.join(DADOS_DIR, "cloud_config.json")
 MESES_PT = (
     "janeiro", "fevereiro", "marco", "abril", "maio", "junho",
     "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
@@ -109,6 +111,44 @@ def ler_json(path, padrao):
 def salvar_json(path, dados):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(dados, f, ensure_ascii=False, indent=2)
+
+def _ler_cloud_config():
+    return ler_json(CLOUD_CONFIG_FILE, {"api_url": "", "sincronizar_automatico": True})
+
+def _cloud_api_url():
+    return _ler_cloud_config().get("api_url", "").strip().rstrip("/")
+
+def _sync_nuvem(rota, metodo, dados=None):
+    base = _cloud_api_url()
+    if not base or not _ler_cloud_config().get("sincronizar_automatico", True):
+        return False
+    import urllib.request
+    url = base + rota
+    body = json.dumps(dados, ensure_ascii=False).encode("utf-8") if dados is not None else None
+    req = urllib.request.Request(
+        url,
+        data=body,
+        headers={"Content-Type": "application/json", "X-Senha": ADMIN_PASSWORD},
+        method=metodo,
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            return 200 <= resp.status < 300
+    except Exception as e:
+        logger.warning(f"Sync nuvem falhou ({rota}): {e}")
+        return False
+
+def _sincronizar_tudo_nuvem():
+    ok = True
+    if not _sync_nuvem("/admin/cardapio", "PUT", ler_json(CARDAPIO_FILE, CARDAPIO_PADRAO)):
+        ok = False
+    if not _sync_nuvem("/admin/eventos", "PUT", ler_json(EVENTOS_FILE, EVENTOS_PADRAO)):
+        ok = False
+    if not _sync_nuvem("/admin/config", "PUT", ler_json(CONFIG_FILE, {"avaliacoes_ativas": True, "modo_leitura": "camera"})):
+        ok = False
+    if ok and _cloud_api_url():
+        logger.info("Configurações sincronizadas com a API na nuvem")
+    return ok
 
 DB_DEFAULT_CONNECTION = "postgresql://neondb_owner:npg_ydP7rqBR0ZoQ@ep-broad-mountain-apatc77i-pooler.c-7.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 PG_POOL = None
@@ -236,6 +276,14 @@ def _criar_tabelas_neon():
                 estagio TEXT,
                 item TEXT,
                 nota TEXT
+            );
+            """
+        )
+        _executar_pg(
+            """
+            CREATE TABLE IF NOT EXISTS sistema_config (
+                chave TEXT PRIMARY KEY,
+                valor JSONB NOT NULL
             );
             """
         )
@@ -540,10 +588,11 @@ def checar_senha(req):
 @app.route('/')
 def serve_cliente():
     pasta_raiz = os.path.dirname(os.path.abspath(__file__))
-    arquivo_index = os.path.join(pasta_raiz, 'Index.html')
-    if os.path.isfile(arquivo_index):
-        return send_from_directory(pasta_raiz, 'Index.html')
-    return jsonify({'erro': 'Index.html não encontrado'}), 404
+    for nome in ('index.html', 'Index.html'):
+        arquivo_index = os.path.join(pasta_raiz, nome)
+        if os.path.isfile(arquivo_index):
+            return send_from_directory(pasta_raiz, nome)
+    return jsonify({'erro': 'index.html não encontrado'}), 404
 
 # Rota para servir arquivos estáticos (CSS, JS, imagens, etc) da pasta raiz
 @app.route('/<path:path>')
@@ -671,14 +720,19 @@ def del_avaliacoes():
 @app.route("/admin/cardapio", methods=["PUT"])
 def put_cardapio():
     if not checar_senha(request): return jsonify({"erro": "Acesso negado"}), 403
-    salvar_json(CARDAPIO_FILE, request.get_json()); return jsonify({"status": "ok"})
+    dados = request.get_json()
+    salvar_json(CARDAPIO_FILE, dados)
+    _sync_nuvem("/admin/cardapio", "PUT", dados)
+    return jsonify({"status": "ok"})
 
 @app.route("/admin/eventos", methods=["POST"])
 def add_evento():
     if not checar_senha(request): return jsonify({"erro": "Acesso negado"}), 403
     ev = request.get_json()
     eventos = ler_json(EVENTOS_FILE, EVENTOS_PADRAO); eventos.append(ev)
-    salvar_json(EVENTOS_FILE, eventos); return jsonify({"status": "ok"})
+    salvar_json(EVENTOS_FILE, eventos)
+    _sync_nuvem("/admin/eventos", "PUT", eventos)
+    return jsonify({"status": "ok"})
 
 @app.route("/admin/eventos", methods=["DELETE"])
 def del_evento():
@@ -686,12 +740,17 @@ def del_evento():
     ev = request.get_json()
     eventos = ler_json(EVENTOS_FILE, EVENTOS_PADRAO)
     eventos = [e for e in eventos if not (e["data"]==ev["data"] and e["evento"]==ev["evento"])]
-    salvar_json(EVENTOS_FILE, eventos); return jsonify({"status": "ok"})
+    salvar_json(EVENTOS_FILE, eventos)
+    _sync_nuvem("/admin/eventos", "PUT", eventos)
+    return jsonify({"status": "ok"})
 
 @app.route("/admin/config", methods=["PUT"])
 def put_config():
     if not checar_senha(request): return jsonify({"erro": "Acesso negado"}), 403
-    salvar_json(CONFIG_FILE, request.get_json()); return jsonify({"status": "ok"})
+    dados = request.get_json()
+    salvar_json(CONFIG_FILE, dados)
+    _sync_nuvem("/admin/config", "PUT", dados)
+    return jsonify({"status": "ok"})
 
 # ==============================================================================
 # ROTAS FLASK — REFEITÓRIO
@@ -1506,6 +1565,7 @@ def abrir_painel_admin(event=None):
         cfg_sys["avaliacoes_ativas"] = status_var.get()
         cfg_sys["modo_leitura"] = modo_var.get()
         salvar_json(CONFIG_FILE, cfg_sys)
+        _sync_nuvem("/admin/config", "PUT", cfg_sys)
 
     def alternar_status():
         salvar_config()
@@ -1598,6 +1658,53 @@ def abrir_painel_admin(event=None):
         padx=14, pady=6, bd=0, cursor="hand2",
     )
     btn_backup_mes.pack(side="left", padx=(0, 8))
+
+    # ── API na nuvem (Opção B) ───────────────────────────────────────────────
+    cloud_frame = tk.Frame(aba_dados, bg=T["OBS_BG"])
+    cloud_frame.pack(fill="x", padx=20, pady=(0, 10))
+
+    tk.Label(cloud_frame, text="API NA NUVEM (CLIENTE HTML)",
+            font=("Segoe UI", 11, "bold"), bg=T["OBS_BG"], fg=T["ACCENT_VIBRANT"]).pack(anchor="w", padx=10, pady=(8, 0))
+    tk.Frame(cloud_frame, bg=T["BORDER_GRID"], height=1).pack(fill="x", padx=10, pady=(4, 8))
+    tk.Label(cloud_frame,
+            text="O index.html usa esta URL para gravar no Neon. Cardápio, eventos e config são enviados automaticamente.",
+            font=("Segoe UI", 9), bg=T["OBS_BG"], fg=T["FG_TEXT"], wraplength=760, justify="left").pack(anchor="w", padx=10, pady=(0, 8))
+
+    cloud_cfg = _ler_cloud_config()
+    cloud_url_var = tk.StringVar(value=cloud_cfg.get("api_url", ""))
+    cloud_sync_var = tk.BooleanVar(value=cloud_cfg.get("sincronizar_automatico", True))
+
+    row_cloud = tk.Frame(cloud_frame, bg=T["OBS_BG"])
+    row_cloud.pack(fill="x", padx=10, pady=(0, 8))
+    tk.Label(row_cloud, text="URL da API:", font=("Segoe UI", 9), bg=T["OBS_BG"], fg=T["FG_TEXT"]).pack(side="left")
+    tk.Entry(row_cloud, textvariable=cloud_url_var, font=("Segoe UI", 10), width=48,
+             bg=T["ENTRY_BG"], fg=T["FG_TEXT"]).pack(side="left", padx=(8, 12))
+    tk.Checkbutton(row_cloud, text="Sync automático", variable=cloud_sync_var,
+                  font=("Segoe UI", 9), bg=T["OBS_BG"], fg=T["FG_TEXT"],
+                  activebackground=T["OBS_BG"], selectcolor=T["ENTRY_BG"]).pack(side="left")
+
+    def _salvar_cloud_config():
+        salvar_json(CLOUD_CONFIG_FILE, {
+            "api_url": cloud_url_var.get().strip().rstrip("/"),
+            "sincronizar_automatico": cloud_sync_var.get(),
+        })
+        messagebox.showinfo("Salvo", "Configuração da API na nuvem salva.")
+
+    def _sync_cloud_agora():
+        _salvar_cloud_config()
+        if _sincronizar_tudo_nuvem():
+            messagebox.showinfo("Sucesso", "Cardápio, eventos e config enviados para a nuvem.")
+        else:
+            messagebox.showwarning("Aviso", "Falha ao sincronizar. Verifique a URL e se ApiNuvem.py está no ar.")
+
+    btn_cloud_row = tk.Frame(cloud_frame, bg=T["OBS_BG"])
+    btn_cloud_row.pack(fill="x", padx=10, pady=(0, 10))
+    tk.Button(btn_cloud_row, text="Salvar URL", command=_salvar_cloud_config,
+             bg=T["FRASE_FG"], fg="white", font=("Segoe UI", 10, "bold"),
+             padx=12, pady=6, bd=0, cursor="hand2").pack(side="left", padx=(0, 8))
+    tk.Button(btn_cloud_row, text="Sincronizar agora", command=_sync_cloud_agora,
+             bg=T["ACCENT_VIBRANT"], fg="white", font=("Segoe UI", 10, "bold"),
+             padx=12, pady=6, bd=0, cursor="hand2").pack(side="left")
 
     # ── ABA RELATORIO ─────────────────────────────────────────────────────────
     def gerar_relatorio():
@@ -1956,6 +2063,7 @@ def abrir_painel_admin(event=None):
         def salvar_card():
             novo = {d:[e.get() for e in ents[d]] for d in dias}
             salvar_json(CARDAPIO_FILE, novo)
+            _sync_nuvem("/admin/cardapio", "PUT", novo)
             messagebox.showinfo("Sucesso", "Cardapio atualizado!")
         tk.Button(aba_card_ed, text="SALVAR ALTERACOES", command=salvar_card, bg=T["ACCENT_VIBRANT"], fg="white", font=("Segoe UI",11,"bold"), pady=9, padx=25, bd=0, cursor="hand2").pack(fill="x", padx=20, pady=(0,8))
         tk.Frame(aba_card_ed, bg=T["BORDER_GRID"], height=2).pack(fill="x", padx=20, pady=(0,4))
@@ -2049,14 +2157,18 @@ def abrir_painel_admin(event=None):
             if messagebox.askyesno("Confirmar","Remover o evento selecionado?"):
                 val = tev.item(sel[0],"values"); evs = ler_json(EVENTOS_FILE, EVENTOS_PADRAO)
                 evs = [e for e in evs if not (e["data"]==val[0] and e["evento"]==val[1])]
-                salvar_json(EVENTOS_FILE, evs); carregar_ev()
+                salvar_json(EVENTOS_FILE, evs)
+                _sync_nuvem("/admin/eventos", "PUT", evs)
+                carregar_ev()
         tk.Button(btns, text="Remover Selecionado", command=rem_ev, bg="#c62828", fg="white", font=("Segoe UI",10,"bold"), pady=9, padx=20, bd=0, cursor="hand2").pack(side="right")
         def add_ev():
             data = ed.get().strip(); desc = edesc.get().strip()
             if not data or not desc: messagebox.showwarning("Campos vazios","Preencha a data e a descricao."); return
             if "/" not in data or len(data)!=5: messagebox.showwarning("Formato invalido","Use o formato DD/MM  ex: 15/07"); return
             evs = ler_json(EVENTOS_FILE, EVENTOS_PADRAO); evs.append({"data":data,"evento":desc})
-            salvar_json(EVENTOS_FILE, evs); carregar_ev()
+            salvar_json(EVENTOS_FILE, evs)
+            _sync_nuvem("/admin/eventos", "PUT", evs)
+            carregar_ev()
             ed.delete(0,"end"); ed.insert(0,"01/01"); edesc.delete(0,"end"); edesc.focus()
         tk.Button(esq, text="Adicionar Evento", command=add_ev, bg=T["ACCENT_VIBRANT"], fg="white", font=("Segoe UI",12,"bold"), pady=13, bd=0, cursor="hand2").pack(fill="x", padx=20)
         esq.bind_all("<Return>", lambda e: add_ev()); carregar_ev()
@@ -4222,6 +4334,8 @@ if __name__ == "__main__":
         _criar_tabelas_neon()
     except Exception:
         pass
+    if _cloud_api_url():
+        threading.Thread(target=_sincronizar_tudo_nuvem, daemon=True).start()
 
     threading.Thread(
         target=lambda: app.run(host="0.0.0.0", port=5000, use_reloader=False, debug=False),

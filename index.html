@@ -81,6 +81,7 @@ html,body{height:100%;margin:0;background:var(--bg-main);color:var(--fg-text)}
       <div class="card" onclick="openRefeitorio()" style="grid-column:1"><div class="small">&#127869; Refeit&oacute;rio</div><div class="small-muted">Confirma&ccedil;&atilde;o de almo&ccedil;o</div></div>
     </div>
     <div class="footer-note">Sua participa&ccedil;&atilde;o &eacute; fundamental para melhorarmos juntos.</div>
+    <div id="apiStatus" class="small-muted" style="margin-top:14px;font-size:12px"></div>
   </div>
 </div>
 
@@ -203,8 +204,21 @@ html,body{height:100%;margin:0;background:var(--bg-main);color:var(--fg-text)}
 
 <script>
 // ---------- Configuração inicial ----------
-// Detecta automaticamente a URL do servidor (localhost, IP da escola, ou ngrok)
-let SERVER_URL = window.location.origin;
+// Opção B: aponta para API na nuvem (ApiNuvem.py). Fallback: mesmo host do HTML.
+function resolveServerUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const fromUrl = params.get('api');
+  if (fromUrl) {
+    const limpo = fromUrl.replace(/\/$/, '');
+    localStorage.setItem('MARWIN_API_URL', limpo);
+    return limpo;
+  }
+  const stored = localStorage.getItem('MARWIN_API_URL');
+  if (stored) return stored.replace(/\/$/, '');
+  if (window.location.protocol.startsWith('http')) return window.location.origin;
+  return '';
+}
+let SERVER_URL = resolveServerUrl();
 // Tema
 const TEMAS = {
   claro: {BG_MAIN:"#f2f8f2",BG_CARD:"#ffffff",ACCENT_VIBRANT:"#1b5e20",ACCENT_SOFT:"#388e3c",FG_TEXT:"#1a2a1a",BORDER_GRID:"#c8e6c9",HIGHLIGHT_YELLOW:"#f9a825",OBS_BG:"#e8f5e9",BTN_CARDAPIO:"#2e7d32",FRASE_FG:"#4a7a4a",ENTRY_BG:"#f0f8f0",BTN_VOLTAR:"#1b5e20"},
@@ -223,6 +237,7 @@ document.getElementById('btnTheme').addEventListener('click', ()=>{ temaAtual = 
 // ---------- util API (fetch) ----------
 const TIMEOUT = 10000;
 async function apiGet(route, padrao=null){
+  if(!SERVER_URL){ console.warn('API URL não configurada'); return padrao; }
   try{
     const ctrl = new AbortController();
     const id = setTimeout(()=>ctrl.abort(), TIMEOUT);
@@ -233,6 +248,7 @@ async function apiGet(route, padrao=null){
   }catch(e){ console.warn('GET',route,e); return padrao; }
 }
 async function apiPost(route, data){
+  if(!SERVER_URL){ console.warn('API URL não configurada'); return null; }
   try{
     const ctrl = new AbortController();
     const id = setTimeout(()=>ctrl.abort(), TIMEOUT);
@@ -495,8 +511,25 @@ document.getElementById('manualInput').addEventListener('keydown', (e)=>{ if(e.k
 // Ctrl+M manual entry for identification form
 window.addEventListener('keydown',(e)=>{ if(e.ctrlKey && e.key.toLowerCase()==='m'){ const m = prompt('Entrada manual — matrícula:'); if(!m) return; const nome = prompt('Nome (opcional):') || ''; const serie = prompt('Série (opcional):') || ''; const curso = prompt('Curso (opcional):') || ''; const payload = JSON.stringify({matricula:m,nome,serie,curso}); processScan(payload); } });
 
-// CONFIG: A URL do servidor agora é detectada automaticamente via window.location.origin
-// Remover o prompt manual, pois o cliente sempre conecta à mesma origem
+async function verificarApi(){
+  const el = document.getElementById('apiStatus');
+  if(!el) return;
+  if(!SERVER_URL){
+    el.textContent = '⚠ Configure a API: abra com ?api=https://sua-api.com ou salve em localStorage (MARWIN_API_URL)';
+    return;
+  }
+  el.textContent = '⏳ Conectando a ' + SERVER_URL + '...';
+  try{
+    const ctrl = new AbortController();
+    const id = setTimeout(()=>ctrl.abort(), 8000);
+    const r = await fetch(SERVER_URL + '/health', {signal: ctrl.signal});
+    clearTimeout(id);
+    el.textContent = r.ok ? '✅ API online: ' + SERVER_URL : '✘ API respondeu com erro';
+  }catch(e){
+    el.textContent = '✘ API offline: ' + SERVER_URL;
+  }
+}
+verificarApi();
 
 // Close modals on backdrop click
 document.querySelectorAll('.modal').forEach(m=> m.addEventListener('click', (e)=>{ if(e.target===m) m.style.display='none' }));
