@@ -5,17 +5,15 @@ Rode ESTE arquivo no PC da escola.
 
 O que ele faz ao iniciar:
   1. Prepara o servidor Flask na porta 5000
-  2. Conecta-se ao PostgreSQL Neon quando disponível
-  3. Mantém CSVs locais como fallback offline
-  4. Abre o painel admin Tkinter com IP local e botão copiar URL
+  2. Conecta-se ao PostgreSQL Neon como fonte de dados
+  3. Abre o painel admin Tkinter com IP local e botão copiar URL
 
 Instalação (uma vez só):
-  pip install flask fpdf2 qrcode pillow psycopg2-binary
+  pip install flask flask-cors fpdf2 qrcode pillow psycopg2-binary
 
 O Cliente.html usa window.location.origin e deve acessar o servidor pela rede local.
 
-Organização dos QR Codes:
-  qrcodes_marwin/
+Organização dos QR Codes: qrcodes_marwin/
     1 Ano - Desenvolvimento de Sistemas/
       2026001_Joao_Silva_1_Ano_Desenvolvimento_de_Sistemas.png
       ...
@@ -27,7 +25,7 @@ Organização dos QR Codes:
 
 import sys, subprocess
 
-for pkg in ["flask", "fpdf2", "qrcode", "pillow", "psycopg2-binary"]:
+for pkg in ["flask", "flask-cors", "fpdf2", "qrcode", "pillow", "psycopg2-binary"]:
     try:
         __import__(pkg.replace("-", "_").replace("pillow","PIL"))
     except ImportError:
@@ -84,13 +82,13 @@ def _buscar_logo_png():
 CARDAPIO_FILE    = os.path.join(DADOS_DIR, "cardapio.json")
 EVENTOS_FILE     = os.path.join(DADOS_DIR, "eventos.json")
 CONFIG_FILE      = os.path.join(DADOS_DIR, "config_sistema.json")
-AVALIACOES_FILE  = os.path.join(DADOS_DIR, "avaliacoes_escola.csv")
-REFEITORIO_FILE  = os.path.join(DADOS_DIR, "refeitorio.csv")
-FREQUENCIA_FILE  = os.path.join(DADOS_DIR, "frequencia.csv")
 TEMA_FILE        = os.path.join(DADOS_DIR, "tema_config.json")
 LISTA_ALUNOS_FILE = os.path.join(DADOS_DIR, "lista_alunos.json")
 DB_CONFIG_FILE   = os.path.join(DADOS_DIR, "db_config.json")
-ULTIMO_BACKUP_MENSAL_FILE = os.path.join(DADOS_DIR, "ultimo_backup_mensal.json")
+MESES_PT = (
+    "janeiro", "fevereiro", "marco", "abril", "maio", "junho",
+    "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
+)
 DEFAULT_ADMIN_PLAIN = "Marwin2026"
 # Prefer env var MARWIN_ADMIN_PASS (pode conter hash bcrypt). Fallback para DEFAULT_ADMIN_PLAIN.
 ADMIN_PASSWORD = os.getenv("MARWIN_ADMIN_PASS", DEFAULT_ADMIN_PLAIN)
@@ -185,28 +183,6 @@ def _executar_pg(sql, params=None, fetch=False):
                 pass
         _release_pg_conn(conn)
 
-def _salvar_duplo(func_csv, func_pg):
-    try:
-        func_csv()
-    except Exception as e:
-        logger.error(f"Erro CSV: {e}")
-    try:
-        func_pg()
-    except Exception as e:
-        logger.error("Erro PostgreSQL")
-
-def _ler_com_fallback(func_pg, func_csv, padrao):
-    try:
-        return func_pg()
-    except Exception as e:
-        logger.warning("PostgreSQL indisponível, usando CSV")
-        try:
-            return func_csv()
-        except Exception as e2:
-            logger.error(f"CSV também falhou: {e2}")
-            return padrao
-
-
 def _get_local_ip():
     try:
         ip = socket.gethostbyname(socket.gethostname())
@@ -266,21 +242,6 @@ def _criar_tabelas_neon():
         logger.info("Tabelas Neon verificadas/criadas")
     except Exception as e:
         logger.warning(f"Nao foi possivel criar tabelas Neon: {e}")
-
-
-def _refeitorio_rows_to_dict(rows):
-    return [
-        {
-            "Data": row[0],
-            "HoraEntrada": row[1],
-            "Matricula": row[2],
-            "Nome": row[3],
-            "Serie": row[4],
-            "Curso": row[5],
-            "Refeicao": row[6],
-        }
-        for row in rows
-    ]
 
 
 def _ler_refeitorio_hoje_db():
@@ -418,15 +379,90 @@ def _ler_avaliacoes_db():
     ]
 
 
-def _ler_avaliacoes_csv():
-    registros = []
-    if os.path.exists(AVALIACOES_FILE):
-        with open(AVALIACOES_FILE, "r", encoding="utf-8") as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                if row:
-                    registros.append(row)
-    return registros
+def _ler_refeitorio_todos_db():
+    rows = _executar_pg(
+        "SELECT data, horaentrada, matricula, nome, serie, curso, refeicao FROM refeitorio ORDER BY data DESC, horaentrada DESC",
+        (),
+        fetch=True,
+    )
+    if not rows:
+        return []
+    return [
+        [row["data"], row["horaentrada"], row["matricula"], row["nome"], row["serie"], row["curso"], row["refeicao"]]
+        for row in rows
+    ]
+
+
+def _ler_frequencia_todos_db():
+    rows = _executar_pg(
+        "SELECT data, horaentrada, matricula, nome, serie, curso, aula FROM frequencia ORDER BY data DESC, horaentrada DESC",
+        (),
+        fetch=True,
+    )
+    if not rows:
+        return []
+    return [
+        [row["data"], row["horaentrada"], row["matricula"], row["nome"], row["serie"], row["curso"], row["aula"]]
+        for row in rows
+    ]
+
+
+def _avaliacoes_para_linhas():
+    return [
+        [r["Data"], r["Aluno"], r["Serie"], r["Curso"], r["Estagio"], r["Item"], r["Nota"]]
+        for r in _ler_avaliacoes_db()
+    ]
+
+
+def _escrever_csv(caminho, header, linhas):
+    with open(caminho, "w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(header)
+        w.writerows(linhas)
+
+
+def _csv_bytes(header, linhas):
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    w.writerow(header)
+    w.writerows(linhas)
+    out = io.BytesIO(buf.getvalue().encode("utf-8"))
+    out.seek(0)
+    return out
+
+
+def _nome_backup_mes_sugerido():
+    hoje = datetime.date.today()
+    return f"backup_{MESES_PT[hoje.month - 1]}_{hoje.year}"
+
+
+def _exportar_backup_mensal_csv(nome_base):
+    """Exporta todas as tabelas do banco para CSVs em dados/backups/YYYY_MM/."""
+    nome_base = re.sub(r'[<>:"/\\|?*]', "_", (nome_base or "").strip())
+    if not nome_base:
+        raise ValueError("Nome do arquivo inválido")
+    pasta = os.path.join(DADOS_DIR, "backups", datetime.date.today().strftime("%Y_%m"))
+    os.makedirs(pasta, exist_ok=True)
+    arquivos = []
+    _escrever_csv(
+        os.path.join(pasta, f"{nome_base}_avaliacoes_escola.csv"),
+        ["Data", "Aluno", "Serie", "Curso", "Estagio", "Item", "Nota"],
+        _avaliacoes_para_linhas(),
+    )
+    arquivos.append(f"{nome_base}_avaliacoes_escola.csv")
+    _escrever_csv(
+        os.path.join(pasta, f"{nome_base}_refeitorio.csv"),
+        ["Data", "HoraEntrada", "Matricula", "Nome", "Serie", "Curso", "Refeicao"],
+        _ler_refeitorio_todos_db(),
+    )
+    arquivos.append(f"{nome_base}_refeitorio.csv")
+    _escrever_csv(
+        os.path.join(pasta, f"{nome_base}_frequencia.csv"),
+        ["Data", "HoraEntrada", "Matricula", "Nome", "Serie", "Curso", "Aula"],
+        _ler_frequencia_todos_db(),
+    )
+    arquivos.append(f"{nome_base}_frequencia.csv")
+    return pasta, arquivos
 
 
 def _avaliacao_ja_existe_db(nome, semana_iso, ano_iso):
@@ -465,52 +501,6 @@ def _limpar_tabelas_neon():
     _executar_pg("DELETE FROM avaliacoes", ())
     logger.info("Tabelas Neon refeitorio, frequencia e avaliacoes limpas")
 
-
-def _ler_ultimo_backup_mensal():
-    dados = ler_json(ULTIMO_BACKUP_MENSAL_FILE, {})
-    return dados.get("ultimo_backup")
-
-
-def _salvar_ultimo_backup_mensal(ts):
-    salvar_json(ULTIMO_BACKUP_MENSAL_FILE, {"ultimo_backup": ts})
-
-
-def _backup_mensal(force=False):
-    try:
-        hoje = datetime.date.today()
-        ultimo = _ler_ultimo_backup_mensal()
-        if not force and ultimo:
-            try:
-                ultima_data = datetime.datetime.strptime(ultimo, "%Y-%m-%d").date()
-                if ultima_data.year == hoje.year and ultima_data.month == hoje.month:
-                    logger.info("Backup mensal ja realizado neste mes")
-                    return
-            except Exception:
-                pass
-
-        pasta = os.path.join(DADOS_DIR, "backups", hoje.strftime("%Y_%m"))
-        os.makedirs(pasta, exist_ok=True)
-        ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        arquivos = [AVALIACOES_FILE, REFEITORIO_FILE, FREQUENCIA_FILE, LISTA_ALUNOS_FILE]
-        for caminho in arquivos:
-            if os.path.exists(caminho):
-                shutil.copy(caminho, os.path.join(pasta, f"{ts}_{os.path.basename(caminho)}"))
-        _salvar_ultimo_backup_mensal(hoje.strftime("%Y-%m-%d"))
-        logger.info(f"Backup mensal local criado em {pasta}")
-    except Exception as e:
-        logger.error(f"Falha ao criar backup mensal: {e}")
-
-
-def _agendar_backup_mensal():
-    def _loop():
-        while True:
-            agora = datetime.datetime.now()
-            proxima_exec = agora.replace(hour=0, minute=30, second=0, microsecond=0)
-            if agora >= proxima_exec:
-                proxima_exec += datetime.timedelta(days=1)
-            time.sleep((proxima_exec - agora).total_seconds())
-            _backup_mensal()
-    threading.Thread(target=_loop, daemon=True).start()
 
 CARDAPIO_PADRAO = {
     "SEGUNDA": ["Cuzcuz com ovo e cafe fresco", "Arroz, feijao, frango cozido e batata doce", "Pao com manteiga e vitamina de goiaba"],
@@ -583,12 +573,15 @@ def get_config():   return jsonify(ler_json(CONFIG_FILE, {"avaliacoes_ativas": T
 @app.route("/avaliacoes", methods=["GET"])
 def get_avaliacoes_publicas():
     """Retorna todos os registros de avaliações em formato JSON"""
-    registros = []
     try:
-        registros = _ler_com_fallback(_ler_avaliacoes_db, lambda: _ler_avaliacoes_csv(), [])
+        registros = _ler_avaliacoes_db()
+        return jsonify({"avaliacoes": registros, "total": len(registros)})
+    except RuntimeError as e:
+        logger.error(f"PostgreSQL indisponível: {e}")
+        return jsonify({"erro": "Banco de dados indisponível"}), 503
     except Exception as e:
         logger.error(f"Erro ao carregar avaliacoes: {e}")
-    return jsonify({"avaliacoes": registros, "total": len(registros)})
+        return jsonify({"erro": "Erro ao carregar avaliações"}), 500
 
 @app.route("/avaliacao", methods=["POST"])
 def post_avaliacao():
@@ -603,29 +596,13 @@ def post_avaliacao():
         semana_iso = hoje.isocalendar()[1]
         ano_iso = hoje.isocalendar()[0]
         
-        if _avaliacao_ja_existe_db(nome, semana_iso, ano_iso):
-            logger.warning(f"Avaliação duplicada detectada: {nome} - Semana {semana_iso}/{ano_iso}")
-            return jsonify({"status": "ja_avaliou", "mensagem": "Você já avaliou esta semana"}), 200
-        
-        if os.path.exists(AVALIACOES_FILE):
-            with open(AVALIACOES_FILE, "r", encoding="utf-8") as f:
-                reader = csv.reader(f)
-                next(reader, None)
-                for row in reader:
-                    if len(row) >= 2:
-                        try:
-                            data_str = row[0]
-                            aluno_nome = row[1]
-                            data_obj = datetime.datetime.strptime(data_str.split(" ")[0], "%d/%m/%Y").date()
-                            semana_registro = data_obj.isocalendar()[1]
-                            ano_registro = data_obj.isocalendar()[0]
-                            if (aluno_nome.strip().lower() == nome.strip().lower() and 
-                                semana_registro == semana_iso and 
-                                ano_registro == ano_iso):
-                                logger.warning(f"Avaliação duplicada detectada: {nome} - Semana {semana_iso}/{ano_iso}")
-                                return jsonify({"status": "ja_avaliou", "mensagem": "Você já avaliou esta semana"}), 200
-                        except Exception:
-                            pass
+        try:
+            if _avaliacao_ja_existe_db(nome, semana_iso, ano_iso):
+                logger.warning(f"Avaliação duplicada detectada: {nome} - Semana {semana_iso}/{ano_iso}")
+                return jsonify({"status": "ja_avaliou", "mensagem": "Você já avaliou esta semana"}), 200
+        except Exception as e:
+            logger.error(f"Erro ao verificar duplicidade de avaliação: {e}")
+            return jsonify({"erro": "Banco de dados indisponível"}), 503
     
     data_hora = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     registros = []
@@ -633,19 +610,15 @@ def post_avaliacao():
         estagio, item = chave.split("|", 1)
         registros.append([data_hora, nome, serie, curso, estagio, item, nota])
 
-    def _salvar_csv():
-        novo = not os.path.exists(AVALIACOES_FILE)
-        with open(AVALIACOES_FILE, "a", newline="", encoding="utf-8") as f:
-            w = csv.writer(f)
-            if novo: w.writerow(["Data","Aluno","Serie","Curso","Estagio","Item","Nota"])
-            for registro in registros:
-                w.writerow(registro)
-
-    def _salvar_db():
+    try:
         for registro in registros:
             _inserir_avaliacao_db(registro)
-
-    _salvar_duplo(_salvar_csv, _salvar_db)
+    except RuntimeError as e:
+        logger.error(f"PostgreSQL indisponível: {e}")
+        return jsonify({"erro": "Banco de dados indisponível"}), 503
+    except Exception as e:
+        logger.error(f"Erro ao salvar avaliação: {e}")
+        return jsonify({"erro": "Erro ao salvar avaliação"}), 500
     logger.info(f"Avaliação recebida de {nome} ({len(respostas)} itens)")
     return jsonify({"status": "ok"})
 
@@ -659,43 +632,41 @@ def verificar_avaliacao():
     semana_iso = hoje.isocalendar()[1]
     ano_iso = hoje.isocalendar()[0]
     
-    if os.path.exists(AVALIACOES_FILE):
-        with open(AVALIACOES_FILE, "r", encoding="utf-8") as f:
-            reader = csv.reader(f)
-            next(reader, None)
-            for row in reader:
-                if len(row) >= 2:
-                    try:
-                        data_str = row[0]
-                        aluno_nome = row[1]
-                        data_obj = datetime.datetime.strptime(data_str.split(" ")[0], "%d/%m/%Y").date()
-                        semana_registro = data_obj.isocalendar()[1]
-                        ano_registro = data_obj.isocalendar()[0]
-                        if (aluno_nome.lower() == nome.lower() and 
-                            semana_registro == semana_iso and 
-                            ano_registro == ano_iso):
-                            return jsonify({"ja_avaliou": True}), 200
-                    except Exception:
-                        pass
-    
-    return jsonify({"ja_avaliou": False}), 200
+    try:
+        ja_avaliou = _avaliacao_ja_existe_db(nome, semana_iso, ano_iso)
+        return jsonify({"ja_avaliou": ja_avaliou}), 200
+    except RuntimeError as e:
+        logger.error(f"PostgreSQL indisponível: {e}")
+        return jsonify({"erro": "Banco de dados indisponível"}), 503
+    except Exception as e:
+        logger.error(f"Erro ao verificar avaliação: {e}")
+        return jsonify({"erro": "Erro ao verificar avaliação"}), 500
 
 @app.route("/admin/avaliacoes", methods=["GET"])
 def get_avaliacoes():
     if not checar_senha(request): return jsonify({"erro": "Acesso negado"}), 403
-    registros = _ler_com_fallback(_ler_avaliacoes_db, lambda: _ler_avaliacoes_csv(), [])
-    return jsonify(registros)
+    try:
+        registros = _ler_avaliacoes_db()
+        return jsonify(registros)
+    except RuntimeError as e:
+        logger.error(f"PostgreSQL indisponível: {e}")
+        return jsonify({"erro": "Banco de dados indisponível"}), 503
+    except Exception as e:
+        logger.error(f"Erro ao carregar avaliacoes: {e}")
+        return jsonify({"erro": "Erro ao carregar avaliações"}), 500
 
 @app.route("/admin/avaliacoes", methods=["DELETE"])
 def del_avaliacoes():
     if not checar_senha(request): return jsonify({"erro": "Acesso negado"}), 403
-    with open(AVALIACOES_FILE, "w", newline="", encoding="utf-8") as f:
-        csv.writer(f).writerow(["Data","Aluno","Serie","Curso","Estagio","Item","Nota"])
     try:
         _apagar_avaliacoes_db()
-    except Exception:
-        pass
-    return jsonify({"status": "apagado"})
+        return jsonify({"status": "apagado"})
+    except RuntimeError as e:
+        logger.error(f"PostgreSQL indisponível: {e}")
+        return jsonify({"erro": "Banco de dados indisponível"}), 503
+    except Exception as e:
+        logger.error(f"Erro ao apagar avaliações: {e}")
+        return jsonify({"erro": "Erro ao apagar avaliações"}), 500
 
 @app.route("/admin/cardapio", methods=["PUT"])
 def put_cardapio():
@@ -757,21 +728,12 @@ def _aula_por_hora(hora):
             return nome_aula
     return "Fora do horário"
 
-def _garantir_refeitorio():
-    if not os.path.exists(REFEITORIO_FILE):
-        with open(REFEITORIO_FILE, "w", newline="", encoding="utf-8") as f:
-            csv.writer(f).writerow(["Data","HoraEntrada","Matricula","Nome","Serie","Curso","Refeicao"])
-
 def _registros_hoje():
-    _garantir_refeitorio()
-    hoje = _hoje()
-    registros = []
-    with open(REFEITORIO_FILE, "r", encoding="utf-8") as f:
-        reader = csv.reader(f); next(reader, None)
-        for row in reader:
-            if len(row) >= 7 and row[0] == hoje:
-                registros.append(row)
-    return registros
+    try:
+        return _ler_refeitorio_hoje_db()
+    except Exception as e:
+        logger.error(f"Erro ao ler refeitorio do banco: {e}")
+        return []
 
 @app.route("/refeitorio/registrar", methods=["POST"])
 def registrar_refeicao():
@@ -804,10 +766,9 @@ def registrar_refeicao():
     curso = _limpar_campo(curso)
     matricula = _limpar_campo(matricula)
     
-    hoje      = _hoje()
+    today      = _hoje()
     if not matricula:
         return jsonify({"erro": "Matricula nao informada"}), 400
-    _garantir_refeitorio()
 
     db_duplicado = _refeitorio_duplicado_db(matricula, refeicao)
     if db_duplicado:
@@ -818,32 +779,22 @@ def registrar_refeicao():
             "total_hoje": db_duplicado["total_hoje"],
             "total_refeicao": db_duplicado["total_refeicao"],
         }), 200
-
-    with open(REFEITORIO_FILE, "r", encoding="utf-8") as f:
-        reader = csv.reader(f); next(reader, None)
-        registros_hoje = [row for row in reader if len(row) >= 7 and row[0] == hoje]
-        # Verifica duplicado
-        for row in registros_hoje:
-            if row[2] == matricula and row[6] == refeicao:
-                total_hoje = len(registros_hoje)
-                total_refeicao = sum(1 for r in registros_hoje if r[6] == refeicao)
-                return jsonify({"status": "ja_registrado", "nome": row[3], "hora": row[1],
-                                "total_hoje": total_hoje, "total_refeicao": total_refeicao}), 200
+    
     hora = datetime.datetime.now().strftime("%H:%M:%S")
     periodo = _aula_por_hora(hora)
-    registro = [hoje, hora, matricula, nome, serie, curso, refeicao]
+    registro = [today, hora, matricula, nome, serie, curso, refeicao]
 
-    def _salvar_csv():
-        with open(REFEITORIO_FILE, "a", newline="", encoding="utf-8") as f:
-            csv.writer(f).writerow(registro)
-
-    def _salvar_db():
+    try:
         _inserir_refeitorio_db(registro)
-
-    _salvar_duplo(_salvar_csv, _salvar_db)
+    except RuntimeError as e:
+        logger.error(f"PostgreSQL indisponível: {e}")
+        return jsonify({"erro": "Banco de dados indisponível"}), 503
+    except Exception as e:
+        logger.error(f"Erro ao registrar refeição: {e}")
+        return jsonify({"erro": "Erro ao registrar refeição"}), 500
     logger.info(f"Refeição registrada: {nome} ({matricula}) - {refeicao}")
     # Contagens após inserir
-    registros = _registros_hoje()
+    registros = _ler_refeitorio_hoje_db()
     total_hoje = len(registros)
     total_refeicao = sum(1 for r in registros if r[6] == refeicao)
     return jsonify({"status": "ok", "nome": nome, "hora": hora, "aula": periodo,
@@ -852,34 +803,51 @@ def registrar_refeicao():
 @app.route("/refeitorio/hoje", methods=["GET"])
 def get_refeitorio_hoje():
     if not checar_senha(request): return jsonify({"erro": "Acesso negado"}), 403
-    return jsonify(_ler_com_fallback(_ler_refeitorio_hoje_db, _registros_hoje, []))
+    try:
+        registros = _ler_refeitorio_hoje_db()
+        return jsonify(registros)
+    except RuntimeError as e:
+        logger.error(f"PostgreSQL indisponível: {e}")
+        return jsonify({"erro": "Banco de dados indisponível"}), 503
+    except Exception as e:
+        logger.error(f"Erro ao ler refeitorio: {e}")
+        return jsonify({"erro": "Erro ao ler dados de refeitório"}), 500
 
 @app.route("/refeitorio/exportar", methods=["GET"])
 def exportar_refeitorio():
     if not checar_senha(request): return jsonify({"erro": "Acesso negado"}), 403
-    _garantir_refeitorio()
-    return send_file(REFEITORIO_FILE, as_attachment=True,
-                     download_name=f"refeitorio_{_hoje().replace('/','_')}.csv",
-                     mimetype="text/csv")
+    try:
+        linhas = _ler_refeitorio_todos_db()
+        buf = _csv_bytes(
+            ["Data", "HoraEntrada", "Matricula", "Nome", "Serie", "Curso", "Refeicao"],
+            linhas,
+        )
+        return send_file(
+            buf,
+            as_attachment=True,
+            download_name=f"refeitorio_{_hoje().replace('/', '_')}.csv",
+            mimetype="text/csv",
+        )
+    except RuntimeError as e:
+        logger.error(f"PostgreSQL indisponível: {e}")
+        return jsonify({"erro": "Banco de dados indisponível"}), 503
+    except Exception as e:
+        logger.error(f"Erro ao exportar refeitorio: {e}")
+        return jsonify({"erro": "Erro ao exportar refeitório"}), 500
 
 @app.route("/refeitorio/apagar", methods=["DELETE"])
 def apagar_refeitorio():
     if not checar_senha(request): return jsonify({"erro": "Acesso negado"}), 403
     data_alvo = request.args.get("data", _hoje())
-    _garantir_refeitorio()
-    linhas = []
-    with open(REFEITORIO_FILE, "r", encoding="utf-8") as f:
-        reader = csv.reader(f); header = next(reader)
-        for row in reader:
-            if len(row) >= 1 and row[0] != data_alvo:
-                linhas.append(row)
-    with open(REFEITORIO_FILE, "w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f); w.writerow(header); w.writerows(linhas)
     try:
         _apagar_refeitorio_data_db(data_alvo)
-    except Exception:
-        pass
-    return jsonify({"status": "apagado", "data": data_alvo})
+        return jsonify({"status": "apagado", "data": data_alvo})
+    except RuntimeError as e:
+        logger.error(f"PostgreSQL indisponível: {e}")
+        return jsonify({"erro": "Banco de dados indisponível"}), 503
+    except Exception as e:
+        logger.error(f"Erro ao apagar refeitorio: {e}")
+        return jsonify({"erro": "Erro ao apagar refeitório"}), 500
 
 @app.route("/refeitorio/qrcode/<matricula>", methods=["GET"])
 def gerar_qrcode_img(matricula):
@@ -897,21 +865,12 @@ def gerar_qrcode_img(matricula):
 # ROTAS FLASK — FREQUÊNCIA
 # ==============================================================================
 
-def _garantir_frequencia():
-    if not os.path.exists(FREQUENCIA_FILE):
-        with open(FREQUENCIA_FILE, "w", newline="", encoding="utf-8") as f:
-            csv.writer(f).writerow(["Data","HoraEntrada","Matricula","Nome","Serie","Curso","Aula"])
-
 def _registros_freq_hoje():
-    _garantir_frequencia()
-    hoje = _hoje()
-    registros = []
-    with open(FREQUENCIA_FILE, "r", encoding="utf-8") as f:
-        reader = csv.reader(f); next(reader, None)
-        for row in reader:
-            if len(row) >= 7 and row[0] == hoje:
-                registros.append(row)
-    return registros
+    try:
+        return _ler_frequencia_hoje_db()
+    except Exception as e:
+        logger.error(f"Erro ao ler frequencia do banco: {e}")
+        return []
 
 @app.route("/frequencia/registrar", methods=["POST"])
 def registrar_frequencia():
@@ -945,80 +904,78 @@ def registrar_frequencia():
     hoje = _hoje()
     if not matricula:
         return jsonify({"erro": "Matricula nao informada"}), 400
-    
-    _garantir_frequencia()
 
     db_duplicado = _frequencia_duplicado_db(matricula)
     if db_duplicado:
         return jsonify({"status": "ja_registrado", "nome": db_duplicado["nome"], "hora": db_duplicado["hora"], "total_hoje": db_duplicado["total_hoje"]}), 200
-
-    with open(FREQUENCIA_FILE, "r", encoding="utf-8") as f:
-        reader = csv.reader(f); next(reader, None)
-        registros_hoje = [row for row in reader if len(row) >= 7 and row[0] == hoje]
-        # Verifica duplicado (matricula + data)
-        for row in registros_hoje:
-            if row[2] == matricula:
-                total_hoje = len(registros_hoje)
-                return jsonify({"status": "ja_registrado", "nome": row[3], "hora": row[1],
-                                "total_hoje": total_hoje}), 200
     
     hora = datetime.datetime.now().strftime("%H:%M:%S")
     aula = _aula_por_hora(hora)
     registro = [hoje, hora, matricula, nome, serie, curso, aula]
 
-    def _salvar_csv():
-        with open(FREQUENCIA_FILE, "a", newline="", encoding="utf-8") as f:
-            csv.writer(f).writerow(registro)
-
-    def _salvar_db():
+    try:
         _inserir_frequencia_db(registro)
+    except RuntimeError as e:
+        logger.error(f"PostgreSQL indisponível: {e}")
+        return jsonify({"erro": "Banco de dados indisponível"}), 503
+    except Exception as e:
+        logger.error(f"Erro ao registrar frequência: {e}")
+        return jsonify({"erro": "Erro ao registrar frequência"}), 500
 
-    _salvar_duplo(_salvar_csv, _salvar_db)
-    
     logger.info(f"Frequência registrada: {nome} ({matricula})")
     
-    registros = _registros_freq_hoje()
+    registros = _ler_frequencia_hoje_db()
     total_hoje = len(registros)
     return jsonify({"status": "ok", "nome": nome, "hora": hora, "aula": aula, "total_hoje": total_hoje}), 200
 
 @app.route("/frequencia/hoje", methods=["GET"])
 def get_frequencia_hoje():
     if not checar_senha(request): return jsonify({"erro": "Acesso negado"}), 403
-    return jsonify(_ler_com_fallback(_ler_frequencia_hoje_db, _registros_freq_hoje, []))
+    try:
+        registros = _ler_frequencia_hoje_db()
+        return jsonify(registros)
+    except RuntimeError as e:
+        logger.error(f"PostgreSQL indisponível: {e}")
+        return jsonify({"erro": "Banco de dados indisponível"}), 503
+    except Exception as e:
+        logger.error(f"Erro ao ler frequencia: {e}")
+        return jsonify({"erro": "Erro ao ler dados de frequência"}), 500
 
 @app.route("/frequencia/exportar", methods=["GET"])
 def exportar_frequencia():
     if not checar_senha(request): return jsonify({"erro": "Acesso negado"}), 403
-    _garantir_frequencia()
-    return send_file(FREQUENCIA_FILE, as_attachment=True,
-                     download_name=f"frequencia_{_hoje().replace('/','_')}.csv",
-                     mimetype="text/csv")
+    try:
+        linhas = _ler_frequencia_todos_db()
+        buf = _csv_bytes(
+            ["Data", "HoraEntrada", "Matricula", "Nome", "Serie", "Curso", "Aula"],
+            linhas,
+        )
+        return send_file(
+            buf,
+            as_attachment=True,
+            download_name=f"frequencia_{_hoje().replace('/', '_')}.csv",
+            mimetype="text/csv",
+        )
+    except RuntimeError as e:
+        logger.error(f"PostgreSQL indisponível: {e}")
+        return jsonify({"erro": "Banco de dados indisponível"}), 503
+    except Exception as e:
+        logger.error(f"Erro ao exportar frequencia: {e}")
+        return jsonify({"erro": "Erro ao exportar frequência"}), 500
 
 @app.route("/frequencia/apagar", methods=["DELETE"])
 def apagar_frequencia():
     if not checar_senha(request): return jsonify({"erro": "Acesso negado"}), 403
     data_alvo = request.args.get("data", _hoje())
-    _garantir_frequencia()
-    linhas = []
-    with open(FREQUENCIA_FILE, "r", encoding="utf-8") as f:
-        reader = csv.reader(f); header = next(reader)
-        for row in reader:
-            if len(row) >= 1 and row[0] != data_alvo:
-                linhas.append(row)
-    with open(FREQUENCIA_FILE, "w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f); w.writerow(header); w.writerows(linhas)
     try:
         _apagar_frequencia_data_db(data_alvo)
-    except Exception:
-        pass
-    return jsonify({"status": "apagado", "data": data_alvo})
-
-@app.route("/admin/backup_local", methods=["POST"])
-def admin_backup_local():
-    if not checar_senha(request):
-        return jsonify({"erro": "Acesso negado"}), 403
-    _backup_mensal(force=True)
-    return jsonify({"status": "backup_criado"}), 200
+        return jsonify({"status": "apagado", "data": data_alvo})
+    except RuntimeError as e:
+        logger.error(f"PostgreSQL indisponível: {e}")
+        return jsonify({"erro": "Banco de dados indisponível"}), 503
+    except Exception as e:
+        logger.error(f"Erro ao apagar frequencia: {e}")
+        return jsonify({"erro": "Erro ao apagar frequência"}), 500
 
 @app.route("/admin/limpar_neon", methods=["DELETE"])
 def admin_limpar_neon():
@@ -1050,15 +1007,12 @@ def _enviar_backup_email():
             logger.warning("Backup por e-mail desativado: credenciais incompletas")
             return
         
-        # Criar zip com timestamp
         ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         zip_name = f"backup_marwin_{ts}.zip"
-        
+        pasta_exp, arquivos_csv = _exportar_backup_mensal_csv(f"email_{ts}")
         with zipfile.ZipFile(zip_name, "w") as zf:
-            if os.path.exists(AVALIACOES_FILE):
-                zf.write(AVALIACOES_FILE, arcname="avaliacoes_escola.csv")
-            if os.path.exists(REFEITORIO_FILE):
-                zf.write(REFEITORIO_FILE, arcname="refeitorio.csv")
+            for nome_arq in arquivos_csv:
+                zf.write(os.path.join(pasta_exp, nome_arq), arcname=nome_arq)
             if os.path.exists(LISTA_ALUNOS_FILE):
                 zf.write(LISTA_ALUNOS_FILE, arcname="lista_alunos.json")
         
@@ -1104,20 +1058,161 @@ def _agendar_backup_email():
     thread = threading.Thread(target=_loop_backup, daemon=True)
     thread.start()
 
-def _backup_csvs():
-    """Cria backups com timestamp dos CSVs relevantes (avaliacoes, refeitorio)."""
+def _iniciar_fluxo_backup_mes(btn_backup=None):
+    """Fluxo guiado: nome do arquivo → exportar CSV → confirmação dupla → limpar banco."""
+    def _habilitar_btn(estado):
+        if btn_backup is not None:
+            try:
+                btn_backup.config(state=estado)
+            except Exception:
+                pass
+
+    _habilitar_btn("disabled")
+
+    dlg_nome = tk.Toplevel(janela)
+    dlg_nome.title("Backup do Mês")
+    dlg_nome.configure(bg=T["BG_CARD"])
+    dlg_nome.transient(janela)
+    dlg_nome.grab_set()
+    dlg_nome.resizable(False, False)
+
+    tk.Label(dlg_nome, text="Nome do arquivo de backup",
+             font=("Segoe UI", 12, "bold"), bg=T["BG_CARD"], fg=T["ACCENT_VIBRANT"]).pack(padx=20, pady=(16, 6))
+    tk.Label(dlg_nome, text="Os CSVs serão salvos em dados/backups/AAAA_MM/",
+             font=("Segoe UI", 9), bg=T["BG_CARD"], fg=T["FRASE_FG"]).pack(padx=20, pady=(0, 10))
+
+    nome_var = tk.StringVar(value=_nome_backup_mes_sugerido())
+    entry_nome = tk.Entry(dlg_nome, textvariable=nome_var, font=("Segoe UI", 11),
+                          bg=T["ENTRY_BG"], fg=T["FG_TEXT"], width=36)
+    entry_nome.pack(padx=20, pady=(0, 16))
+    entry_nome.focus_set()
+    entry_nome.select_range(0, "end")
+
+    resultado = {"cancelado": True, "nome": ""}
+
+    def _cancelar_inicio():
+        resultado["cancelado"] = True
+        dlg_nome.destroy()
+        _habilitar_btn("normal")
+
+    def _confirmar_nome():
+        nome = nome_var.get().strip()
+        if not nome:
+            messagebox.showwarning("Aviso", "Informe um nome para o backup.", parent=dlg_nome)
+            return
+        resultado["cancelado"] = False
+        resultado["nome"] = nome
+        dlg_nome.destroy()
+
+    btn_row = tk.Frame(dlg_nome, bg=T["BG_CARD"])
+    btn_row.pack(pady=(0, 16))
+    tk.Button(btn_row, text="Cancelar", command=_cancelar_inicio,
+              bg=T["FRASE_FG"], fg="white", font=("Segoe UI", 10, "bold"),
+              padx=14, pady=6, bd=0, cursor="hand2").pack(side="left", padx=6)
+    tk.Button(btn_row, text="Continuar", command=_confirmar_nome,
+              bg=T["ACCENT_SOFT"], fg="white", font=("Segoe UI", 10, "bold"),
+              padx=14, pady=6, bd=0, cursor="hand2").pack(side="left", padx=6)
+
+    dlg_nome.wait_window()
+    if resultado["cancelado"]:
+        return
+
     try:
-        backups_dir = os.path.join(DADOS_DIR, "backups")
-        os.makedirs(backups_dir, exist_ok=True)
-        ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        for f in [AVALIACOES_FILE, REFEITORIO_FILE]:
-            if os.path.exists(f):
-                nome = os.path.basename(f)
-                dst = os.path.join(backups_dir, f"{ts}_{nome}")
-                shutil.copy(f, dst)
-        logger.info(f"Backup local criado com timestamp {ts}")
+        pasta, arquivos = _exportar_backup_mensal_csv(resultado["nome"])
+        lista = "\n".join(f"• {a}" for a in arquivos)
+        messagebox.showinfo(
+            "Backup exportado",
+            f"CSVs gerados com sucesso em:\n{pasta}\n\n{lista}",
+        )
+        logger.info(f"Backup do mês exportado: {pasta}")
     except Exception as e:
-        logger.error(f"Erro ao criar backups: {e}")
+        logger.error(f"Falha ao exportar backup do mês: {e}")
+        messagebox.showerror("Erro", f"Falha ao exportar backup:\n{e}")
+        _habilitar_btn("normal")
+        return
+
+    if not messagebox.askyesno(
+        "Confirmar exclusão",
+        "Tem certeza que deseja apagar todos os dados do banco?\n"
+        "Esta ação não pode ser desfeita.",
+        icon="warning",
+    ):
+        messagebox.showinfo("Cancelado", "Nenhum dado foi removido do banco. O backup CSV foi mantido.")
+        _habilitar_btn("normal")
+        return
+
+    dlg_final = tk.Toplevel(janela)
+    dlg_final.title("Confirmação final")
+    dlg_final.configure(bg=T["BG_CARD"])
+    dlg_final.transient(janela)
+    dlg_final.grab_set()
+    dlg_final.resizable(False, False)
+
+    tk.Label(
+        dlg_final,
+        text="Confirmação final: os dados serão permanentemente removidos do banco.\n"
+             "Digite CONFIRMAR para prosseguir.",
+        font=("Segoe UI", 10),
+        bg=T["BG_CARD"],
+        fg=T["FG_TEXT"],
+        justify="left",
+    ).pack(padx=20, pady=(16, 10))
+
+    conf_var = tk.StringVar()
+    entry_conf = tk.Entry(dlg_final, textvariable=conf_var, font=("Segoe UI", 11),
+                          bg=T["ENTRY_BG"], fg=T["FG_TEXT"], width=28)
+    entry_conf.pack(padx=20, pady=(0, 12))
+
+    btn_apagar = tk.Button(
+        dlg_final, text="Apagar dados do banco", state="disabled",
+        bg="#c62828", fg="white", font=("Segoe UI", 10, "bold"),
+        padx=14, pady=6, bd=0,
+    )
+    confirmado = {"ok": False}
+
+    def _atualizar_btn(*_):
+        if conf_var.get() == "CONFIRMAR":
+            btn_apagar.config(state="normal", cursor="hand2")
+        else:
+            btn_apagar.config(state="disabled", cursor="")
+
+    def _executar_apagar():
+        confirmado["ok"] = True
+        dlg_final.destroy()
+
+    def _cancelar_final():
+        confirmado["ok"] = False
+        dlg_final.destroy()
+
+    conf_var.trace_add("write", _atualizar_btn)
+    btn_apagar.config(command=_executar_apagar)
+
+    btn_row2 = tk.Frame(dlg_final, bg=T["BG_CARD"])
+    btn_row2.pack(pady=(0, 16))
+    tk.Button(btn_row2, text="Cancelar", command=_cancelar_final,
+              bg=T["FRASE_FG"], fg="white", font=("Segoe UI", 10, "bold"),
+              padx=14, pady=6, bd=0, cursor="hand2").pack(side="left", padx=6)
+    btn_apagar.pack(in_=btn_row2, side="left", padx=6)
+
+    dlg_final.wait_window()
+
+    if not confirmado["ok"]:
+        messagebox.showinfo("Cancelado", "Nenhum dado foi removido do banco. O backup CSV foi mantido.")
+        _habilitar_btn("normal")
+        return
+
+    try:
+        _limpar_tabelas_neon()
+        messagebox.showinfo("Concluído", "Dados do banco removidos com sucesso. O backup CSV foi mantido.")
+        logger.info("Backup do mês concluído: banco limpo após exportação")
+    except Exception as e:
+        logger.error(f"Falha ao limpar banco após backup: {e}")
+        messagebox.showerror(
+            "Erro",
+            f"O backup CSV foi salvo, mas falhou ao apagar o banco:\n{e}",
+        )
+    finally:
+        _habilitar_btn("normal")
 
 # ==============================================================================
 # PAINEL ADMIN TKINTER
@@ -1303,40 +1398,46 @@ def abrir_painel_admin(event=None):
 
     def carregar():
         for i in tabela.get_children(): tabela.delete(i)
-        if os.path.exists(AVALIACOES_FILE):
-            with open(AVALIACOES_FILE,"r",encoding="utf-8") as f:
-                reader=list(csv.reader(f))
-                if len(reader)>1:
-                    for idx,r in enumerate(reversed(reader[1:])):
-                        if len(r)<7: continue
-                        ok_nome = f_nome.get().lower() in r[1].lower() if f_nome.get() else True
-                        ok_data = f_data.get() in r[0] if f_data.get() else True
-                        mapa_e  = {"Comida":"1","Limpeza":"2","Ensino":"3","Semana":"4"}
-                        ok_est  = (r[4]==mapa_e.get(f_est.get())) if f_est.get() else True
-                        ok_item = f_item.get().lower() in r[5].lower() if f_item.get() else True
-                        if ok_nome and ok_data and ok_est and ok_item:
-                            categoria = "Almoço favorito" if _eh_almoco_favorito(r[5]) else "Avaliação"
-                            exib = [r[0], r[1], r[2], r[3], r[4], categoria, r[5], r[6]]
-                            if r[4]=="4" and not _eh_almoco_favorito(r[5]):
-                                try:
-                                    n=float(r[6])
-                                    exib[7]="Ruim" if n<=1 else ("Medio" if n<=3 else "Bom")
-                                except: pass
-                            tabela.insert("","end",values=exib,tags=("even" if idx%2==0 else "odd",))
+        try:
+            linhas = _avaliacoes_para_linhas()
+        except Exception as e:
+            messagebox.showerror("Erro", f"Falha ao carregar avaliações do banco:\n{e}")
+            lbl_cnt.config(text="0 registro(s)")
+            return
+        for idx, r in enumerate(linhas):
+            if len(r) < 7:
+                continue
+            ok_nome = f_nome.get().lower() in r[1].lower() if f_nome.get() else True
+            ok_data = f_data.get() in r[0] if f_data.get() else True
+            mapa_e  = {"Comida":"1","Limpeza":"2","Ensino":"3","Semana":"4"}
+            ok_est  = (r[4]==mapa_e.get(f_est.get())) if f_est.get() else True
+            ok_item = f_item.get().lower() in r[5].lower() if f_item.get() else True
+            if ok_nome and ok_data and ok_est and ok_item:
+                categoria = "Almoço favorito" if _eh_almoco_favorito(r[5]) else "Avaliação"
+                exib = [r[0], r[1], r[2], r[3], r[4], categoria, r[5], r[6]]
+                if r[4]=="4" and not _eh_almoco_favorito(r[5]):
+                    try:
+                        n=float(r[6])
+                        exib[7]="Ruim" if n<=1 else ("Medio" if n<=3 else "Bom")
+                    except: pass
+                tabela.insert("","end",values=exib,tags=("even" if idx%2==0 else "odd",))
         lbl_cnt.config(text=f"{len(tabela.get_children())} registro(s)")
 
     def apagar():
         if messagebox.askyesno("Aviso","Apagar todos os dados?"):
-            with open(AVALIACOES_FILE,"w",newline="",encoding="utf-8") as f:
-                csv.writer(f).writerow(["Data","Aluno","Serie","Curso","Estagio","Item","Nota"])
-            carregar()
+            try:
+                _apagar_avaliacoes_db()
+                carregar()
+                messagebox.showinfo("Sucesso", "Avaliações apagadas do banco.")
+            except Exception as e:
+                messagebox.showerror("Erro", f"Falha ao apagar avaliações:\n{e}")
 
     def exportar_avaliacoes_pdf():
-        if not os.path.exists(AVALIACOES_FILE):
-            messagebox.showwarning("Aviso", "Nenhum arquivo de avaliações encontrado.")
+        try:
+            reader = [["Data","Aluno","Serie","Curso","Estagio","Item","Nota"]] + _avaliacoes_para_linhas()
+        except Exception as e:
+            messagebox.showerror("Erro", f"Falha ao ler avaliações do banco:\n{e}")
             return
-        with open(AVALIACOES_FILE, "r", encoding="utf-8") as f:
-            reader = list(csv.reader(f))
         if len(reader) <= 1:
             messagebox.showwarning("Aviso", "Não há avaliações para exportar.")
             return
@@ -1476,39 +1577,27 @@ def abrir_painel_admin(event=None):
     tabela.tag_configure("even",background=T["ENTRY_BG"]); tabela.tag_configure("odd",background=T["BG_CARD"])
     carregar()
     
-    # ── Configurações de backup mensal local e limpador Neon ────────────────
+    # ── Backup do Mês ───────────────────────────────────────────────────────
     cfg_backup_frame = tk.Frame(aba_dados, bg=T["OBS_BG"])
     cfg_backup_frame.pack(fill="x", padx=20, pady=(15, 10))
 
-    tk.Label(cfg_backup_frame, text="BACKUP MENSAL LOCAL E CONTROLE NEON",
+    tk.Label(cfg_backup_frame, text="BACKUP DO MÊS",
             font=("Segoe UI", 11, "bold"), bg=T["OBS_BG"], fg=T["ACCENT_VIBRANT"]).pack(anchor="w", padx=10, pady=(8, 0))
     tk.Frame(cfg_backup_frame, bg=T["BORDER_GRID"], height=1).pack(fill="x", padx=10, pady=(4, 8))
 
     tk.Label(cfg_backup_frame,
-            text="Backup mensal local é gravado em dados/backups/YYYY_MM. Use limpar Neon apenas quando necessário.",
+            text="Exporta todos os dados do banco para CSV e, após confirmação em duas etapas, limpa as tabelas.",
             font=("Segoe UI", 9), bg=T["OBS_BG"], fg=T["FG_TEXT"], wraplength=760, justify="left").pack(anchor="w", padx=10, pady=(0, 10))
-
-    def _criar_backup_manual():
-        _backup_mensal(force=True)
-        messagebox.showinfo("Sucesso", "Backup local mensal criado com sucesso!")
-
-    def _limpar_neon_e_exibir():
-        if not messagebox.askyesno("Confirmar", "Deseja realmente apagar todos os registros Neon de refeitorio e frequencia?"):
-            return
-        try:
-            _limpar_tabelas_neon()
-            messagebox.showinfo("Sucesso", "Dados Neon limpos com sucesso.")
-        except Exception as e:
-            messagebox.showerror("Erro", f"Falha ao limpar Neon:\n{e}")
 
     btn_backup_frame = tk.Frame(cfg_backup_frame, bg=T["OBS_BG"])
     btn_backup_frame.pack(fill="x", padx=10, pady=(0, 10))
-    tk.Button(btn_backup_frame, text="Gerar backup mensal agora", command=_criar_backup_manual,
-             bg=T["ACCENT_SOFT"], fg="white", font=("Segoe UI", 10, "bold"),
-             padx=14, pady=6, bd=0, cursor="hand2").pack(side="left", padx=(0, 8))
-    tk.Button(btn_backup_frame, text="Limpar dados Neon", command=_limpar_neon_e_exibir,
-             bg="#c62828", fg="white", font=("Segoe UI", 10, "bold"),
-             padx=14, pady=6, bd=0, cursor="hand2").pack(side="left")
+    btn_backup_mes = tk.Button(
+        btn_backup_frame, text="Backup do Mês",
+        command=lambda: _iniciar_fluxo_backup_mes(btn_backup_mes),
+        bg=T["ACCENT_SOFT"], fg="white", font=("Segoe UI", 10, "bold"),
+        padx=14, pady=6, bd=0, cursor="hand2",
+    )
+    btn_backup_mes.pack(side="left", padx=(0, 8))
 
     # ── ABA RELATORIO ─────────────────────────────────────────────────────────
     def gerar_relatorio():
@@ -1558,45 +1647,52 @@ def abrir_painel_admin(event=None):
             return nome_norm
         mapa_estagio = {"1": "Comida", "2": "Limpeza", "3": "Ensino", "4": "Semana"}
 
-        if os.path.exists(AVALIACOES_FILE):
-            with open(AVALIACOES_FILE, "r", encoding="utf-8") as f:
-                reader = csv.reader(f); next(reader)
-                for r in reader:
-                    if len(r) < 7: continue
-                    data_str, nome_al, serie_al, curso_al, est, item, ns = (r[0], r[1], r[2], r[3], r[4], r[5], r[6])
-                    try:
-                        d_obj = datetime.datetime.strptime(data_str.split(" ")[0], "%d/%m/%Y").date()
-                        # aceitar qualquer avaliação dentro do intervalo segunda->domingo da semana atual
-                        if d_obj < inicio_sem or d_obj > fim_sem:
-                            continue
-                    except Exception:
-                        continue
-                    if _eh_almoco_favorito(item):
-                        va.append(ns)
-                        # garantir que voto por almoço também conte como participação desse aluno
-                        alunos_semana.add(_aluno_id(nome_al, data_str))
-                        if curso_al and curso_al.strip() not in ("N/A", ""):
-                            cursos_counter[curso_al.strip()] += 1
-                        if serie_al and serie_al.strip() not in ("N/A", ""):
-                            series_counter[serie_al.strip()] += 1
-                        continue
-                    try: nota = float(ns)
-                    except: continue
-                    est_nome = mapa_estagio.get(est, "")
-                    if not est_nome: continue
-                    if item not in ne[est_nome]: ne[est_nome][item] = []
-                    ne[est_nome][item].append(nota)
-                    if est == "4":
-                        if nota <= 1: ds["Ruim"] += 1
-                        elif nota <= 3: ds["Medio"] += 1
-                        else: ds["Bom"] += 1
-                        total_resp += 1
-                    # marcar participação do aluno para qualquer avaliação válida
-                    alunos_semana.add(_aluno_id(nome_al, data_str))
-                    if curso_al and curso_al.strip() not in ("N/A", ""):
-                        cursos_counter[curso_al.strip()] += 1
-                    if serie_al and serie_al.strip() not in ("N/A", ""):
-                        series_counter[serie_al.strip()] += 1
+        try:
+            linhas_rel = _avaliacoes_para_linhas()
+        except Exception as e:
+            messagebox.showerror("Erro", f"Falha ao carregar avaliações do banco:\n{e}")
+            return
+        for r in linhas_rel:
+            if len(r) < 7:
+                continue
+            data_str, nome_al, serie_al, curso_al, est, item, ns = (r[0], r[1], r[2], r[3], r[4], r[5], r[6])
+            try:
+                d_obj = datetime.datetime.strptime(data_str.split(" ")[0], "%d/%m/%Y").date()
+                if d_obj < inicio_sem or d_obj > fim_sem:
+                    continue
+            except Exception:
+                continue
+            if _eh_almoco_favorito(item):
+                va.append(ns)
+                alunos_semana.add(_aluno_id(nome_al, data_str))
+                if curso_al and curso_al.strip() not in ("N/A", ""):
+                    cursos_counter[curso_al.strip()] += 1
+                if serie_al and serie_al.strip() not in ("N/A", ""):
+                    series_counter[serie_al.strip()] += 1
+                continue
+            try:
+                nota = float(ns)
+            except Exception:
+                continue
+            est_nome = mapa_estagio.get(est, "")
+            if not est_nome:
+                continue
+            if item not in ne[est_nome]:
+                ne[est_nome][item] = []
+            ne[est_nome][item].append(nota)
+            if est == "4":
+                if nota <= 1:
+                    ds["Ruim"] += 1
+                elif nota <= 3:
+                    ds["Medio"] += 1
+                else:
+                    ds["Bom"] += 1
+                total_resp += 1
+            alunos_semana.add(_aluno_id(nome_al, data_str))
+            if curso_al and curso_al.strip() not in ("N/A", ""):
+                cursos_counter[curso_al.strip()] += 1
+            if serie_al and serie_al.strip() not in ("N/A", ""):
+                series_counter[serie_al.strip()] += 1
 
         cnt = Counter(va)
         if va:
@@ -2090,28 +2186,24 @@ def abrir_painel_admin(event=None):
         lbl_filtro_ativo.pack(side="left", padx=(0, 16))
 
         def exportar_csv_ref():
-            nome_arq = f"refeitorio_{_hoje().replace('/', '_')}.csv"
-            _garantir_refeitorio()
-            import shutil; shutil.copy(REFEITORIO_FILE, nome_arq)
-            messagebox.showinfo("Exportado", f"Arquivo salvo como:\n{nome_arq}")
+            try:
+                nome_arq = f"refeitorio_{_hoje().replace('/', '_')}.csv"
+                _escrever_csv(
+                    nome_arq,
+                    ["Data", "HoraEntrada", "Matricula", "Nome", "Serie", "Curso", "Refeicao"],
+                    _ler_refeitorio_todos_db(),
+                )
+                messagebox.showinfo("Exportado", f"Arquivo salvo como:\n{nome_arq}")
+            except Exception as e:
+                messagebox.showerror("Erro", f"Falha ao exportar:\n{e}")
 
         def apagar_hoje():
             if messagebox.askyesno("Confirmar", f"Apagar todos os registros de hoje ({_hoje()})?"):
                 try:
-                    import requests as rq
-                    rq.delete("http://127.0.0.1:5000/refeitorio/apagar",
-                              params={"data": _hoje()},
-                              headers={"X-Senha": ADMIN_PASSWORD}, timeout=5)
-                except Exception:
-                    linhas = []
-                    if os.path.exists(REFEITORIO_FILE):
-                        with open(REFEITORIO_FILE, "r", encoding="utf-8") as f:
-                            reader = csv.reader(f); header = next(reader)
-                            for row in reader:
-                                if len(row) >= 1 and row[0] != _hoje():
-                                    linhas.append(row)
-                        with open(REFEITORIO_FILE, "w", newline="", encoding="utf-8") as f:
-                            w = csv.writer(f); w.writerow(header); w.writerows(linhas)
+                    _apagar_refeitorio_data_db(_hoje())
+                    messagebox.showinfo("Sucesso", "Registros de hoje apagados do banco.")
+                except Exception as e:
+                    messagebox.showerror("Erro", f"Falha ao apagar registros:\n{e}")
                 atualizar_ref()
 
         tk.Button(btn_row, text="↻  Atualizar", command=lambda: atualizar_ref(),
@@ -3290,22 +3382,24 @@ def abrir_painel_admin(event=None):
         lbl_total_freq.pack(side="left", padx=(0, 10))
 
         def exportar_csv_freq():
-            nome_arq = f"frequencia_{_hoje().replace('/', '_')}.csv"
-            _garantir_frequencia()
-            import shutil; shutil.copy(FREQUENCIA_FILE, nome_arq)
-            messagebox.showinfo("Exportado", f"Arquivo salvo como:\n{nome_arq}")
+            try:
+                nome_arq = f"frequencia_{_hoje().replace('/', '_')}.csv"
+                _escrever_csv(
+                    nome_arq,
+                    ["Data", "HoraEntrada", "Matricula", "Nome", "Serie", "Curso", "Aula"],
+                    _ler_frequencia_todos_db(),
+                )
+                messagebox.showinfo("Exportado", f"Arquivo salvo como:\n{nome_arq}")
+            except Exception as e:
+                messagebox.showerror("Erro", f"Falha ao exportar:\n{e}")
 
         def apagar_hoje_freq():
             if messagebox.askyesno("Confirmar", f"Apagar todos os registros de hoje ({_hoje()})?"):
-                linhas = []
-                if os.path.exists(FREQUENCIA_FILE):
-                    with open(FREQUENCIA_FILE, "r", encoding="utf-8") as f:
-                        reader = csv.reader(f); header = next(reader)
-                        for row in reader:
-                            if len(row) >= 1 and row[0] != _hoje():
-                                linhas.append(row)
-                    with open(FREQUENCIA_FILE, "w", newline="", encoding="utf-8") as f:
-                        w = csv.writer(f); w.writerow(header); w.writerows(linhas)
+                try:
+                    _apagar_frequencia_data_db(_hoje())
+                    messagebox.showinfo("Sucesso", "Registros de hoje apagados do banco.")
+                except Exception as e:
+                    messagebox.showerror("Erro", f"Falha ao apagar registros:\n{e}")
                 atualizar_freq()
 
         def abrir_ausentes_freq():
@@ -3676,44 +3770,42 @@ def abrir_painel_admin(event=None):
                     messagebox.showerror("Erro", "Data inválida. Use DD/MM/YYYY")
                     return
             
-            # Selecionar arquivo de dados conforme tipo de histórico
-            arquivo = REFEITORIO_FILE if hist_tipo_var.get() == "refeitorio" else FREQUENCIA_FILE
             eh_frequencia = hist_tipo_var.get() == "frequencia"
-            
-            # Agrupar por data
+
             dados_por_data = {}
-            if os.path.exists(arquivo):
-                with open(arquivo, "r", encoding="utf-8") as f:
-                    reader = csv.reader(f)
-                    next(reader, None)
-                    for row in reader:
-                        if len(row) >= 7:
-                            try:
-                                data_obj = datetime.datetime.strptime(row[0], "%d/%m/%Y").date()
-                                if d_inicio <= data_obj <= d_fim:
-                                    serie = row[4] if len(row) > 4 else ""
-                                    curso = row[5] if len(row) > 5 else ""
-                                    
-                                    if serie_var.get() != "(Todas)" and serie_var.get() not in serie: continue
-                                    if curso_var.get() != "(Todos)" and curso_var.get() not in curso: continue
-                                    
-                                    if data_obj not in dados_por_data:
-                                        dados_por_data[data_obj] = {"total": 0, "presentes": 0, "ausentes": 0, "almocou": 0, "nao_almocou": 0}
-                                    
-                                    if eh_frequencia:
-                                        # Para frequência: cada linha é um presente
-                                        dados_por_data[data_obj]["presentes"] += 1
-                                        dados_por_data[data_obj]["total"] += 1
-                                    else:
-                                        # Para refeitório
-                                        refeicao = row[6] if len(row) > 6 else ""
-                                        if refeicao.lower() == "almoco":
-                                            dados_por_data[data_obj]["almocou"] += 1
-                                        else:
-                                            dados_por_data[data_obj]["nao_almocou"] += 1
-                                        dados_por_data[data_obj]["total"] += 1
-                            except Exception:
-                                pass
+            try:
+                linhas_hist = _ler_frequencia_todos_db() if eh_frequencia else _ler_refeitorio_todos_db()
+            except Exception as e:
+                messagebox.showerror("Erro", f"Falha ao carregar histórico do banco:\n{e}")
+                return
+            for row in linhas_hist:
+                if len(row) >= 7:
+                    try:
+                        data_obj = datetime.datetime.strptime(row[0], "%d/%m/%Y").date()
+                        if d_inicio <= data_obj <= d_fim:
+                            serie = row[4] if len(row) > 4 else ""
+                            curso = row[5] if len(row) > 5 else ""
+
+                            if serie_var.get() != "(Todas)" and serie_var.get() not in serie:
+                                continue
+                            if curso_var.get() != "(Todos)" and curso_var.get() not in curso:
+                                continue
+
+                            if data_obj not in dados_por_data:
+                                dados_por_data[data_obj] = {"total": 0, "presentes": 0, "ausentes": 0, "almocou": 0, "nao_almocou": 0}
+
+                            if eh_frequencia:
+                                dados_por_data[data_obj]["presentes"] += 1
+                                dados_por_data[data_obj]["total"] += 1
+                            else:
+                                refeicao = row[6] if len(row) > 6 else ""
+                                if refeicao.lower() == "almoco":
+                                    dados_por_data[data_obj]["almocou"] += 1
+                                else:
+                                    dados_por_data[data_obj]["nao_almocou"] += 1
+                                dados_por_data[data_obj]["total"] += 1
+                    except Exception:
+                        pass
             
             # Preencher tabela conforme tipo
             if eh_frequencia:
@@ -3850,8 +3942,8 @@ def abrir_painel_admin(event=None):
                                          text=data_label, font=("Segoe UI", 8), fill=T["FG_TEXT"])
         
         def exportar_pdf_historico():
-            if not os.path.exists(REFEITORIO_FILE):
-                messagebox.showwarning("Aviso", "Nenhum arquivo de refeitório encontrado")
+            if not th.get_children():
+                messagebox.showwarning("Aviso", "Nenhum dado de histórico para exportar.")
                 return
             try:
                 from fpdf import FPDF
@@ -4125,8 +4217,6 @@ def iniciar_tkinter(url_publica):
 # INICIALIZACAO
 # ==============================================================================
 if __name__ == "__main__":
-    _backup_mensal(force=True)
-    _agendar_backup_mensal()
     _iniciar_pool_pg()
     try:
         _criar_tabelas_neon()
