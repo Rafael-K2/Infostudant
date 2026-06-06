@@ -550,6 +550,188 @@ def _limpar_tabelas_neon():
     logger.info("Tabelas Neon refeitorio, frequencia e avaliacoes limpas")
 
 
+# ── Colunas de cada tabela para detecção automática ──────────────────────────
+_COLS_REFEITORIO  = {"Data", "HoraEntrada", "Matricula", "Nome", "Serie", "Curso", "Refeicao"}
+_COLS_FREQUENCIA  = {"Data", "HoraEntrada", "Matricula", "Nome", "Serie", "Curso", "Aula"}
+_COLS_AVALIACOES  = {"Data", "Aluno", "Serie", "Curso", "Estagio", "Item", "Nota"}
+
+
+def _detectar_tabela_csv(colunas_csv):
+    """Retorna 'refeitorio', 'frequencia', 'avaliacoes' ou None."""
+    cols = set(colunas_csv)
+    if "Refeicao" in cols and _COLS_REFEITORIO.issubset(cols):
+        return "refeitorio"
+    if "Aula" in cols and _COLS_FREQUENCIA.issubset(cols):
+        return "frequencia"
+    if "Nota" in cols and _COLS_AVALIACOES.issubset(cols):
+        return "avaliacoes"
+    return None
+
+
+def _duplicata_existe(tabela, linha):
+    """Verifica se o registro já existe no banco (comparação por campos-chave)."""
+    try:
+        if tabela == "refeitorio":
+            rows = _executar_pg(
+                "SELECT 1 FROM refeitorio WHERE data=%s AND horaentrada=%s AND matricula=%s AND refeicao=%s LIMIT 1",
+                (linha.get("Data",""), linha.get("HoraEntrada",""),
+                 linha.get("Matricula",""), linha.get("Refeicao","")),
+                fetch=True,
+            )
+        elif tabela == "frequencia":
+            rows = _executar_pg(
+                "SELECT 1 FROM frequencia WHERE data=%s AND horaentrada=%s AND matricula=%s AND aula=%s LIMIT 1",
+                (linha.get("Data",""), linha.get("HoraEntrada",""),
+                 linha.get("Matricula",""), linha.get("Aula","")),
+                fetch=True,
+            )
+        elif tabela == "avaliacoes":
+            rows = _executar_pg(
+                "SELECT 1 FROM avaliacoes WHERE data=%s AND aluno=%s AND estagio=%s AND item=%s LIMIT 1",
+                (linha.get("Data",""), linha.get("Aluno",""),
+                 linha.get("Estagio",""), linha.get("Item","")),
+                fetch=True,
+            )
+        else:
+            return False
+        return bool(rows)
+    except Exception:
+        return False
+
+
+def _importar_csv_para_banco(caminho_csv, ignorar_duplicatas=True, callback_progresso=None):
+    """
+    Lê o CSV, detecta a tabela pelo conjunto de colunas e insere os registros.
+
+    Parâmetros
+    ----------
+    caminho_csv        : str  – caminho completo do arquivo CSV
+    ignorar_duplicatas : bool – se True, pula linhas já existentes no banco
+    callback_progresso : callable(atual, total) | None – chamado a cada linha processada
+
+    Retorna
+    -------
+    dict com chaves: tabela, inseridos, ignorados, erros
+    Levanta ValueError se o arquivo não puder ser identificado.
+    """
+    with open(caminho_csv, "r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        linhas = list(reader)
+
+    if not linhas:
+        return {"tabela": "?", "inseridos": 0, "ignorados": 0, "erros": 0}
+
+    tabela = _detectar_tabela_csv(list(linhas[0].keys()))
+
+    if tabela is None:
+        raise ValueError(
+            "Colunas do CSV não correspondem a nenhuma tabela conhecida.\n"
+            "Esperado:\n"
+            f"  refeitorio  → {sorted(_COLS_REFEITORIO)}\n"
+            f"  frequencia  → {sorted(_COLS_FREQUENCIA)}\n"
+            f"  avaliacoes  → {sorted(_COLS_AVALIACOES)}"
+        )
+
+    total = len(linhas)
+    inseridos = ignorados = erros = 0
+
+    for i, linha in enumerate(linhas, 1):
+        if callback_progresso:
+            try:
+                callback_progresso(i, total)
+            except Exception:
+                pass
+
+        try:
+            if ignorar_duplicatas and _duplicata_existe(tabela, linha):
+                ignorados += 1
+                continue
+
+            if tabela == "refeitorio":
+                _inserir_refeitorio_db([
+                    linha.get("Data",""), linha.get("HoraEntrada",""),
+                    linha.get("Matricula",""), linha.get("Nome",""),
+                    linha.get("Serie",""), linha.get("Curso",""), linha.get("Refeicao",""),
+                ])
+            elif tabela == "frequencia":
+                _inserir_frequencia_db([
+                    linha.get("Data",""), linha.get("HoraEntrada",""),
+                    linha.get("Matricula",""), linha.get("Nome",""),
+                    linha.get("Serie",""), linha.get("Curso",""), linha.get("Aula",""),
+                ])
+            elif tabela == "avaliacoes":
+                _inserir_avaliacao_db([
+                    linha.get("Data",""), linha.get("Aluno",""),
+                    linha.get("Serie",""), linha.get("Curso",""),
+                    linha.get("Estagio",""), linha.get("Item",""), linha.get("Nota",""),
+                ])
+            inseridos += 1
+        except Exception as e_linha:
+            erros += 1
+            logger.warning(f"_importar_csv_para_banco ({os.path.basename(caminho_csv)}) linha {i}: {e_linha}")
+
+    logger.info(
+        f"Importação CSV concluída — tabela={tabela} arquivo={os.path.basename(caminho_csv)} "
+        f"inseridos={inseridos} ignorados={ignorados} erros={erros}"
+    )
+    return {"tabela": tabela, "inseridos": inseridos, "ignorados": ignorados, "erros": erros}
+
+
+def _importar_csv_para_banco_forcado(caminho_csv, tabela, ignorar_duplicatas=True, callback_progresso=None):
+    """
+    Versão de _importar_csv_para_banco com tabela de destino forçada manualmente.
+    Usada quando a detecção automática falha e o usuário escolheu a tabela no diálogo.
+    """
+    with open(caminho_csv, "r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        linhas = list(reader)
+
+    if not linhas:
+        return {"tabela": tabela, "inseridos": 0, "ignorados": 0, "erros": 0}
+
+    total = len(linhas)
+    inseridos = ignorados = erros = 0
+
+    for i, linha in enumerate(linhas, 1):
+        if callback_progresso:
+            try:
+                callback_progresso(i, total)
+            except Exception:
+                pass
+        try:
+            if ignorar_duplicatas and _duplicata_existe(tabela, linha):
+                ignorados += 1
+                continue
+            if tabela == "refeitorio":
+                _inserir_refeitorio_db([
+                    linha.get("Data", ""), linha.get("HoraEntrada", ""),
+                    linha.get("Matricula", ""), linha.get("Nome", ""),
+                    linha.get("Serie", ""), linha.get("Curso", ""), linha.get("Refeicao", ""),
+                ])
+            elif tabela == "frequencia":
+                _inserir_frequencia_db([
+                    linha.get("Data", ""), linha.get("HoraEntrada", ""),
+                    linha.get("Matricula", ""), linha.get("Nome", ""),
+                    linha.get("Serie", ""), linha.get("Curso", ""), linha.get("Aula", ""),
+                ])
+            elif tabela == "avaliacoes":
+                _inserir_avaliacao_db([
+                    linha.get("Data", ""), linha.get("Aluno", ""),
+                    linha.get("Serie", ""), linha.get("Curso", ""),
+                    linha.get("Estagio", ""), linha.get("Item", ""), linha.get("Nota", ""),
+                ])
+            inseridos += 1
+        except Exception as e_linha:
+            erros += 1
+            logger.warning(f"_importar_csv_para_banco_forcado ({os.path.basename(caminho_csv)}) linha {i}: {e_linha}")
+
+    logger.info(
+        f"Importação forçada — tabela={tabela} arquivo={os.path.basename(caminho_csv)} "
+        f"inseridos={inseridos} ignorados={ignorados} erros={erros}"
+    )
+    return {"tabela": tabela, "inseridos": inseridos, "ignorados": ignorados, "erros": erros}
+
+
 CARDAPIO_PADRAO = {
     "SEGUNDA": ["Cuzcuz com ovo e cafe fresco", "Arroz, feijao, frango cozido e batata doce", "Pao com manteiga e vitamina de goiaba"],
     "TERCA":   ["Cuzcuz com ovo e cafe fresco", "Arroz, feijao, frango cozido e batata doce", "Pao com manteiga e vitamina de goiaba"],
@@ -1440,6 +1622,27 @@ def abrir_painel_admin(event=None):
                     font=("Segoe UI",11,"bold"), relief="flat", padding=[0,8])
 
     aba_dados   = tk.Frame(nb, bg=T["BG_CARD"]); nb.add(aba_dados,   text="  Avaliacoes  ")
+
+    # ── Canvas scrollável para a aba Avaliações ──────────────────────────────
+    _cvs_dados = tk.Canvas(aba_dados, bg=T["BG_CARD"], highlightthickness=0)
+    _sb_dados  = ttk.Scrollbar(aba_dados, orient="vertical", command=_cvs_dados.yview)
+    _cvs_dados.configure(yscrollcommand=_sb_dados.set)
+    _sb_dados.pack(side="right", fill="y")
+    _cvs_dados.pack(side="left", fill="both", expand=True)
+    _scroll_inner = tk.Frame(_cvs_dados, bg=T["BG_CARD"])
+    _cvs_win_id   = _cvs_dados.create_window((0, 0), window=_scroll_inner, anchor="nw")
+
+    def _on_scroll_inner_configure(event):
+        _cvs_dados.configure(scrollregion=_cvs_dados.bbox("all"))
+    def _on_cvs_dados_configure(event):
+        _cvs_dados.itemconfig(_cvs_win_id, width=event.width)
+    def _on_mousewheel(event):
+        _cvs_dados.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+    _scroll_inner.bind("<Configure>", _on_scroll_inner_configure)
+    _cvs_dados.bind("<Configure>", _on_cvs_dados_configure)
+    _cvs_dados.bind("<MouseWheel>", _on_mousewheel)
+    _scroll_inner.bind("<MouseWheel>", _on_mousewheel)
     aba_rel     = tk.Frame(nb, bg=T["BG_CARD"]); nb.add(aba_rel,     text="  Relatorio Semanal  ")
     aba_card_ed = tk.Frame(nb, bg=T["BG_CARD"]); nb.add(aba_card_ed, text="  Editar Cardapio  ")
     aba_ev_ed   = tk.Frame(nb, bg=T["BG_CARD"]); nb.add(aba_ev_ed,   text="  Editar Eventos  ")
@@ -1525,7 +1728,7 @@ def abrir_painel_admin(event=None):
         except Exception as e:
             messagebox.showerror("Erro ao exportar", f"Falha ao gerar PDF:\n{e}")
 
-    fcard=tk.Frame(aba_dados,bg=T["BG_CARD"],padx=20,pady=15); fcard.pack(fill="x",padx=20,pady=(20,10))
+    fcard=tk.Frame(_scroll_inner,bg=T["BG_CARD"],padx=20,pady=15); fcard.pack(fill="x",padx=20,pady=(20,10))
     tk.Label(fcard,text="FILTROS",font=("Segoe UI",13,"bold"),bg=T["BG_CARD"],fg=T["ACCENT_VIBRANT"]).pack(anchor="w",pady=(0,10))
     tk.Frame(fcard,bg=T["BORDER_GRID"],height=1).pack(fill="x",pady=(0,12))
     
@@ -1624,9 +1827,9 @@ def abrir_painel_admin(event=None):
     linha1.bind("<Configure>", _ajustar_layout_filtros)
     _ajustar_layout_filtros()
 
-    lbl_cnt=tk.Label(aba_dados,text="0 registro(s)",font=("Segoe UI",10),bg=T["BG_CARD"],fg=T["FRASE_FG"])
+    lbl_cnt=tk.Label(_scroll_inner,text="0 registro(s)",font=("Segoe UI",10),bg=T["BG_CARD"],fg=T["FRASE_FG"])
     lbl_cnt.pack(anchor="w",padx=25,pady=(5,0))
-    ft=tk.Frame(aba_dados,bg=T["BORDER_GRID"],padx=1,pady=1); ft.pack(expand=True,fill="both",padx=20,pady=(5,20))
+    ft=tk.Frame(_scroll_inner,bg=T["BORDER_GRID"],padx=1,pady=1); ft.pack(expand=True,fill="both",padx=20,pady=(5,20))
     tabela=ttk.Treeview(ft,columns=("D","A","S","Cr","E","C","I","N"),show="headings")
     for col,txt,w in zip(("D","A","S","Cr","E","C","I","N"),("DATA","ALUNO","SERIE","CURSO","ESTAGIO","CATEGORIA","ITEM","RESPOSTA"),(120,140,80,140,85,130,220,95)):
         tabela.heading(col,text=txt); tabela.column(col,width=w,anchor="center")
@@ -1638,7 +1841,7 @@ def abrir_painel_admin(event=None):
     carregar()
     
     # ── Backup do Mês ───────────────────────────────────────────────────────
-    cfg_backup_frame = tk.Frame(aba_dados, bg=T["OBS_BG"])
+    cfg_backup_frame = tk.Frame(_scroll_inner, bg=T["OBS_BG"])
     cfg_backup_frame.pack(fill="x", padx=20, pady=(15, 10))
 
     tk.Label(cfg_backup_frame, text="BACKUP DO MÊS",
@@ -1659,8 +1862,281 @@ def abrir_painel_admin(event=None):
     )
     btn_backup_mes.pack(side="left", padx=(0, 8))
 
+    # ── Restaurar Backup ─────────────────────────────────────────────────────
+    cfg_restaurar_frame = tk.Frame(_scroll_inner, bg=T["OBS_BG"])
+    cfg_restaurar_frame.pack(fill="x", padx=20, pady=(0, 10))
+
+    tk.Label(cfg_restaurar_frame, text="RESTAURAR BACKUP",
+             font=("Segoe UI", 11, "bold"), bg=T["OBS_BG"], fg=T["ACCENT_VIBRANT"]).pack(anchor="w", padx=10, pady=(8, 0))
+    tk.Frame(cfg_restaurar_frame, bg=T["BORDER_GRID"], height=1).pack(fill="x", padx=10, pady=(4, 8))
+    tk.Label(cfg_restaurar_frame,
+             text="Selecione um ou mais arquivos CSV para importar de volta ao banco. "
+                  "A tabela de destino é detectada automaticamente pelas colunas do CSV. "
+                  "Se não reconhecida, um diálogo de mapeamento manual será exibido.",
+             font=("Segoe UI", 9), bg=T["OBS_BG"], fg=T["FG_TEXT"],
+             wraplength=760, justify="left").pack(anchor="w", padx=10, pady=(0, 8))
+
+    # ── lista de arquivos selecionados ────────────────────────────────────────
+    _csvs_selecionados = []   # lista mutável compartilhada entre closures
+
+    lista_frame = tk.Frame(cfg_restaurar_frame, bg=T["OBS_BG"])
+    lista_frame.pack(fill="x", padx=10, pady=(0, 4))
+
+    lbox_scroll = ttk.Scrollbar(lista_frame, orient="vertical")
+    lbox_csvs = tk.Listbox(lista_frame, height=4,
+                           font=("Segoe UI", 9), selectmode="extended",
+                           bg=T["ENTRY_BG"], fg=T["FG_TEXT"],
+                           selectbackground=T["ACCENT_SOFT"], selectforeground="white",
+                           relief="flat", bd=1, yscrollcommand=lbox_scroll.set)
+    lbox_scroll.config(command=lbox_csvs.yview)
+    lbox_csvs.pack(side="left", fill="x", expand=True)
+    lbox_scroll.pack(side="left", fill="y")
+
+    lbl_n_csvs = tk.Label(cfg_restaurar_frame,
+                          text="Nenhum arquivo selecionado.",
+                          font=("Segoe UI", 9, "italic"), bg=T["OBS_BG"], fg=T["FRASE_FG"])
+    lbl_n_csvs.pack(anchor="w", padx=10, pady=(0, 6))
+
+    def _atualizar_lista_csvs():
+        lbox_csvs.delete(0, "end")
+        for p in _csvs_selecionados:
+            lbox_csvs.insert("end", os.path.basename(p))
+        n = len(_csvs_selecionados)
+        lbl_n_csvs.config(text=f"{n} arquivo(s) selecionado(s)." if n else "Nenhum arquivo selecionado.")
+
+    def _selecionar_csvs():
+        from tkinter import filedialog
+        pasta_backups = os.path.join(DADOS_DIR, "backups")
+        inicial = pasta_backups if os.path.isdir(pasta_backups) else DADOS_DIR
+        caminhos = filedialog.askopenfilenames(
+            parent=janela,
+            title="Selecionar CSV(s) de backup",
+            initialdir=inicial,
+            filetypes=[("Arquivos CSV", "*.csv"), ("Todos os arquivos", "*.*")],
+        )
+        if caminhos:
+            for c in caminhos:
+                if c not in _csvs_selecionados:
+                    _csvs_selecionados.append(c)
+            _atualizar_lista_csvs()
+
+    def _remover_csvs_selecionados():
+        indices = list(lbox_csvs.curselection())
+        for i in sorted(indices, reverse=True):
+            del _csvs_selecionados[i]
+        _atualizar_lista_csvs()
+
+    def _limpar_lista_csvs():
+        _csvs_selecionados.clear()
+        _atualizar_lista_csvs()
+
+    btn_sel_row = tk.Frame(cfg_restaurar_frame, bg=T["OBS_BG"])
+    btn_sel_row.pack(fill="x", padx=10, pady=(0, 8))
+    tk.Button(btn_sel_row, text="➕ Adicionar CSV(s)",
+              command=_selecionar_csvs,
+              bg=T["ACCENT_SOFT"], fg="white", font=("Segoe UI", 10, "bold"),
+              padx=12, pady=5, bd=0, cursor="hand2").pack(side="left", padx=(0, 6))
+    tk.Button(btn_sel_row, text="➖ Remover selecionado",
+              command=_remover_csvs_selecionados,
+              bg=T["FRASE_FG"], fg="white", font=("Segoe UI", 10, "bold"),
+              padx=12, pady=5, bd=0, cursor="hand2").pack(side="left", padx=(0, 6))
+    tk.Button(btn_sel_row, text="🗑 Limpar lista",
+              command=_limpar_lista_csvs,
+              bg=T["OBS_BG"], fg=T["ACCENT_VIBRANT"], font=("Segoe UI", 10, "bold"),
+              padx=12, pady=5, bd=0, cursor="hand2").pack(side="left")
+
+    # ── opção ignorar duplicatas ───────────────────────────────────────────────
+    opt_row = tk.Frame(cfg_restaurar_frame, bg=T["OBS_BG"])
+    opt_row.pack(fill="x", padx=10, pady=(0, 8))
+    ignorar_dup_var = tk.BooleanVar(value=True)
+    tk.Checkbutton(opt_row, text="Ignorar duplicatas (recomendado)",
+                   variable=ignorar_dup_var,
+                   font=("Segoe UI", 9), bg=T["OBS_BG"], fg=T["FG_TEXT"],
+                   activebackground=T["OBS_BG"], selectcolor=T["ENTRY_BG"]).pack(side="left")
+
+    # ── barra de progresso (oculta até iniciar) ───────────────────────────────
+    prog_frame = tk.Frame(cfg_restaurar_frame, bg=T["OBS_BG"])
+    prog_frame.pack(fill="x", padx=10, pady=(0, 4))
+    prog_bar = ttk.Progressbar(prog_frame, mode="determinate", length=400)
+    lbl_prog = tk.Label(prog_frame, text="", font=("Segoe UI", 9),
+                        bg=T["OBS_BG"], fg=T["FRASE_FG"])
+    # ocultos até a importação começar
+
+    # ── diálogo de mapeamento manual ──────────────────────────────────────────
+    def _dialogo_mapeamento_manual(nome_arquivo, colunas_csv):
+        """Abre janela para o usuário escolher manualmente a tabela de destino.
+        Retorna 'refeitorio', 'frequencia', 'avaliacoes' ou None (cancelado)."""
+        resultado = {"tabela": None}
+        dlg = tk.Toplevel(janela)
+        dlg.title("Mapeamento manual de tabela")
+        dlg.configure(bg=T["BG_CARD"])
+        dlg.transient(janela); dlg.grab_set(); dlg.resizable(False, False)
+
+        tk.Label(dlg, text="Tabela de destino não reconhecida",
+                 font=("Segoe UI", 12, "bold"), bg=T["BG_CARD"], fg=T["ACCENT_VIBRANT"]).pack(padx=20, pady=(16, 4))
+        tk.Label(dlg, text=f"Arquivo: {nome_arquivo}",
+                 font=("Segoe UI", 9, "italic"), bg=T["BG_CARD"], fg=T["FRASE_FG"]).pack(padx=20)
+        tk.Label(dlg, text=f"Colunas detectadas: {', '.join(colunas_csv)}",
+                 font=("Segoe UI", 8), bg=T["BG_CARD"], fg=T["FG_TEXT"],
+                 wraplength=400, justify="left").pack(padx=20, pady=(4, 12))
+        tk.Label(dlg, text="Selecione a tabela de destino para esta importação:",
+                 font=("Segoe UI", 9), bg=T["BG_CARD"], fg=T["FG_TEXT"]).pack(padx=20, pady=(0, 8))
+
+        tabela_var = tk.StringVar(value="")
+        opcoes = [
+            ("refeitorio",  "Refeitório  (Data, HoraEntrada, Matricula, Nome, Serie, Curso, Refeicao)"),
+            ("frequencia",  "Frequência  (Data, HoraEntrada, Matricula, Nome, Serie, Curso, Aula)"),
+            ("avaliacoes",  "Avaliações  (Data, Aluno, Serie, Curso, Estagio, Item, Nota)"),
+        ]
+        for val, texto in opcoes:
+            tk.Radiobutton(dlg, text=texto, variable=tabela_var, value=val,
+                           font=("Segoe UI", 9), bg=T["BG_CARD"], fg=T["FG_TEXT"],
+                           activebackground=T["BG_CARD"], selectcolor=T["ENTRY_BG"]).pack(anchor="w", padx=28, pady=2)
+
+        def _confirmar():
+            if not tabela_var.get():
+                messagebox.showwarning("Aviso", "Selecione uma tabela de destino.", parent=dlg)
+                return
+            resultado["tabela"] = tabela_var.get()
+            dlg.destroy()
+
+        def _cancelar():
+            dlg.destroy()
+
+        btn_r = tk.Frame(dlg, bg=T["BG_CARD"]); btn_r.pack(pady=(12, 16))
+        tk.Button(btn_r, text="Cancelar", command=_cancelar,
+                  bg=T["FRASE_FG"], fg="white", font=("Segoe UI", 10, "bold"),
+                  padx=14, pady=6, bd=0, cursor="hand2").pack(side="left", padx=6)
+        tk.Button(btn_r, text="Importar", command=_confirmar,
+                  bg=T["ACCENT_SOFT"], fg="white", font=("Segoe UI", 10, "bold"),
+                  padx=14, pady=6, bd=0, cursor="hand2").pack(side="left", padx=6)
+
+        dlg.wait_window()
+        return resultado["tabela"]
+
+    # ── execução da importação ─────────────────────────────────────────────────
+    def _executar_restaurar_backup():
+        if not _csvs_selecionados:
+            messagebox.showwarning("Aviso", "Adicione pelo menos um arquivo CSV à lista antes de importar.")
+            return
+
+        ignorar_dup = ignorar_dup_var.get()
+        total_arquivos = len(_csvs_selecionados)
+
+        # Confirmar
+        lista_nomes = "\n".join(f"  • {os.path.basename(p)}" for p in _csvs_selecionados)
+        dup_texto = "Duplicatas serão IGNORADAS." if ignorar_dup else "Duplicatas serão INSERIDAS mesmo assim."
+        if not messagebox.askyesno(
+            "Confirmar restauração",
+            f"Importar {total_arquivos} arquivo(s):\n{lista_nomes}\n\n"
+            f"{dup_texto}\n\nDeseja continuar?",
+        ):
+            return
+
+        # Mostrar barra de progresso
+        prog_bar["value"] = 0
+        prog_bar["maximum"] = 100
+        lbl_prog.config(text="Iniciando...")
+        prog_bar.pack(side="left", padx=(0, 8), pady=4)
+        lbl_prog.pack(side="left")
+        prog_frame.update_idletasks()
+
+        resumo_total = {"inseridos": 0, "ignorados": 0, "erros": 0}
+        detalhes = []
+        arquivos_com_erro = []
+
+        for idx_arq, caminho in enumerate(_csvs_selecionados, 1):
+            nome_arq = os.path.basename(caminho)
+            lbl_prog.config(text=f"[{idx_arq}/{total_arquivos}] {nome_arq}")
+            prog_frame.update_idletasks()
+
+            # Verificar se o arquivo precisa de mapeamento manual
+            try:
+                with open(caminho, "r", encoding="utf-8") as f:
+                    primeiras = list(csv.DictReader(f))
+                if not primeiras:
+                    detalhes.append(f"⚠️ {nome_arq}: arquivo vazio, ignorado.")
+                    continue
+                colunas_csv = list(primeiras[0].keys())
+                tabela_detectada = _detectar_tabela_csv(colunas_csv)
+            except Exception as e_leitura:
+                arquivos_com_erro.append(nome_arq)
+                detalhes.append(f"❌ {nome_arq}: erro ao ler — {e_leitura}")
+                continue
+
+            if tabela_detectada is None:
+                # Mapeamento manual
+                tabela_manual = _dialogo_mapeamento_manual(nome_arq, colunas_csv)
+                if tabela_manual is None:
+                    detalhes.append(f"⏭ {nome_arq}: ignorado pelo usuário (mapeamento cancelado).")
+                    continue
+                # Patch temporário: forçar tabela na função via monkey-patch não é necessário
+                # pois _importar_csv_para_banco vai re-detectar; em vez disso usamos wrapper
+                try:
+                    resultado = _importar_csv_para_banco_forcado(
+                        caminho, tabela_manual, ignorar_dup,
+                        lambda atual, total, _a=idx_arq, _t=total_arquivos: (
+                            prog_bar.config(value=int((_a - 1 + atual / total) / _t * 100)),
+                            prog_frame.update_idletasks()
+                        )
+                    )
+                except Exception as e_imp:
+                    arquivos_com_erro.append(nome_arq)
+                    detalhes.append(f"❌ {nome_arq}: {e_imp}")
+                    continue
+            else:
+                try:
+                    resultado = _importar_csv_para_banco(
+                        caminho, ignorar_dup,
+                        lambda atual, total, _a=idx_arq, _t=total_arquivos: (
+                            prog_bar.config(value=int((_a - 1 + atual / total) / _t * 100)),
+                            prog_frame.update_idletasks()
+                        )
+                    )
+                except Exception as e_imp:
+                    arquivos_com_erro.append(nome_arq)
+                    detalhes.append(f"❌ {nome_arq}: {e_imp}")
+                    continue
+
+            resumo_total["inseridos"] += resultado["inseridos"]
+            resumo_total["ignorados"] += resultado["ignorados"]
+            resumo_total["erros"]     += resultado["erros"]
+            detalhes.append(
+                f"✅ {nome_arq} → {resultado['tabela']}: "
+                f"{resultado['inseridos']} inserido(s), "
+                f"{resultado['ignorados']} ignorado(s), "
+                f"{resultado['erros']} erro(s)."
+            )
+
+        # Finalizar barra
+        prog_bar["value"] = 100
+        lbl_prog.config(text="Concluído.")
+        prog_frame.update_idletasks()
+
+        # Resumo final
+        msg = (
+            f"Importação concluída!\n\n"
+            f"✅ Inseridos : {resumo_total['inseridos']}\n"
+            f"⏭ Ignorados : {resumo_total['ignorados']}\n"
+            f"❌ Erros     : {resumo_total['erros']}\n\n"
+            + "\n".join(detalhes)
+        )
+        messagebox.showinfo("Resumo da importação", msg)
+
+        # Esconder barra e limpar lista
+        prog_bar.pack_forget(); lbl_prog.pack_forget()
+        _limpar_lista_csvs()
+        carregar()
+
+    btn_importar_row = tk.Frame(cfg_restaurar_frame, bg=T["OBS_BG"])
+    btn_importar_row.pack(fill="x", padx=10, pady=(0, 10))
+    tk.Button(btn_importar_row, text="▶ Importar CSV(s) para o banco",
+              command=_executar_restaurar_backup,
+              bg=T["ACCENT_VIBRANT"], fg="white", font=("Segoe UI", 10, "bold"),
+              padx=14, pady=7, bd=0, cursor="hand2").pack(side="left")
+
     # ── API na nuvem (Opção B) ───────────────────────────────────────────────
-    cloud_frame = tk.Frame(aba_dados, bg=T["OBS_BG"])
+    cloud_frame = tk.Frame(_scroll_inner, bg=T["OBS_BG"])
     cloud_frame.pack(fill="x", padx=20, pady=(0, 10))
 
     tk.Label(cloud_frame, text="API NA NUVEM (CLIENTE HTML)",
