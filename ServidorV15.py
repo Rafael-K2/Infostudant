@@ -540,10 +540,10 @@ def checar_senha(req):
 @app.route('/')
 def serve_cliente():
     pasta_raiz = os.path.dirname(os.path.abspath(__file__))
-    arquivo_index = os.path.join(pasta_raiz, 'Cliente.html')
+    arquivo_index = os.path.join(pasta_raiz, 'Index.html')
     if os.path.isfile(arquivo_index):
-        return send_from_directory(pasta_raiz, 'Cliente.html')
-    return jsonify({'erro': 'Cliente.html não encontrado'}), 404
+        return send_from_directory(pasta_raiz, 'Index.html')
+    return jsonify({'erro': 'Index.html não encontrado'}), 404
 
 # Rota para servir arquivos estáticos (CSS, JS, imagens, etc) da pasta raiz
 @app.route('/<path:path>')
