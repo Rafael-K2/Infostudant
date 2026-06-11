@@ -1,0 +1,21 @@
+12/06/2026 18:54:35 - INFO - Pool PostgreSQL inicializado
+12/06/2026 18:54:36 - INFO - Tabelas Neon verificadas/criadas
+12/06/2026 18:54:37 - WARNING - Sync nuvem falhou (/admin/cardapio): HTTP Error 405: Method Not Allowed
+12/06/2026 18:54:37 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
+12/06/2026 18:54:38 - WARNING - Sync nuvem falhou (/admin/eventos): HTTP Error 405: Method Not Allowed
+12/06/2026 18:54:38 - WARNING - Sync nuvem falhou (/admin/config): HTTP Error 405: Method Not Allowed
+12/06/2026 18:54:45 - INFO - Painel admin aberto com sucesso
+12/06/2026 18:57:00 - INFO - Pool PostgreSQL inicializado
+12/06/2026 18:57:01 - INFO - Tabelas Neon verificadas/criadas
+12/06/2026 18:57:02 - WARNING - Sync nuvem falhou (/admin/cardapio): HTTP Error 405: Method Not Allowed
+12/06/2026 18:57:02 - WARNING - Sync nuvem falhou (/admin/eventos): HTTP Error 405: Method Not Allowed
+12/06/2026 18:57:02 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
+12/06/2026 18:57:03 - WARNING - Sync nuvem falhou (/admin/config): HTTP Error 405: Method Not Allowed
+12/06/2026 18:57:09 - INFO - Painel admin aberto com sucesso
+12/06/2026 21:43:50 - INFO - Pool PostgreSQL inicializado
+12/06/2026 21:43:50 - INFO - Tabelas Neon verificadas/criadas
+12/06/2026 21:43:51 - WARNING - Sync nuvem falhou (/admin/cardapio): HTTP Error 405: Method Not Allowed
+12/06/2026 21:43:51 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
+12/06/2026 21:43:52 - WARNING - Sync nuvem falhou (/admin/eventos): HTTP Error 405: Method Not Allowed
+12/06/2026 21:43:53 - WARNING - Sync nuvem falhou (/admin/config): HTTP Error 405: Method Not Allowed
+12/06/2026 21:44:00 - INFO - Painel admin (CTk) aberto com sucesso

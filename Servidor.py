@@ -39,6 +39,8 @@ from flask import Flask, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS
 import tkinter as tk
 from tkinter import ttk, messagebox
+import customtkinter as ctk
+import datetime
 
 import qrcode
 from PIL import Image, ImageTk
@@ -94,6 +96,14 @@ MESES_PT = (
 DEFAULT_ADMIN_PLAIN = "Marwin2026"
 # Prefer env var MARWIN_ADMIN_PASS (pode conter hash bcrypt). Fallback para DEFAULT_ADMIN_PLAIN.
 ADMIN_PASSWORD = os.getenv("MARWIN_ADMIN_PASS", DEFAULT_ADMIN_PLAIN)
+# Senha em texto claro para envio no header X-Senha ao sincronizar com a nuvem.
+# Se MARWIN_ADMIN_PASS for um hash bcrypt, use MARWIN_ADMIN_PLAIN_PASS com a senha real.
+ADMIN_PLAIN_PASS = os.getenv("MARWIN_ADMIN_PLAIN_PASS", DEFAULT_ADMIN_PLAIN)
+if ADMIN_PASSWORD == DEFAULT_ADMIN_PLAIN:
+    print(
+        "\n[AVISO DE SEGURANÇA] A variável de ambiente MARWIN_ADMIN_PASS não está definida.\n"
+        "O servidor está usando a senha padrão. Defina MARWIN_ADMIN_PASS para maior segurança.\n"
+    )
 
 # Try to import bcrypt if available (optional). If ADMIN_PASSWORD is a bcrypt hash, we'll use it.
 try:
@@ -119,8 +129,13 @@ def _cloud_api_url():
     return _ler_cloud_config().get("api_url", "").strip().rstrip("/")
 
 def _sync_nuvem(rota, metodo, dados=None):
-    base = _cloud_api_url()
-    if not base or not _ler_cloud_config().get("sincronizar_automatico", True):
+    cfg = _ler_cloud_config()
+    base = cfg.get("api_url", "").strip().rstrip("/")
+    if not base:
+        logger.debug(f"Sync nuvem ignorado ({rota}): api_url não configurada em cloud_config.json")
+        return False
+    if not cfg.get("sincroniz   ar_automatico", True):
+        logger.debug(f"Sync nuvem ignorado ({rota}): sincronizar_automatico=false")
         return False
     import urllib.request
     url = base + rota
@@ -128,12 +143,23 @@ def _sync_nuvem(rota, metodo, dados=None):
     req = urllib.request.Request(
         url,
         data=body,
-        headers={"Content-Type": "application/json", "X-Senha": ADMIN_PASSWORD},
+        headers={"Content-Type": "application/json", "X-Senha": ADMIN_PLAIN_PASS},
         method=metodo,
     )
     try:
         with urllib.request.urlopen(req, timeout=15) as resp:
-            return 200 <= resp.status < 300
+            ok = 200 <= resp.status < 300
+            if not ok:
+                logger.warning(f"Sync nuvem ({rota}): HTTP {resp.status}")
+            return ok
+    except urllib.error.HTTPError as e:
+        corpo = ""
+        try:
+            corpo = e.read().decode("utf-8", errors="replace")[:200]
+        except Exception:
+            pass
+        logger.warning(f"Sync nuvem falhou ({rota}): HTTP {e.code} — {corpo}")
+        return False
     except Exception as e:
         logger.warning(f"Sync nuvem falhou ({rota}): {e}")
         return False
@@ -150,7 +176,22 @@ def _sincronizar_tudo_nuvem():
         logger.info("Configurações sincronizadas com a API na nuvem")
     return ok
 
-DB_DEFAULT_CONNECTION = "postgresql://neondb_owner:npg_ydP7rqBR0ZoQ@ep-broad-mountain-apatc77i-pooler.c-7.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+# ── Credenciais do banco — use variável de ambiente para evitar exposição ──────
+# Defina MARWIN_DB_URL no sistema antes de rodar:
+#   Windows : set MARWIN_DB_URL=postgresql://usuario:senha@host/neondb?sslmode=require
+#   Linux   : export MARWIN_DB_URL=postgresql://...
+_DB_FALLBACK = (
+    "postgresql://neondb_owner:npg_ydP7rqBR0ZoQ@"
+    "ep-broad-mountain-apatc77i-pooler.c-7.us-east-1.aws.neon.tech"
+    "/neondb?sslmode=require&channel_binding=require"
+)
+DB_DEFAULT_CONNECTION = os.getenv("MARWIN_DB_URL", _DB_FALLBACK)
+if DB_DEFAULT_CONNECTION == _DB_FALLBACK:
+    print(
+        "\n[AVISO DE SEGURANÇA] A variável de ambiente MARWIN_DB_URL não está definida.\n"
+        "O servidor está usando a connection string padrão embutida no código.\n"
+        "Defina MARWIN_DB_URL para evitar expor credenciais.\n"
+    )
 PG_POOL = None
 
 def _carregar_db_config():
@@ -1579,9 +1620,32 @@ def pedir_senha_tk():
               cursor="hand2", activebackground=T["ACCENT_SOFT"],
               command=confirmar).pack(side="right", expand=True, fill="x", padx=(6, 0))
     win.bind("<Return>", lambda e: confirmar()); win.wait_window(); return resultado["senha"]
-
-def abrir_painel_admin(event=None):
+# ── Cores do novo tema ──────────────────────────────────────────────────────
+VERDE_ESCURO   = "#0F3D2E"
+VERDE_VIBRANTE = "#1F6B45"
+VERDE_SIDEBAR  = "#123D2C"
+VERDE_SELECAO  = "#1F6B45"
+VERDE_HOVER    = "#1A4D38"
+VERDE_CLARO    = "#E8F5E9"
+AZUL_CLARO     = "#E3F2FD"
+ROXO_CLARO     = "#F3E5F5"
+LARANJA_CLARO  = "#FFF3E0"
+VERMELHO_CLARO = "#FFEBEE"
+CINZA_BG       = "#F5F6F8"
+BRANCO         = "#FFFFFF"
+TEXTO_CINZA    = "#6B7280"
+TEXTO_ESCURO   = "#1F2937"
+TEXTO_CLARO    = "#D7E8DE"
+ 
+ 
+def abrir_painel_admin_ctk(event=None):
+    """Abre o Painel Administrativo com o novo visual (CustomTkinter).
+ 
+    Mantém a MESMA verificação de senha e as MESMAS funções de leitura
+    de dados do painel original — só muda a interface.
+    """
     senha = pedir_senha_tk()
+ 
     def _local_check(pw: str) -> bool:
         if not pw:
             return False
@@ -1591,1069 +1655,1161 @@ def abrir_painel_admin(event=None):
             except Exception:
                 return False
         return secrets.compare_digest(pw, ADMIN_PASSWORD)
-
+ 
     if not _local_check(senha):
         if senha is not None:
-            logger.warning(f"Tentativa de acesso admin com senha incorreta")
-            messagebox.showerror("Acesso negado","Senha incorreta!")
+            logger.warning("Tentativa de acesso admin com senha incorreta")
+            messagebox.showerror("Acesso negado", "Senha incorreta!")
         return
-        return
-
-    logger.info("Painel admin aberto com sucesso")
-    
-    jd = tk.Toplevel(janela); configurar_janela(jd,"Painel Administrativo — EEEP MARWIN")
+ 
+    logger.info("Painel admin (CTk) aberto com sucesso")
+ 
+    ctk.set_appearance_mode("light")
+    ctk.set_default_color_theme("green")
+ 
+    jd = ctk.CTkToplevel(janela)
+    jd.title("Painel Administrativo — EEEP MARWIN")
+    jd.geometry("1400x850")
+    jd.configure(fg_color=CINZA_BG)
     jd.attributes("-topmost", True)
     jd.lift()
     jd.focus_force()
     jd.after(100, lambda: jd.attributes("-topmost", False))
-    criar_barra_topo(jd, "⚙️  Painel Administrativo",
-                     subtitulo=f"Servidor: {url_ngrok_global}" if url_ngrok_global else None)
-
-    nb = ttk.Notebook(jd); nb.pack(fill="both", expand=True, padx=20, pady=15)
-    style = ttk.Style(); style.theme_use("default")
-    style.configure("TNotebook", background=T["BG_MAIN"], borderwidth=0)
-    style.configure("TNotebook.Tab", background=T["OBS_BG"], foreground=T["ACCENT_VIBRANT"],
-                    font=("Segoe UI",11,"bold"), padding=[20,10])
-    style.map("TNotebook.Tab", background=[("selected",T["BG_CARD"])], foreground=[("selected",T["ACCENT_VIBRANT"])])
-    style.configure("Treeview", background=T["BG_CARD"], foreground=T["FG_TEXT"], rowheight=38,
-                    fieldbackground=T["BG_CARD"], font=("Segoe UI",11))
-    style.map("Treeview", background=[("selected",T["ACCENT_SOFT"])], foreground=[("selected","white")])
-    style.configure("Treeview.Heading", background=T["ACCENT_VIBRANT"], foreground="white",
-                    font=("Segoe UI",11,"bold"), relief="flat", padding=[0,8])
-
-    aba_dados   = tk.Frame(nb, bg=T["BG_CARD"]); nb.add(aba_dados,   text="  Avaliacoes  ")
-
-    # ── Canvas scrollável para a aba Avaliações ──────────────────────────────
-    _cvs_dados = tk.Canvas(aba_dados, bg=T["BG_CARD"], highlightthickness=0)
-    _sb_dados  = ttk.Scrollbar(aba_dados, orient="vertical", command=_cvs_dados.yview)
-    _cvs_dados.configure(yscrollcommand=_sb_dados.set)
-    _sb_dados.pack(side="right", fill="y")
-    _cvs_dados.pack(side="left", fill="both", expand=True)
-    _scroll_inner = tk.Frame(_cvs_dados, bg=T["BG_CARD"])
-    _cvs_win_id   = _cvs_dados.create_window((0, 0), window=_scroll_inner, anchor="nw")
-
-    def _on_scroll_inner_configure(event):
-        _cvs_dados.configure(scrollregion=_cvs_dados.bbox("all"))
-    def _on_cvs_dados_configure(event):
-        _cvs_dados.itemconfig(_cvs_win_id, width=event.width)
-    def _on_mousewheel(event):
-        _cvs_dados.yview_scroll(int(-1 * (event.delta / 120)), "units")
-
-    _scroll_inner.bind("<Configure>", _on_scroll_inner_configure)
-    _cvs_dados.bind("<Configure>", _on_cvs_dados_configure)
-    _cvs_dados.bind("<MouseWheel>", _on_mousewheel)
-    _scroll_inner.bind("<MouseWheel>", _on_mousewheel)
-    aba_rel     = tk.Frame(nb, bg=T["BG_CARD"]); nb.add(aba_rel,     text="  Relatorio Semanal  ")
-    aba_card_ed = tk.Frame(nb, bg=T["BG_CARD"]); nb.add(aba_card_ed, text="  Editar Cardapio  ")
-    aba_ev_ed   = tk.Frame(nb, bg=T["BG_CARD"]); nb.add(aba_ev_ed,   text="  Editar Eventos  ")
-    aba_ref     = tk.Frame(nb, bg=T["BG_CARD"]); nb.add(aba_ref,     text="  Refeitorio  ")
-    aba_freq    = tk.Frame(nb, bg=T["BG_CARD"]); nb.add(aba_freq,    text="  Frequencia  ")
-    aba_hist    = tk.Frame(nb, bg=T["BG_CARD"]); nb.add(aba_hist,    text="  Historico  ")
-    aba_qr      = tk.Frame(nb, bg=T["BG_CARD"]); nb.add(aba_qr,      text="  QR Codes  ")
-    aba_logs    = tk.Frame(nb, bg=T["BG_CARD"]); nb.add(aba_logs,    text="  Logs  ")
-
-    # ── ABA AVALIACOES ────────────────────────────────────────────────────────
-    f_nome,f_data,f_item,f_est = tk.StringVar(),tk.StringVar(),tk.StringVar(),tk.StringVar()
-
-    def _eh_almoco_favorito(item: str):
-        return "almoco favorito" in item.lower() or "almoço favorito" in item.lower()
-
-    def carregar():
-        for i in tabela.get_children(): tabela.delete(i)
+ 
+    jd.grid_columnconfigure(0, weight=0)
+    jd.grid_columnconfigure(1, weight=1)
+    jd.grid_rowconfigure(0, weight=1)
+ 
+    paginas = {}
+ 
+    # ──────────────────────────────────────────────────────────────────
+    # SIDEBAR
+    # ──────────────────────────────────────────────────────────────────
+    sidebar = ctk.CTkFrame(jd, width=230, corner_radius=0, fg_color=VERDE_SIDEBAR)
+    sidebar.grid(row=0, column=0, sticky="nsew")
+    sidebar.grid_propagate(False)
+ 
+    topo = ctk.CTkFrame(sidebar, fg_color="transparent")
+    topo.pack(fill="x", padx=20, pady=(24, 20))
+ 
+    logo_path = _buscar_logo_png()
+    logo_ref = None
+    if logo_path:
         try:
-            linhas = _avaliacoes_para_linhas()
-        except Exception as e:
-            messagebox.showerror("Erro", f"Falha ao carregar avaliações do banco:\n{e}")
-            lbl_cnt.config(text="0 registro(s)")
-            return
-        for idx, r in enumerate(linhas):
-            if len(r) < 7:
-                continue
-            ok_nome = f_nome.get().lower() in r[1].lower() if f_nome.get() else True
-            ok_data = f_data.get() in r[0] if f_data.get() else True
-            mapa_e  = {"Comida":"1","Limpeza":"2","Ensino":"3","Semana":"4"}
-            ok_est  = (r[4]==mapa_e.get(f_est.get())) if f_est.get() else True
-            ok_item = f_item.get().lower() in r[5].lower() if f_item.get() else True
-            if ok_nome and ok_data and ok_est and ok_item:
-                categoria = "Almoço favorito" if _eh_almoco_favorito(r[5]) else "Avaliação"
-                exib = [r[0], r[1], r[2], r[3], r[4], categoria, r[5], r[6]]
-                if r[4]=="4" and not _eh_almoco_favorito(r[5]):
-                    try:
-                        n=float(r[6])
-                        exib[7]="Ruim" if n<=1 else ("Medio" if n<=3 else "Bom")
-                    except: pass
-                tabela.insert("","end",values=exib,tags=("even" if idx%2==0 else "odd",))
-        lbl_cnt.config(text=f"{len(tabela.get_children())} registro(s)")
-
-    def apagar():
-        if messagebox.askyesno("Aviso","Apagar todos os dados?"):
-            try:
-                _apagar_avaliacoes_db()
-                carregar()
-                messagebox.showinfo("Sucesso", "Avaliações apagadas do banco.")
-            except Exception as e:
-                messagebox.showerror("Erro", f"Falha ao apagar avaliações:\n{e}")
-
-    def exportar_avaliacoes_pdf():
-        try:
-            reader = [["Data","Aluno","Serie","Curso","Estagio","Item","Nota"]] + _avaliacoes_para_linhas()
-        except Exception as e:
-            messagebox.showerror("Erro", f"Falha ao ler avaliações do banco:\n{e}")
-            return
-        if len(reader) <= 1:
-            messagebox.showwarning("Aviso", "Não há avaliações para exportar.")
-            return
-        try:
-            from fpdf import FPDF
-            pdf = FPDF()
-            pdf.set_auto_page_break(True, margin=15)
-            pdf.add_page()
-            pdf.set_font("Arial", "B", 16)
-            pdf.cell(0, 10, "AVALIACOES ESCOLARES - EEEP MARWIN", ln=True, align="C")
-            pdf.set_font("Arial", "", 12)
-            pdf.cell(0, 8, f"Data: {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}", ln=True)
-            pdf.ln(6)
-            pdf.set_font("Arial", "B", 11)
-            pdf.cell(0, 8, "Registros de avaliacao:", ln=True)
-            pdf.ln(3)
-            pdf.set_font("Arial", "", 10)
-            for row in reader[1:]:
-                if len(row) < 7: continue
-                pdf.multi_cell(0, 6, f"Data: {row[0]} | Aluno: {row[1]} | Serie: {row[2]} | Curso: {row[3]}")
-                pdf.multi_cell(0, 6, f"Estagio: {row[4]} | Item: {row[5]} | Nota: {row[6]}")
-                pdf.ln(2)
-            nome_arq = f"avaliacoes_marwin_{datetime.datetime.now().strftime('%d_%m_%Y')}.pdf"
-            pdf.output(nome_arq)
-            messagebox.showinfo("Sucesso", f"PDF gerado com sucesso:\n{nome_arq}")
-        except Exception as e:
-            messagebox.showerror("Erro ao exportar", f"Falha ao gerar PDF:\n{e}")
-
-    fcard=tk.Frame(_scroll_inner,bg=T["BG_CARD"],padx=20,pady=15); fcard.pack(fill="x",padx=20,pady=(20,10))
-    tk.Label(fcard,text="FILTROS",font=("Segoe UI",13,"bold"),bg=T["BG_CARD"],fg=T["ACCENT_VIBRANT"]).pack(anchor="w",pady=(0,10))
-    tk.Frame(fcard,bg=T["BORDER_GRID"],height=1).pack(fill="x",pady=(0,12))
-    
-    # LINHA 1 — Filtros de busca (grid)
-    linha1=tk.Frame(fcard,bg=T["BG_CARD"]); linha1.pack(fill="x",pady=4)
-    linha1.grid_columnconfigure(0, weight=1)
-    linha1.grid_columnconfigure(1, weight=1)
-    linha1.grid_columnconfigure(2, weight=1)
-    linha1.grid_columnconfigure(3, weight=0)
-    linha1.grid_columnconfigure(4, weight=0)
-
-    fr_nome=tk.Frame(linha1,bg=T["BG_CARD"]); fr_nome.grid(row=0,column=0,sticky="ew",padx=(0,20))
-    tk.Label(fr_nome,text="Nome",font=("Segoe UI",9),bg=T["BG_CARD"],fg=T["FRASE_FG"]).pack(anchor="w")
-    tk.Entry(fr_nome,textvariable=f_nome,width=25,font=("Segoe UI",11),bg=T["ENTRY_BG"],fg=T["FG_TEXT"],relief="solid",bd=1).pack(ipady=4)
-
-    fr_data=tk.Frame(linha1,bg=T["BG_CARD"]); fr_data.grid(row=0,column=1,sticky="ew",padx=(0,20))
-    tk.Label(fr_data,text="Data",font=("Segoe UI",9),bg=T["BG_CARD"],fg=T["FRASE_FG"]).pack(anchor="w")
-    tk.Entry(fr_data,textvariable=f_data,width=12,font=("Segoe UI",11),bg=T["ENTRY_BG"],fg=T["FG_TEXT"],relief="solid",bd=1).pack(ipady=4)
-
-    fr3=tk.Frame(linha1,bg=T["BG_CARD"]); fr3.grid(row=0,column=2,sticky="ew",padx=(0,20))
-    tk.Label(fr3,text="Estagio",font=("Segoe UI",9),bg=T["BG_CARD"],fg=T["FRASE_FG"]).pack(anchor="w")
-    ttk.Combobox(fr3,textvariable=f_est,values=["","Comida","Limpeza","Ensino","Semana"],
-                 state="readonly",width=12,font=("Segoe UI",11)).pack(ipady=2)
-
-    btn_buscar=tk.Button(linha1,text="Buscar",command=carregar,bg=T["ACCENT_SOFT"],fg="white",
-              font=("Segoe UI",10,"bold"),padx=18,pady=8,bd=0,cursor="hand2")
-    btn_buscar.grid(row=0,column=3,padx=15)
-    btn_export=tk.Button(linha1,text="Exportar PDF",command=exportar_avaliacoes_pdf,bg=T["ACCENT_VIBRANT"],fg="white",
-              font=("Segoe UI",10,"bold"),padx=18,pady=8,bd=0,cursor="hand2")
-    btn_export.grid(row=0,column=4,padx=5)
-
-    cfg_sys = ler_json(CONFIG_FILE, {"avaliacoes_ativas": True, "modo_leitura": "camera"})
-    status_var = tk.BooleanVar(value=cfg_sys.get("avaliacoes_ativas", True))
-    modo_var = tk.StringVar(value=cfg_sys.get("modo_leitura", "camera"))
-
-    def salvar_config():
-        cfg_sys["avaliacoes_ativas"] = status_var.get()
-        cfg_sys["modo_leitura"] = modo_var.get()
-        salvar_json(CONFIG_FILE, cfg_sys)
-        _sync_nuvem("/admin/config", "PUT", cfg_sys)
-
-    def alternar_status():
-        salvar_config()
-
-    def alterar_modo():
-        salvar_config()
-
-    # LINHA 2 — Controles de configuração (pack)
-    linha2=tk.Frame(fcard,bg=T["BG_CARD"]); linha2.pack(fill="x",pady=4)
-    
-    chk_avaliacoes = tk.Checkbutton(linha2, text="Avaliacoes Ativas", variable=status_var, command=alternar_status,
-                   font=("Segoe UI",10,"bold"), bg=T["BG_CARD"], fg=T["ACCENT_VIBRANT"],
-                   activebackground=T["BG_CARD"], selectcolor=T["ENTRY_BG"], cursor="hand2")
-    chk_avaliacoes.pack(side="left", padx=(0, 16))
-    
-    sep1 = tk.Frame(linha2, bg=T["BORDER_GRID"], width=1)
-    sep1.pack(side="left", fill="y", padx=(0, 16))
-    
-    fr4 = tk.Frame(linha2, bg=T["BG_CARD"])
-    fr4.pack(side="left", padx=(0, 16))
-    tk.Label(fr4, text="Modo de leitura:", font=("Segoe UI",9), bg=T["BG_CARD"], fg=T["FRASE_FG"]).pack(anchor="w")
-    rb_cam = tk.Radiobutton(fr4, text="Webcam", variable=modo_var, value="camera",
-                             bg=T["BG_CARD"], fg=T["FG_TEXT"], selectcolor=T["ACCENT_SOFT"],
-                             activebackground=T["BG_CARD"], font=("Segoe UI",10), command=alterar_modo)
-    rb_cam.pack(side="left", padx=(0, 8))
-    rb_usb = tk.Radiobutton(fr4, text="Leitor USB", variable=modo_var, value="usb",
-                             bg=T["BG_CARD"], fg=T["FG_TEXT"], selectcolor=T["ACCENT_SOFT"],
-                             activebackground=T["BG_CARD"], font=("Segoe UI",10), command=alterar_modo)
-    rb_usb.pack(side="left")
-    
-    sep2 = tk.Frame(linha2, bg=T["BORDER_GRID"], width=1)
-    sep2.pack(side="left", fill="y", padx=(0, 16))
-    
-    btn_apagar = tk.Button(linha2, text="Apagar tudo", command=apagar, bg="#c62828", fg="white",
-              font=("Segoe UI",10,"bold"), padx=18, pady=8, bd=0, cursor="hand2")
-    btn_apagar.pack(side="right")
-
-    def _ajustar_layout_filtros(event=None):
-        largura = fcard.winfo_width()
-        if largura < 780:
-            for widget in linha1.winfo_children():
-                widget.grid_forget()
-            row = 0
-            for widget in (fr_nome, fr_data, fr3, btn_buscar, btn_export):
-                widget.grid(row=row, column=0, sticky="ew", padx=0, pady=(0,6))
-                row += 1
-            linha1.grid_columnconfigure(0, weight=1)
-        else:
-            fr_nome.grid(row=0,column=0,sticky="ew",padx=(0,20),pady=0)
-            fr_data.grid(row=0,column=1,sticky="ew",padx=(0,20),pady=0)
-            fr3.grid(row=0,column=2,sticky="ew",padx=(0,20),pady=0)
-            btn_buscar.grid(row=0,column=3,padx=15,pady=0)
-            btn_export.grid(row=0,column=4,padx=5,pady=0)
-            for col in range(5):
-                linha1.grid_columnconfigure(col, weight=1 if col in (0,1,2) else 0)
-    linha1.bind("<Configure>", _ajustar_layout_filtros)
-    _ajustar_layout_filtros()
-
-    lbl_cnt=tk.Label(_scroll_inner,text="0 registro(s)",font=("Segoe UI",10),bg=T["BG_CARD"],fg=T["FRASE_FG"])
-    lbl_cnt.pack(anchor="w",padx=25,pady=(5,0))
-    ft=tk.Frame(_scroll_inner,bg=T["BORDER_GRID"],padx=1,pady=1); ft.pack(expand=True,fill="both",padx=20,pady=(5,20))
-    tabela=ttk.Treeview(ft,columns=("D","A","S","Cr","E","C","I","N"),show="headings")
-    for col,txt,w in zip(("D","A","S","Cr","E","C","I","N"),("DATA","ALUNO","SERIE","CURSO","ESTAGIO","CATEGORIA","ITEM","RESPOSTA"),(120,140,80,140,85,130,220,95)):
-        tabela.heading(col,text=txt); tabela.column(col,width=w,anchor="center")
-    sbh=ttk.Scrollbar(ft, orient="horizontal", command=tabela.xview)
-    tabela.configure(xscrollcommand=sbh.set)
-    tabela.pack(expand=True,fill="both")
-    sbh.pack(fill="x")
-    tabela.tag_configure("even",background=T["ENTRY_BG"]); tabela.tag_configure("odd",background=T["BG_CARD"])
-    carregar()
-    
-    # ── Backup do Mês ───────────────────────────────────────────────────────
-    cfg_backup_frame = tk.Frame(_scroll_inner, bg=T["OBS_BG"])
-    cfg_backup_frame.pack(fill="x", padx=20, pady=(15, 10))
-
-    tk.Label(cfg_backup_frame, text="BACKUP DO MÊS",
-            font=("Segoe UI", 11, "bold"), bg=T["OBS_BG"], fg=T["ACCENT_VIBRANT"]).pack(anchor="w", padx=10, pady=(8, 0))
-    tk.Frame(cfg_backup_frame, bg=T["BORDER_GRID"], height=1).pack(fill="x", padx=10, pady=(4, 8))
-
-    tk.Label(cfg_backup_frame,
-            text="Exporta todos os dados do banco para CSV e, após confirmação em duas etapas, limpa as tabelas.",
-            font=("Segoe UI", 9), bg=T["OBS_BG"], fg=T["FG_TEXT"], wraplength=760, justify="left").pack(anchor="w", padx=10, pady=(0, 10))
-
-    btn_backup_frame = tk.Frame(cfg_backup_frame, bg=T["OBS_BG"])
-    btn_backup_frame.pack(fill="x", padx=10, pady=(0, 10))
-    btn_backup_mes = tk.Button(
-        btn_backup_frame, text="Backup do Mês",
-        command=lambda: _iniciar_fluxo_backup_mes(btn_backup_mes),
-        bg=T["ACCENT_SOFT"], fg="white", font=("Segoe UI", 10, "bold"),
-        padx=14, pady=6, bd=0, cursor="hand2",
-    )
-    btn_backup_mes.pack(side="left", padx=(0, 8))
-
-    # ── Restaurar Backup ─────────────────────────────────────────────────────
-    cfg_restaurar_frame = tk.Frame(_scroll_inner, bg=T["OBS_BG"])
-    cfg_restaurar_frame.pack(fill="x", padx=20, pady=(0, 10))
-
-    tk.Label(cfg_restaurar_frame, text="RESTAURAR BACKUP",
-             font=("Segoe UI", 11, "bold"), bg=T["OBS_BG"], fg=T["ACCENT_VIBRANT"]).pack(anchor="w", padx=10, pady=(8, 0))
-    tk.Frame(cfg_restaurar_frame, bg=T["BORDER_GRID"], height=1).pack(fill="x", padx=10, pady=(4, 8))
-    tk.Label(cfg_restaurar_frame,
-             text="Selecione um ou mais arquivos CSV para importar de volta ao banco. "
-                  "A tabela de destino é detectada automaticamente pelas colunas do CSV. "
-                  "Se não reconhecida, um diálogo de mapeamento manual será exibido.",
-             font=("Segoe UI", 9), bg=T["OBS_BG"], fg=T["FG_TEXT"],
-             wraplength=760, justify="left").pack(anchor="w", padx=10, pady=(0, 8))
-
-    # ── lista de arquivos selecionados ────────────────────────────────────────
-    _csvs_selecionados = []   # lista mutável compartilhada entre closures
-
-    lista_frame = tk.Frame(cfg_restaurar_frame, bg=T["OBS_BG"])
-    lista_frame.pack(fill="x", padx=10, pady=(0, 4))
-
-    lbox_scroll = ttk.Scrollbar(lista_frame, orient="vertical")
-    lbox_csvs = tk.Listbox(lista_frame, height=4,
-                           font=("Segoe UI", 9), selectmode="extended",
-                           bg=T["ENTRY_BG"], fg=T["FG_TEXT"],
-                           selectbackground=T["ACCENT_SOFT"], selectforeground="white",
-                           relief="flat", bd=1, yscrollcommand=lbox_scroll.set)
-    lbox_scroll.config(command=lbox_csvs.yview)
-    lbox_csvs.pack(side="left", fill="x", expand=True)
-    lbox_scroll.pack(side="left", fill="y")
-
-    lbl_n_csvs = tk.Label(cfg_restaurar_frame,
-                          text="Nenhum arquivo selecionado.",
-                          font=("Segoe UI", 9, "italic"), bg=T["OBS_BG"], fg=T["FRASE_FG"])
-    lbl_n_csvs.pack(anchor="w", padx=10, pady=(0, 6))
-
-    def _atualizar_lista_csvs():
-        lbox_csvs.delete(0, "end")
-        for p in _csvs_selecionados:
-            lbox_csvs.insert("end", os.path.basename(p))
-        n = len(_csvs_selecionados)
-        lbl_n_csvs.config(text=f"{n} arquivo(s) selecionado(s)." if n else "Nenhum arquivo selecionado.")
-
-    def _selecionar_csvs():
-        from tkinter import filedialog
-        pasta_backups = os.path.join(DADOS_DIR, "backups")
-        inicial = pasta_backups if os.path.isdir(pasta_backups) else DADOS_DIR
-        caminhos = filedialog.askopenfilenames(
-            parent=janela,
-            title="Selecionar CSV(s) de backup",
-            initialdir=inicial,
-            filetypes=[("Arquivos CSV", "*.csv"), ("Todos os arquivos", "*.*")],
-        )
-        if caminhos:
-            for c in caminhos:
-                if c not in _csvs_selecionados:
-                    _csvs_selecionados.append(c)
-            _atualizar_lista_csvs()
-
-    def _remover_csvs_selecionados():
-        indices = list(lbox_csvs.curselection())
-        for i in sorted(indices, reverse=True):
-            del _csvs_selecionados[i]
-        _atualizar_lista_csvs()
-
-    def _limpar_lista_csvs():
-        _csvs_selecionados.clear()
-        _atualizar_lista_csvs()
-
-    btn_sel_row = tk.Frame(cfg_restaurar_frame, bg=T["OBS_BG"])
-    btn_sel_row.pack(fill="x", padx=10, pady=(0, 8))
-    tk.Button(btn_sel_row, text="➕ Adicionar CSV(s)",
-              command=_selecionar_csvs,
-              bg=T["ACCENT_SOFT"], fg="white", font=("Segoe UI", 10, "bold"),
-              padx=12, pady=5, bd=0, cursor="hand2").pack(side="left", padx=(0, 6))
-    tk.Button(btn_sel_row, text="➖ Remover selecionado",
-              command=_remover_csvs_selecionados,
-              bg=T["FRASE_FG"], fg="white", font=("Segoe UI", 10, "bold"),
-              padx=12, pady=5, bd=0, cursor="hand2").pack(side="left", padx=(0, 6))
-    tk.Button(btn_sel_row, text="🗑 Limpar lista",
-              command=_limpar_lista_csvs,
-              bg=T["OBS_BG"], fg=T["ACCENT_VIBRANT"], font=("Segoe UI", 10, "bold"),
-              padx=12, pady=5, bd=0, cursor="hand2").pack(side="left")
-
-    # ── opção ignorar duplicatas ───────────────────────────────────────────────
-    opt_row = tk.Frame(cfg_restaurar_frame, bg=T["OBS_BG"])
-    opt_row.pack(fill="x", padx=10, pady=(0, 8))
-    ignorar_dup_var = tk.BooleanVar(value=True)
-    tk.Checkbutton(opt_row, text="Ignorar duplicatas (recomendado)",
-                   variable=ignorar_dup_var,
-                   font=("Segoe UI", 9), bg=T["OBS_BG"], fg=T["FG_TEXT"],
-                   activebackground=T["OBS_BG"], selectcolor=T["ENTRY_BG"]).pack(side="left")
-
-    # ── barra de progresso (oculta até iniciar) ───────────────────────────────
-    prog_frame = tk.Frame(cfg_restaurar_frame, bg=T["OBS_BG"])
-    prog_frame.pack(fill="x", padx=10, pady=(0, 4))
-    prog_bar = ttk.Progressbar(prog_frame, mode="determinate", length=400)
-    lbl_prog = tk.Label(prog_frame, text="", font=("Segoe UI", 9),
-                        bg=T["OBS_BG"], fg=T["FRASE_FG"])
-    # ocultos até a importação começar
-
-    # ── diálogo de mapeamento manual ──────────────────────────────────────────
-    def _dialogo_mapeamento_manual(nome_arquivo, colunas_csv):
-        """Abre janela para o usuário escolher manualmente a tabela de destino.
-        Retorna 'refeitorio', 'frequencia', 'avaliacoes' ou None (cancelado)."""
-        resultado = {"tabela": None}
-        dlg = tk.Toplevel(janela)
-        dlg.title("Mapeamento manual de tabela")
-        dlg.configure(bg=T["BG_CARD"])
-        dlg.transient(janela); dlg.grab_set(); dlg.resizable(False, False)
-
-        tk.Label(dlg, text="Tabela de destino não reconhecida",
-                 font=("Segoe UI", 12, "bold"), bg=T["BG_CARD"], fg=T["ACCENT_VIBRANT"]).pack(padx=20, pady=(16, 4))
-        tk.Label(dlg, text=f"Arquivo: {nome_arquivo}",
-                 font=("Segoe UI", 9, "italic"), bg=T["BG_CARD"], fg=T["FRASE_FG"]).pack(padx=20)
-        tk.Label(dlg, text=f"Colunas detectadas: {', '.join(colunas_csv)}",
-                 font=("Segoe UI", 8), bg=T["BG_CARD"], fg=T["FG_TEXT"],
-                 wraplength=400, justify="left").pack(padx=20, pady=(4, 12))
-        tk.Label(dlg, text="Selecione a tabela de destino para esta importação:",
-                 font=("Segoe UI", 9), bg=T["BG_CARD"], fg=T["FG_TEXT"]).pack(padx=20, pady=(0, 8))
-
-        tabela_var = tk.StringVar(value="")
-        opcoes = [
-            ("refeitorio",  "Refeitório  (Data, HoraEntrada, Matricula, Nome, Serie, Curso, Refeicao)"),
-            ("frequencia",  "Frequência  (Data, HoraEntrada, Matricula, Nome, Serie, Curso, Aula)"),
-            ("avaliacoes",  "Avaliações  (Data, Aluno, Serie, Curso, Estagio, Item, Nota)"),
-        ]
-        for val, texto in opcoes:
-            tk.Radiobutton(dlg, text=texto, variable=tabela_var, value=val,
-                           font=("Segoe UI", 9), bg=T["BG_CARD"], fg=T["FG_TEXT"],
-                           activebackground=T["BG_CARD"], selectcolor=T["ENTRY_BG"]).pack(anchor="w", padx=28, pady=2)
-
-        def _confirmar():
-            if not tabela_var.get():
-                messagebox.showwarning("Aviso", "Selecione uma tabela de destino.", parent=dlg)
-                return
-            resultado["tabela"] = tabela_var.get()
-            dlg.destroy()
-
-        def _cancelar():
-            dlg.destroy()
-
-        btn_r = tk.Frame(dlg, bg=T["BG_CARD"]); btn_r.pack(pady=(12, 16))
-        tk.Button(btn_r, text="Cancelar", command=_cancelar,
-                  bg=T["FRASE_FG"], fg="white", font=("Segoe UI", 10, "bold"),
-                  padx=14, pady=6, bd=0, cursor="hand2").pack(side="left", padx=6)
-        tk.Button(btn_r, text="Importar", command=_confirmar,
-                  bg=T["ACCENT_SOFT"], fg="white", font=("Segoe UI", 10, "bold"),
-                  padx=14, pady=6, bd=0, cursor="hand2").pack(side="left", padx=6)
-
-        dlg.wait_window()
-        return resultado["tabela"]
-
-    # ── execução da importação ─────────────────────────────────────────────────
-    def _executar_restaurar_backup():
-        if not _csvs_selecionados:
-            messagebox.showwarning("Aviso", "Adicione pelo menos um arquivo CSV à lista antes de importar.")
-            return
-
-        ignorar_dup = ignorar_dup_var.get()
-        total_arquivos = len(_csvs_selecionados)
-
-        # Confirmar
-        lista_nomes = "\n".join(f"  • {os.path.basename(p)}" for p in _csvs_selecionados)
-        dup_texto = "Duplicatas serão IGNORADAS." if ignorar_dup else "Duplicatas serão INSERIDAS mesmo assim."
-        if not messagebox.askyesno(
-            "Confirmar restauração",
-            f"Importar {total_arquivos} arquivo(s):\n{lista_nomes}\n\n"
-            f"{dup_texto}\n\nDeseja continuar?",
-        ):
-            return
-
-        # Mostrar barra de progresso
-        prog_bar["value"] = 0
-        prog_bar["maximum"] = 100
-        lbl_prog.config(text="Iniciando...")
-        prog_bar.pack(side="left", padx=(0, 8), pady=4)
-        lbl_prog.pack(side="left")
-        prog_frame.update_idletasks()
-
-        resumo_total = {"inseridos": 0, "ignorados": 0, "erros": 0}
-        detalhes = []
-        arquivos_com_erro = []
-
-        for idx_arq, caminho in enumerate(_csvs_selecionados, 1):
-            nome_arq = os.path.basename(caminho)
-            lbl_prog.config(text=f"[{idx_arq}/{total_arquivos}] {nome_arq}")
-            prog_frame.update_idletasks()
-
-            # Verificar se o arquivo precisa de mapeamento manual
-            try:
-                with open(caminho, "r", encoding="utf-8") as f:
-                    primeiras = list(csv.DictReader(f))
-                if not primeiras:
-                    detalhes.append(f"⚠️ {nome_arq}: arquivo vazio, ignorado.")
-                    continue
-                colunas_csv = list(primeiras[0].keys())
-                tabela_detectada = _detectar_tabela_csv(colunas_csv)
-            except Exception as e_leitura:
-                arquivos_com_erro.append(nome_arq)
-                detalhes.append(f"❌ {nome_arq}: erro ao ler — {e_leitura}")
-                continue
-
-            if tabela_detectada is None:
-                # Mapeamento manual
-                tabela_manual = _dialogo_mapeamento_manual(nome_arq, colunas_csv)
-                if tabela_manual is None:
-                    detalhes.append(f"⏭ {nome_arq}: ignorado pelo usuário (mapeamento cancelado).")
-                    continue
-                # Patch temporário: forçar tabela na função via monkey-patch não é necessário
-                # pois _importar_csv_para_banco vai re-detectar; em vez disso usamos wrapper
-                try:
-                    resultado = _importar_csv_para_banco_forcado(
-                        caminho, tabela_manual, ignorar_dup,
-                        lambda atual, total, _a=idx_arq, _t=total_arquivos: (
-                            prog_bar.config(value=int((_a - 1 + atual / total) / _t * 100)),
-                            prog_frame.update_idletasks()
-                        )
-                    )
-                except Exception as e_imp:
-                    arquivos_com_erro.append(nome_arq)
-                    detalhes.append(f"❌ {nome_arq}: {e_imp}")
-                    continue
+            from PIL import Image
+            img = Image.open(logo_path).convert("RGBA")
+            img.thumbnail((40, 40), Image.LANCZOS)
+            logo_ref = ctk.CTkImage(light_image=img, dark_image=img, size=img.size)
+            ctk.CTkLabel(topo, image=logo_ref, text="").pack(side="left")
+        except Exception:
+            ctk.CTkLabel(topo, text="🏫", font=("Segoe UI", 28), width=40).pack(side="left")
+    else:
+        ctk.CTkLabel(topo, text="🏫", font=("Segoe UI", 28), width=40).pack(side="left")
+    jd._logo_ref = logo_ref  # mantém referência viva
+ 
+    textos_logo = ctk.CTkFrame(topo, fg_color="transparent")
+    textos_logo.pack(side="left", padx=(8, 0))
+    ctk.CTkLabel(textos_logo, text="Painel Administrativo",
+                  font=("Segoe UI", 14, "bold"), text_color="white").pack(anchor="w")
+    ctk.CTkLabel(textos_logo, text="EEEP MARWIN",
+                  font=("Segoe UI", 11), text_color=TEXTO_CLARO).pack(anchor="w")
+ 
+    itens_menu = [
+        ("🏠", "Visão Geral"),
+        ("📋", "Avaliações"),
+        ("📅", "Relatório Semanal"),
+        ("🍽️", "Editar Cardápio"),
+        ("🗓️", "Editar Eventos"),
+        ("👤", "Refeitório"),
+        ("⏱️", "Frequência"),
+        ("🕘", "Histórico"),
+        ("🔲", "QR Codes"),
+        ("📄", "Logs"),
+    ]
+ 
+    botoes_menu = {}
+ 
+    def selecionar_botao(nome):
+        for n, b in botoes_menu.items():
+            if n == nome:
+                b.configure(fg_color=VERDE_SELECAO, text_color="white", hover_color=VERDE_SELECAO)
             else:
-                try:
-                    resultado = _importar_csv_para_banco(
-                        caminho, ignorar_dup,
-                        lambda atual, total, _a=idx_arq, _t=total_arquivos: (
-                            prog_bar.config(value=int((_a - 1 + atual / total) / _t * 100)),
-                            prog_frame.update_idletasks()
-                        )
-                    )
-                except Exception as e_imp:
-                    arquivos_com_erro.append(nome_arq)
-                    detalhes.append(f"❌ {nome_arq}: {e_imp}")
-                    continue
-
-            resumo_total["inseridos"] += resultado["inseridos"]
-            resumo_total["ignorados"] += resultado["ignorados"]
-            resumo_total["erros"]     += resultado["erros"]
-            detalhes.append(
-                f"✅ {nome_arq} → {resultado['tabela']}: "
-                f"{resultado['inseridos']} inserido(s), "
-                f"{resultado['ignorados']} ignorado(s), "
-                f"{resultado['erros']} erro(s)."
-            )
-
-        # Finalizar barra
-        prog_bar["value"] = 100
-        lbl_prog.config(text="Concluído.")
-        prog_frame.update_idletasks()
-
-        # Resumo final
-        msg = (
-            f"Importação concluída!\n\n"
-            f"✅ Inseridos : {resumo_total['inseridos']}\n"
-            f"⏭ Ignorados : {resumo_total['ignorados']}\n"
-            f"❌ Erros     : {resumo_total['erros']}\n\n"
-            + "\n".join(detalhes)
-        )
-        messagebox.showinfo("Resumo da importação", msg)
-
-        # Esconder barra e limpar lista
-        prog_bar.pack_forget(); lbl_prog.pack_forget()
-        _limpar_lista_csvs()
-        carregar()
-
-    btn_importar_row = tk.Frame(cfg_restaurar_frame, bg=T["OBS_BG"])
-    btn_importar_row.pack(fill="x", padx=10, pady=(0, 10))
-    tk.Button(btn_importar_row, text="▶ Importar CSV(s) para o banco",
-              command=_executar_restaurar_backup,
-              bg=T["ACCENT_VIBRANT"], fg="white", font=("Segoe UI", 10, "bold"),
-              padx=14, pady=7, bd=0, cursor="hand2").pack(side="left")
-
-    # ── API na nuvem (Opção B) ───────────────────────────────────────────────
-    cloud_frame = tk.Frame(_scroll_inner, bg=T["OBS_BG"])
-    cloud_frame.pack(fill="x", padx=20, pady=(0, 10))
-
-    tk.Label(cloud_frame, text="API NA NUVEM (CLIENTE HTML)",
-            font=("Segoe UI", 11, "bold"), bg=T["OBS_BG"], fg=T["ACCENT_VIBRANT"]).pack(anchor="w", padx=10, pady=(8, 0))
-    tk.Frame(cloud_frame, bg=T["BORDER_GRID"], height=1).pack(fill="x", padx=10, pady=(4, 8))
-    tk.Label(cloud_frame,
-            text="O index.html usa esta URL para gravar no Neon. Cardápio, eventos e config são enviados automaticamente.",
-            font=("Segoe UI", 9), bg=T["OBS_BG"], fg=T["FG_TEXT"], wraplength=760, justify="left").pack(anchor="w", padx=10, pady=(0, 8))
-
-    cloud_cfg = _ler_cloud_config()
-    cloud_url_var = tk.StringVar(value=cloud_cfg.get("api_url", ""))
-    cloud_sync_var = tk.BooleanVar(value=cloud_cfg.get("sincronizar_automatico", True))
-
-    row_cloud = tk.Frame(cloud_frame, bg=T["OBS_BG"])
-    row_cloud.pack(fill="x", padx=10, pady=(0, 8))
-    tk.Label(row_cloud, text="URL da API:", font=("Segoe UI", 9), bg=T["OBS_BG"], fg=T["FG_TEXT"]).pack(side="left")
-    tk.Entry(row_cloud, textvariable=cloud_url_var, font=("Segoe UI", 10), width=48,
-             bg=T["ENTRY_BG"], fg=T["FG_TEXT"]).pack(side="left", padx=(8, 12))
-    tk.Checkbutton(row_cloud, text="Sync automático", variable=cloud_sync_var,
-                  font=("Segoe UI", 9), bg=T["OBS_BG"], fg=T["FG_TEXT"],
-                  activebackground=T["OBS_BG"], selectcolor=T["ENTRY_BG"]).pack(side="left")
-
-    def _salvar_cloud_config():
-        salvar_json(CLOUD_CONFIG_FILE, {
-            "api_url": cloud_url_var.get().strip().rstrip("/"),
-            "sincronizar_automatico": cloud_sync_var.get(),
-        })
-        messagebox.showinfo("Salvo", "Configuração da API na nuvem salva.")
-
-    def _sync_cloud_agora():
-        _salvar_cloud_config()
-        if _sincronizar_tudo_nuvem():
-            messagebox.showinfo("Sucesso", "Cardápio, eventos e config enviados para a nuvem.")
-        else:
-            messagebox.showwarning("Aviso", "Falha ao sincronizar. Verifique a URL e se ApiNuvem.py está no ar.")
-
-    btn_cloud_row = tk.Frame(cloud_frame, bg=T["OBS_BG"])
-    btn_cloud_row.pack(fill="x", padx=10, pady=(0, 10))
-    tk.Button(btn_cloud_row, text="Salvar URL", command=_salvar_cloud_config,
-             bg=T["FRASE_FG"], fg="white", font=("Segoe UI", 10, "bold"),
-             padx=12, pady=6, bd=0, cursor="hand2").pack(side="left", padx=(0, 8))
-    tk.Button(btn_cloud_row, text="Sincronizar agora", command=_sync_cloud_agora,
-             bg=T["ACCENT_VIBRANT"], fg="white", font=("Segoe UI", 10, "bold"),
-             padx=12, pady=6, bd=0, cursor="hand2").pack(side="left")
-
-    # ── ABA RELATORIO ─────────────────────────────────────────────────────────
-    def gerar_relatorio():
-        for w in aba_rel.winfo_children(): w.destroy()
-
-        hoje = datetime.date.today()
-        semana_iso = hoje.isocalendar()[1]
-        ano_iso    = hoje.isocalendar()[0]
-        # Usar janela móvel: últimas 7 dias (hoje e 6 dias anteriores)
-        inicio_sem = hoje - datetime.timedelta(days=6)
-        fim_sem = hoje
-
-        ds = {"Bom": 0, "Medio": 0, "Ruim": 0}
-        ne = {"Comida": {}, "Limpeza": {}, "Ensino": {}, "Semana": {}}
-        va = []; total_resp = 0
-        alunos_semana = set(); cursos_counter = Counter(); series_counter = Counter()
-        def _norm_nome(n: str) -> str:
-            if not n:
-                return "anonimo"
-            s = " ".join(n.split())
-            s = s.strip().lower()
-            if not s:
-                return "anonimo"
-            # Normaliza unicode (corrige acentos inconsistentes)
-            s = unicodedata.normalize('NFC', s)
-            # Tentativa robusta: remover acentos e caracteres não-ASCII
+                b.configure(fg_color="transparent", text_color=TEXTO_CLARO, hover_color=VERDE_HOVER)
+ 
+    def mostrar_pagina(nome):
+        selecionar_botao(nome)
+        if nome not in paginas:
             try:
-                s_ascii = unicodedata.normalize('NFD', s)
-                s_ascii = ''.join(c for c in s_ascii if unicodedata.category(c) != 'Mn')
-                s_alpha = re.sub(r'[^a-z]', '', s_ascii.lower())
-            except Exception:
-                s_alpha = re.sub(r'[^a-z]', '', s)
-            # Se a forma ascii reduzida contém 'anon' ou for 'animo' (corrompido), tratar como anônimo
-            if 'anon' in s_alpha or s_alpha.startswith('animo'):
-                return 'anonimo'
-            return s
-        def _aluno_id(n: str, data_str: str) -> str:
-            """Retorna um identificador único por avaliador.
-            Para nomes válidos, retorna o nome normalizado; para anônimos,
-            utiliza o timestamp do registro para diferenciar envios distintos.
-            """
-            nome_norm = _norm_nome(n)
-            if nome_norm == "anonimo":
-                # data_str inclui data e hora; usar como separador garante que
-                # múltiplas linhas da mesma submissão sejam contadas como uma
-                return f"anonimo::{data_str}"
-            return nome_norm
-        mapa_estagio = {"1": "Comida", "2": "Limpeza", "3": "Ensino", "4": "Semana"}
-
-        try:
-            linhas_rel = _avaliacoes_para_linhas()
-        except Exception as e:
-            messagebox.showerror("Erro", f"Falha ao carregar avaliações do banco:\n{e}")
-            return
-        for r in linhas_rel:
-            if len(r) < 7:
-                continue
-            data_str, nome_al, serie_al, curso_al, est, item, ns = (r[0], r[1], r[2], r[3], r[4], r[5], r[6])
-            try:
-                d_obj = datetime.datetime.strptime(data_str.split(" ")[0], "%d/%m/%Y").date()
-                if d_obj < inicio_sem or d_obj > fim_sem:
-                    continue
-            except Exception:
-                continue
-            if _eh_almoco_favorito(item):
-                va.append(ns)
-                alunos_semana.add(_aluno_id(nome_al, data_str))
-                if curso_al and curso_al.strip() not in ("N/A", ""):
-                    cursos_counter[curso_al.strip()] += 1
-                if serie_al and serie_al.strip() not in ("N/A", ""):
-                    series_counter[serie_al.strip()] += 1
-                continue
-            try:
-                nota = float(ns)
-            except Exception:
-                continue
-            est_nome = mapa_estagio.get(est, "")
-            if not est_nome:
-                continue
-            if item not in ne[est_nome]:
-                ne[est_nome][item] = []
-            ne[est_nome][item].append(nota)
-            if est == "4":
-                if nota <= 1:
-                    ds["Ruim"] += 1
-                elif nota <= 3:
-                    ds["Medio"] += 1
+                if nome == "Visão Geral":
+                    paginas[nome] = criar_pagina_visao_geral()
+                elif nome == "Avaliações":
+                    paginas[nome] = criar_pagina_avaliacoes()
+                elif nome == "Relatório Semanal":
+                    paginas[nome] = criar_pagina_relatorio_semanal()
+                elif nome == "Editar Cardápio":
+                    paginas[nome] = criar_pagina_cardapio()
+                elif nome == "Editar Eventos":
+                     paginas[nome] = criar_pagina_eventos()
+                elif nome == "Refeitório":
+                    paginas[nome] = criar_pagina_refeitorio()
+                elif nome == "Frequência":
+                    paginas[nome] = criar_pagina_frequencia()
+                elif nome == "Histórico":
+                    paginas[nome] = criar_pagina_historico()
+                elif nome == "QR Codes":
+                    paginas[nome] = criar_pagina_qrcodes()
+                elif nome == "Logs":
+                    paginas[nome] = criar_pagina_logs()
                 else:
-                    ds["Bom"] += 1
-                total_resp += 1
-            alunos_semana.add(_aluno_id(nome_al, data_str))
-            if curso_al and curso_al.strip() not in ("N/A", ""):
-                cursos_counter[curso_al.strip()] += 1
-            if serie_al and serie_al.strip() not in ("N/A", ""):
-                series_counter[serie_al.strip()] += 1
-
-        cnt = Counter(va)
-        if va:
-            max_votes = max(cnt.values())
-            top_choices = [it for it, vt in cnt.items() if vt == max_votes]
-            dv = ", ".join(top_choices); tv = max_votes
-        else:
-            dv = "Nenhum voto"; tv = 0
-        total_favorites = sum(cnt.values())
-        total_alunos_unicos = len(alunos_semana)
-
-        cs = tk.Canvas(aba_rel, bg=T["BG_CARD"], highlightthickness=0)
-        sbs = ttk.Scrollbar(aba_rel, orient="vertical", command=cs.yview)
-        sfs = tk.Frame(cs, bg=T["BG_CARD"])
-        sfs.bind("<Configure>", lambda e: cs.configure(scrollregion=cs.bbox("all")))
-        window_id = cs.create_window((0, 0), window=sfs, anchor="nw", width=jd.winfo_width() - 60)
-        cs.bind("<Configure>", lambda e: cs.itemconfig(window_id, width=e.width))
-        cs.configure(yscrollcommand=sbs.set)
-        cs.pack(side="left", fill="both", expand=True); sbs.pack(side="right", fill="y")
-        cs.bind_all("<MouseWheel>", lambda e: cs.yview_scroll(int(-1*(e.delta/120)), "units"))
-
-        # Cabeçalho
-        hdr = tk.Frame(sfs, bg=T["ACCENT_VIBRANT"]); hdr.pack(fill="x")
-        tk.Label(hdr, text="RELATÓRIO SEMANAL DE DESEMPENHO",
-                 font=("Segoe UI", 16, "bold"), bg=T["ACCENT_VIBRANT"], fg="white",
-                 pady=16).pack(side="left", padx=24)
-        data_label = f"Semana {semana_iso}/{ano_iso}  —  {hoje.strftime('%d/%m/%Y')}"
-        tk.Label(hdr, text=data_label, font=("Segoe UI", 10),
-                 bg=T["ACCENT_VIBRANT"], fg="#b2dfb4").pack(side="right", padx=16)
-        tk.Frame(sfs, bg=T["HIGHLIGHT_YELLOW"], height=4).pack(fill="x")
-
-        if total_resp == 0 and not va:
-            tk.Label(sfs, text="Aguardando avaliações para gerar o relatório.",
-                     font=("Segoe UI", 16), bg=T["BG_CARD"], fg=T["FRASE_FG"], pady=120).pack()
-            return
-
-        p_bom = (ds["Bom"] / total_resp) * 100 if total_resp else 0
-        if total_resp:
-            status = "POSITIVO" if p_bom > 60 else ("REGULAR" if p_bom > 40 else "CRITICO")
-            cor_status = {"POSITIVO": "#4caf50", "REGULAR": "#fdd835", "CRITICO": "#f44336"}[status]
-        else:
-            status = "SEM DADOS"; cor_status = "#9e9e9e"
-
-        # Cards resumo
-        summary_frame = tk.Frame(sfs, bg=T["BG_CARD"])
-        summary_frame.pack(fill="x", padx=24, pady=(16, 0))
-        for c in range(4): summary_frame.columnconfigure(c, weight=1)
-
-        def _resumo_card(parent, titulo, valor, subtitulo, cor, col):
-            card = tk.Frame(parent, bg=T["ENTRY_BG"], bd=0,
-                            highlightbackground=cor, highlightthickness=2, padx=14, pady=12)
-            card.grid(row=0, column=col, sticky="nsew", padx=5, pady=(0, 0))
-            tk.Frame(card, bg=cor, height=3).pack(fill="x", pady=(0, 6))
-            tk.Label(card, text=titulo, font=("Segoe UI", 8, "bold"),
-                     bg=T["ENTRY_BG"], fg=T["FRASE_FG"]).pack(anchor="w")
-            tk.Label(card, text=valor, font=("Segoe UI", 18, "bold"),
-                     bg=T["ENTRY_BG"], fg=cor).pack(anchor="w", pady=(4, 0))
-            if subtitulo:
-                tk.Label(card, text=subtitulo, font=("Segoe UI", 9),
-                         bg=T["ENTRY_BG"], fg=T["FG_TEXT"]).pack(anchor="w", pady=(3, 0))
-
-        _resumo_card(summary_frame, "ALUNOS ÚNICOS", str(total_alunos_unicos), "Participantes esta semana", T["ACCENT_VIBRANT"], 0)
-        _resumo_card(summary_frame, "RESPOSTAS (EXP.)", str(total_resp), "Estágio 4 — Experiência", T["ACCENT_SOFT"], 1)
-        _resumo_card(summary_frame, "SATISFAÇÃO", f"{p_bom:.1f}%", status, cor_status, 2)
-        _resumo_card(summary_frame, "ALMOÇO FAVORITO", dv[:20] + ("…" if len(dv) > 20 else ""), f"{tv} voto(s) de {total_favorites}", T["HIGHLIGHT_YELLOW"], 3)
-
-        # Badge clima
-        badge = tk.Frame(sfs, bg=cor_status, padx=16, pady=10)
-        badge.pack(fill="x", padx=24, pady=(10, 0))
-        msgs_clima = {
-            "POSITIVO": "✅  Clima escolar POSITIVO — maioria dos alunos satisfeita",
-            "REGULAR": "⚠️  Clima escolar REGULAR — atenção necessária",
-            "CRITICO": "🚨  Clima escolar CRÍTICO — ação imediata recomendada",
-            "SEM DADOS": "ℹ️  Sem dados de sentimento registrados esta semana",
-        }
-        tk.Label(badge, text=msgs_clima.get(status, ""),
-                 font=("Segoe UI", 11, "bold"), bg=cor_status, fg="white").pack(side="left")
-        tk.Label(badge, text=f"Bom: {ds['Bom']}   Regular: {ds['Medio']}   Ruim: {ds['Ruim']}",
-                 font=("Segoe UI", 10), bg=cor_status, fg="white").pack(side="right")
-
-        # Gráfico sentimento
-        sentimento_frame = tk.Frame(sfs, bg=T["ENTRY_BG"], bd=0,
-                                    highlightbackground=T["BORDER_GRID"], highlightthickness=1,
-                                    padx=18, pady=16)
-        sentimento_frame.pack(fill="x", padx=24, pady=(14, 0))
-        tk.Label(sentimento_frame, text="SENTIMENTO — Estágio 4 (Experiência da Semana)",
-                 font=("Segoe UI", 12, "bold"), bg=T["ENTRY_BG"], fg=T["ACCENT_VIBRANT"]).pack(anchor="w")
-        tk.Label(sentimento_frame, text=f"Baseado em {total_resp} resposta(s) desta semana",
-                 font=("Segoe UI", 9), bg=T["ENTRY_BG"], fg=T["FRASE_FG"]).pack(anchor="w", pady=(2, 8))
-        cv = tk.Canvas(sentimento_frame, bg=T["ENTRY_BG"], highlightthickness=0, height=100)
-        cv.pack(fill="x", pady=2)
-        itens_sent = [("🟢  Bom", ds["Bom"], "#4caf50"), ("🟡  Regular", ds["Medio"], "#fdd835"), ("🔴  Ruim", ds["Ruim"], "#f44336")]
-        def _desenhar_barras(event=None):
-            largura_canvas = max(320, cv.winfo_width())
-            cv.delete("all")
-            bar_w = max(200, largura_canvas - 200)
-            x_label = 100; x_start = x_label + 16
-            max_ds = max(ds.values()) if max(ds.values()) > 0 else 1
-            for i, (label, val, cor) in enumerate(itens_sent):
-                y = 14 + i * 30
-                cv.create_rectangle(x_start, y, x_start + bar_w, y + 20, fill=T["BG_CARD"], outline="")
-                filled = int((val / max_ds) * bar_w) if bar_w > 0 else 0
-                if filled > 0:
-                    cv.create_rectangle(x_start, y, x_start + filled, y + 20, fill=cor, outline="")
-                cv.create_text(x_label, y + 10, text=label, font=("Segoe UI", 9, "bold"), anchor="e", fill=T["FG_TEXT"])
-                pct = (val / total_resp * 100) if total_resp else 0
-                cv.create_text(x_start + filled + 8, y + 10,
-                               text=f"{val} ({pct:.0f}%)", font=("Segoe UI", 9, "bold"),
-                               anchor="w", fill=T["FG_TEXT"])
-        cv.bind("<Configure>", _desenhar_barras)
-        cv.after(80, _desenhar_barras)
-
-        # Breakdown detalhado por estágio
-        tk.Frame(sfs, bg=T["BORDER_GRID"], height=1).pack(fill="x", padx=24, pady=(16, 0))
-        tk.Label(sfs, text="DETALHAMENTO POR CATEGORIA E ITEM",
-                 font=("Segoe UI", 13, "bold"), bg=T["BG_CARD"], fg=T["ACCENT_VIBRANT"]).pack(
-                 anchor="w", padx=24, pady=(12, 6))
-
-        ICONES_EST = {"Comida": "🍽️", "Limpeza": "🧹", "Ensino": "📚", "Semana": "✨"}
-        COR_EST = {"Comida": "#e65100", "Limpeza": "#1565c0", "Ensino": "#6a1b9a", "Semana": "#2e7d32"}
-
-        for est_nome, itens_dict in ne.items():
-            if not itens_dict: continue
-            bloco = tk.Frame(sfs, bg=T["BG_CARD"], highlightbackground=T["BORDER_GRID"], highlightthickness=1)
-            bloco.pack(fill="x", padx=24, pady=(0, 10))
-            bloco_hd = tk.Frame(bloco, bg=COR_EST.get(est_nome, T["ACCENT_VIBRANT"]))
-            bloco_hd.pack(fill="x")
-            media_geral_est = [n for notas in itens_dict.values() for n in notas]
-            media_est = sum(media_geral_est) / len(media_geral_est) if media_geral_est else 0
-            tk.Label(bloco_hd, text=f"  {ICONES_EST.get(est_nome,'')}  {est_nome.upper()}",
-                     font=("Segoe UI", 11, "bold"),
-                     bg=COR_EST.get(est_nome, T["ACCENT_VIBRANT"]), fg="white", pady=8).pack(side="left", padx=6)
-            tk.Label(bloco_hd, text=f"Média geral: {media_est:.2f}/5.00  |  {len(media_geral_est)} resp.",
-                     font=("Segoe UI", 9), bg=COR_EST.get(est_nome, T["ACCENT_VIBRANT"]), fg="white").pack(side="right", padx=12)
-
-            tbl = tk.Frame(bloco, bg=T["BG_CARD"]); tbl.pack(fill="x")
-            for ci, txt in enumerate(["ITEM / CRITÉRIO", "MÉDIA", "MIN", "MÁX", "DISTRIBUIÇÃO 1→5"]):
-                tk.Label(tbl, text=txt, font=("Segoe UI", 8, "bold"),
-                         bg=T["ENTRY_BG"], fg=T["FRASE_FG"], padx=8, pady=5,
-                         anchor="w" if ci == 0 else "center").grid(
-                             row=0, column=ci, sticky="nsew", padx=1, pady=1)
-            tbl.grid_columnconfigure(0, weight=3)
-            for ci in range(1, 5): tbl.grid_columnconfigure(ci, weight=1)
-
-            for idx_item, (item_nome, notas) in enumerate(sorted(itens_dict.items())):
-                bg_row = T["BG_CARD"] if idx_item % 2 == 0 else T["ENTRY_BG"]
-                media_item = sum(notas) / len(notas) if notas else 0
-                min_item = min(notas) if notas else 0; max_item = max(notas) if notas else 0
-                cor_nota = "#4caf50" if media_item >= 4 else ("#fdd835" if media_item >= 2.5 else "#f44336")
-                estrelas = "★" * round(media_item) + "☆" * (5 - round(media_item))
-                tk.Label(tbl, text=f"  {item_nome}", font=("Segoe UI", 10),
-                         bg=bg_row, fg=T["FG_TEXT"], anchor="w", padx=8, pady=5,
-                         wraplength=280, justify="left").grid(row=idx_item+1, column=0, sticky="nsew", padx=1, pady=1)
-                frm_nota = tk.Frame(tbl, bg=bg_row); frm_nota.grid(row=idx_item+1, column=1, sticky="nsew", padx=1, pady=1)
-                tk.Label(frm_nota, text=f"{media_item:.2f}", font=("Segoe UI", 10, "bold"), bg=bg_row, fg=cor_nota).pack()
-                tk.Label(frm_nota, text=estrelas, font=("Segoe UI", 7), bg=bg_row, fg=T["HIGHLIGHT_YELLOW"]).pack()
-                tk.Label(tbl, text=f"{min_item:.0f}", font=("Segoe UI", 10),
-                         bg=bg_row, fg="#c62828", pady=5).grid(row=idx_item+1, column=2, sticky="nsew", padx=1, pady=1)
-                tk.Label(tbl, text=f"{max_item:.0f}", font=("Segoe UI", 10),
-                         bg=bg_row, fg="#2e7d32", pady=5).grid(row=idx_item+1, column=3, sticky="nsew", padx=1, pady=1)
-                dist_txt = "  ".join([f"{int(n)}★={notas.count(n)}" for n in [1,2,3,4,5] if notas.count(n) > 0])
-                tk.Label(tbl, text=dist_txt or "—", font=("Segoe UI", 8),
-                         bg=bg_row, fg=T["FRASE_FG"], padx=6, pady=5).grid(row=idx_item+1, column=4, sticky="nsew", padx=1, pady=1)
-
-        # Almoço favorito
-        if va:
-            tk.Frame(sfs, bg=T["BORDER_GRID"], height=1).pack(fill="x", padx=24, pady=(6, 0))
-            fav_frame = tk.Frame(sfs, bg=T["ENTRY_BG"], bd=0,
-                                 highlightbackground=T["BORDER_GRID"], highlightthickness=1,
-                                 padx=18, pady=16)
-            fav_frame.pack(fill="x", padx=24, pady=(10, 0))
-            tk.Label(fav_frame, text="🍛  RANKING — ALMOÇO FAVORITO DA SEMANA",
-                     font=("Segoe UI", 12, "bold"), bg=T["ENTRY_BG"], fg=T["ACCENT_VIBRANT"]).pack(anchor="w")
-            tk.Label(fav_frame, text=f"Total de votos: {total_favorites}",
-                     font=("Segoe UI", 9), bg=T["ENTRY_BG"], fg=T["FRASE_FG"]).pack(anchor="w", pady=(2, 8))
-            for pos, (opc, cont) in enumerate(cnt.most_common(), start=1):
-                pct_fav = (cont / total_favorites * 100) if total_favorites else 0
-                item_f = tk.Frame(fav_frame, bg=T["ENTRY_BG"]); item_f.pack(fill="x", pady=2)
-                medal = {1: "🥇", 2: "🥈", 3: "🥉"}.get(pos, f"  {pos}.")
-                tk.Label(item_f, text=f"{medal}  {opc}", font=("Segoe UI", 11, "bold"),
-                         bg=T["ENTRY_BG"], fg=T["FG_TEXT"]).pack(side="left")
-                tk.Label(item_f, text=f"{cont} voto(s)  ({pct_fav:.1f}%)",
-                         font=("Segoe UI", 10), bg=T["ENTRY_BG"], fg=T["FRASE_FG"]).pack(side="right")
-
-        # Participação por curso/série
-        if cursos_counter or series_counter:
-            tk.Frame(sfs, bg=T["BORDER_GRID"], height=1).pack(fill="x", padx=24, pady=(14, 0))
-            tk.Label(sfs, text="PARTICIPAÇÃO POR TURMA",
-                     font=("Segoe UI", 12, "bold"), bg=T["BG_CARD"], fg=T["ACCENT_VIBRANT"]).pack(anchor="w", padx=24, pady=(10, 6))
-            part_frame = tk.Frame(sfs, bg=T["BG_CARD"])
-            part_frame.pack(fill="x", padx=24, pady=(0, 10))
-            part_frame.grid_columnconfigure(0, weight=1); part_frame.grid_columnconfigure(1, weight=1)
-            def _bloco_part(parent, titulo, counter, row, col):
-                bf = tk.Frame(parent, bg=T["ENTRY_BG"], bd=0,
-                              highlightbackground=T["BORDER_GRID"], highlightthickness=1,
-                              padx=12, pady=10)
-                bf.grid(row=row, column=col, sticky="nsew", padx=5, pady=5)
-                tk.Label(bf, text=titulo, font=("Segoe UI", 10, "bold"),
-                         bg=T["ENTRY_BG"], fg=T["ACCENT_VIBRANT"]).pack(anchor="w", pady=(0, 5))
-                total_part = sum(counter.values())
-                for item_p, cnt_p in counter.most_common():
-                    pf = tk.Frame(bf, bg=T["ENTRY_BG"]); pf.pack(fill="x", pady=1)
-                    tk.Label(pf, text=item_p, font=("Segoe UI", 10), bg=T["ENTRY_BG"], fg=T["FG_TEXT"]).pack(side="left")
-                    pct_p = (cnt_p / total_part * 100) if total_part else 0
-                    tk.Label(pf, text=f"{cnt_p} ({pct_p:.0f}%)", font=("Segoe UI", 9), bg=T["ENTRY_BG"], fg=T["FRASE_FG"]).pack(side="right")
-            _bloco_part(part_frame, "Por Curso", cursos_counter, 0, 0)
-            _bloco_part(part_frame, "Por Série", series_counter, 0, 1)
-
-        # Exportar PDF
-        def exportar_pdf():
-            try:
-                from fpdf import FPDF
-                pdf = FPDF(); pdf.add_page(); pdf.set_font("Arial", "B", 16)
-                pdf.cell(200, 10, txt=f"RELATORIO SEMANAL - EEEP MARWIN - Semana {semana_iso}/{ano_iso}", ln=True, align="C")
-                pdf.set_font("Arial", "", 12)
-                pdf.cell(200, 10, txt=f"Data: {hoje.strftime('%d/%m/%Y')}  |  Alunos: {total_alunos_unicos}  |  Satisfacao: {p_bom:.1f}%", ln=True, align="C")
-                pdf.ln(5); pdf.set_font("Arial", "B", 13); pdf.cell(0, 8, txt="Sentimento:", ln=True)
-                pdf.set_font("Arial", "", 11)
-                pdf.cell(0, 7, txt=f"Bom: {ds['Bom']}  Regular: {ds['Medio']}  Ruim: {ds['Ruim']}  |  Status: {status}", ln=True); pdf.ln(4)
-                for est_nome, itens_dict in ne.items():
-                    if not itens_dict: continue
-                    media_geral_est = [n for notas in itens_dict.values() for n in notas]
-                    media_est = sum(media_geral_est)/len(media_geral_est) if media_geral_est else 0
-                    pdf.set_font("Arial", "B", 12); pdf.cell(0, 8, txt=f"{est_nome.upper()} (media: {media_est:.2f}/5.00)", ln=True)
-                    pdf.set_font("Arial", "", 10)
-                    for item_nome, notas in sorted(itens_dict.items()):
-                        media_i = sum(notas)/len(notas) if notas else 0
-                        dist = "  ".join([f"{int(n)}x{notas.count(n)}" for n in [1,2,3,4,5] if notas.count(n) > 0])
-                        pdf.cell(0, 6, txt=f"  - {item_nome}: {media_i:.2f}/5 ({len(notas)} resp.) | {dist}", ln=True)
-                    pdf.ln(2)
-                if va:
-                    pdf.set_font("Arial", "B", 12); pdf.cell(0, 8, txt="Almoco Favorito:", ln=True)
-                    pdf.set_font("Arial", "", 10)
-                    for opc, cont in cnt.most_common():
-                        pdf.cell(0, 6, txt=f"  - {opc}: {cont} voto(s)", ln=True)
-                nome_arq = f"relatorio_marwin_semana{semana_iso}_{ano_iso}.pdf"
-                pdf.output(nome_arq); messagebox.showinfo("Sucesso", f"PDF salvo como:\n{nome_arq}")
+                    paginas[nome] = criar_pagina_em_construcao(nome)
             except Exception as e:
-                messagebox.showerror("Erro", f"Falha: {e}")
+                import traceback
+                paginas[nome] = criar_pagina_erro(nome, traceback.format_exc())
+                print(traceback.format_exc())
+        for pg in paginas.values():
+            pg.grid_remove()
+        paginas[nome].grid(row=1, column=0, sticky="nsew")
 
-        btn_bar = tk.Frame(sfs, bg=T["BG_CARD"]); btn_bar.pack(fill="x", padx=24, pady=(18, 36))
-        tk.Button(btn_bar, text="  EXPORTAR PDF  ", font=("Segoe UI", 11, "bold"),
-                  bg=T["ACCENT_VIBRANT"], fg="white", padx=30, pady=12, bd=0,
-                  cursor="hand2", command=exportar_pdf).pack(side="left")
-        tk.Label(btn_bar, text=f"Gerado em {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}",
-                 font=("Segoe UI", 9), bg=T["BG_CARD"], fg=T["FRASE_FG"]).pack(side="left", padx=14)
+    def criar_pagina_erro(nome, erro_texto):
+        page = ctk.CTkFrame(container, fg_color=CINZA_BG)
+        page.grid_columnconfigure(0, weight=1)
+        page.grid_rowconfigure(1, weight=1)
+        ctk.CTkLabel(page, text=f"Erro ao abrir '{nome}'",
+                      font=("Segoe UI", 16, "bold"), text_color="#F44336"
+                      ).grid(row=0, column=0, sticky="w", padx=24, pady=(24, 8))
+        box = ctk.CTkTextbox(page, font=("Consolas", 11))
+        box.grid(row=1, column=0, sticky="nsew", padx=24, pady=(0, 24))
+        box.insert("1.0", erro_texto)
+        box.configure(state="disabled")
+        return page
+ 
+    for icone, nome in itens_menu:
+        btn = ctk.CTkButton(
+            sidebar, text=f"  {icone}   {nome}", anchor="w", font=("Segoe UI", 13),
+            fg_color="transparent", text_color=TEXTO_CLARO, hover_color=VERDE_HOVER,
+            corner_radius=8, height=38,
+            command=lambda n=nome: mostrar_pagina(n),
+        )
+        btn.pack(fill="x", padx=12, pady=2)
+        botoes_menu[nome] = btn
+ 
+    rodape = ctk.CTkFrame(sidebar, fg_color=VERDE_SELECAO, corner_radius=10)
+    rodape.pack(fill="x", padx=12, pady=16, side="bottom")
+    ctk.CTkLabel(rodape, text="👤", font=("Segoe UI", 22), text_color="white"
+                   ).pack(side="left", padx=(12, 8), pady=12)
+    info_rodape = ctk.CTkFrame(rodape, fg_color="transparent")
+    info_rodape.pack(side="left", pady=12)
+    ctk.CTkLabel(info_rodape, text="Administrador", font=("Segoe UI", 12, "bold"),
+                  text_color="white").pack(anchor="w")
+    ctk.CTkLabel(info_rodape, text="Sistema", font=("Segoe UI", 10),
+                  text_color="#B2DFB4").pack(anchor="w")
+    ctk.CTkLabel(info_rodape, text="● Online", font=("Segoe UI", 10),
+                  text_color="#7BE08C").pack(anchor="w")
+ 
+    # ──────────────────────────────────────────────────────────────────
+    # ÁREA DE CONTEÚDO + HEADER
+    # ──────────────────────────────────────────────────────────────────
+    container = ctk.CTkFrame(jd, fg_color=CINZA_BG, corner_radius=0)
+    container.grid(row=0, column=1, sticky="nsew")
+    container.grid_rowconfigure(1, weight=1)
+    container.grid_columnconfigure(0, weight=1)
+ 
+    header = ctk.CTkFrame(container, fg_color=VERDE_VIBRANTE, height=56, corner_radius=0)
+    header.grid(row=0, column=0, sticky="ew")
+    header.grid_propagate(False)
+    ctk.CTkLabel(header, text="", fg_color="transparent").pack(side="left", expand=True)
+    status = ctk.CTkFrame(header, fg_color="transparent")
+    status.pack(side="right", padx=20)
+    ctk.CTkLabel(status, text="●", font=("Segoe UI", 14), text_color="#4CAF50").pack(side="left")
+    servidor_txt = f"  Servidor: {url_ngrok_global}" if url_ngrok_global else "  Servidor: indisponível"
+    ctk.CTkLabel(status, text=servidor_txt, font=("Segoe UI", 12), text_color="white").pack(side="left")
+ 
+    # ──────────────────────────────────────────────────────────────────
+    # HELPERS DE LAYOUT (cards / tabelas)
+    # ──────────────────────────────────────────────────────────────────
+    def card_resumo(parent, row, col, icone, cor_fundo, cor_icone, titulo, valor, subtitulo):
+        card = ctk.CTkFrame(parent, fg_color=BRANCO, corner_radius=12)
+        card.grid(row=row, column=col, sticky="nsew", padx=8, pady=4)
+        conteudo = ctk.CTkFrame(card, fg_color="transparent")
+        conteudo.pack(fill="x", padx=18, pady=18)
+        icone_box = ctk.CTkFrame(conteudo, fg_color=cor_fundo, corner_radius=10, width=48, height=48)
+        icone_box.pack(side="left", padx=(0, 14))
+        icone_box.pack_propagate(False)
+        ctk.CTkLabel(icone_box, text=icone, font=("Segoe UI", 20),
+                      text_color=cor_icone).place(relx=0.5, rely=0.5, anchor="center")
+        textos = ctk.CTkFrame(conteudo, fg_color="transparent")
+        textos.pack(side="left", fill="x", expand=True)
+        ctk.CTkLabel(textos, text=titulo, font=("Segoe UI", 12), text_color=TEXTO_CINZA).pack(anchor="w")
+        valor_lbl = ctk.CTkLabel(textos, text=valor, font=("Segoe UI", 26, "bold"), text_color=TEXTO_ESCURO)
+        valor_lbl.pack(anchor="w")
+        sub_lbl = ctk.CTkLabel(textos, text=subtitulo, font=("Segoe UI", 10), text_color=TEXTO_CINZA)
+        sub_lbl.pack(anchor="w")
+        return valor_lbl, sub_lbl
+ 
+    def card_tabela(parent, titulo, colunas, linhas, rodape="", larguras=None):
+        card = ctk.CTkFrame(parent, fg_color=BRANCO, corner_radius=12)
+        topo = ctk.CTkFrame(card, fg_color="transparent")
+        topo.pack(fill="x", padx=18, pady=(16, 10))
+        ctk.CTkLabel(topo, text=titulo, font=("Segoe UI", 13, "bold"), text_color=TEXTO_ESCURO).pack(side="left")
+ 
+        header_t = ctk.CTkFrame(card, fg_color=VERDE_ESCURO, corner_radius=6)
+        header_t.pack(fill="x", padx=18)
+        n = len(colunas)
+        for i, c in enumerate(colunas):
+            w = larguras.get(i) if larguras else None
+            ctk.CTkLabel(header_t, text=c, font=("Segoe UI", 10, "bold"), text_color="white",
+                          width=w or 0, anchor="w").pack(side="left", expand=(i == n - 1),
+                                                            fill="x", padx=8, pady=8)
+ 
+        if not linhas:
+            ctk.CTkLabel(card, text="Nenhum registro encontrado.", font=("Segoe UI", 11),
+                          text_color=TEXTO_CINZA).pack(anchor="w", padx=18, pady=12)
+        else:
+            for linha in linhas:
+                linha_frame = ctk.CTkFrame(card, fg_color="transparent")
+                linha_frame.pack(fill="x", padx=18)
+                for i, valor in enumerate(linha):
+                    w = larguras.get(i) if larguras else None
+                    ctk.CTkLabel(linha_frame, text=str(valor), font=("Segoe UI", 11),
+                                  width=w or 0, anchor="w",
+                                  text_color="#374151").pack(side="left", expand=(i == n - 1),
+                                                                fill="x", padx=8, pady=8)
+                ctk.CTkFrame(card, fg_color="#F0F0F0", height=1).pack(fill="x", padx=18)
+ 
+        if rodape:
+            ctk.CTkLabel(card, text=rodape, font=("Segoe UI", 10),
+                          text_color="#2E7D32").pack(anchor="w", padx=18, pady=(10, 16))
+        else:
+            ctk.CTkFrame(card, fg_color="transparent", height=10).pack()
+        return card
+ 
+    # ──────────────────────────────────────────────────────────────────
+    # PÁGINA: VISÃO GERAL (ligada ao banco)
+    # ──────────────────────────────────────────────────────────────────
+    def criar_pagina_visao_geral():
+        page = ctk.CTkScrollableFrame(container, fg_color=CINZA_BG)
+        page.grid_columnconfigure((0, 1, 2), weight=1)
+ 
+        # Cabeçalho com data de hoje
+        cab = ctk.CTkFrame(page, fg_color="transparent")
+        cab.grid(row=0, column=0, columnspan=3, sticky="ew", pady=(0, 16))
+        cab.grid_columnconfigure(0, weight=1)
+ 
+        textos = ctk.CTkFrame(cab, fg_color="transparent")
+        textos.grid(row=0, column=0, sticky="w")
+        ctk.CTkLabel(textos, text="Bom dia, Administrador! 👋",
+                      font=("Segoe UI", 22, "bold"), text_color=TEXTO_ESCURO).pack(anchor="w")
+        ctk.CTkLabel(textos, text="Aqui está um resumo das atividades de hoje.",
+                      font=("Segoe UI", 12), text_color=TEXTO_CINZA).pack(anchor="w")
+ 
+        hoje_dt = datetime.date.today()
+        dias_semana_pt = ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira",
+                            "Sexta-feira", "Sábado", "Domingo"]
+        data_box = ctk.CTkFrame(cab, fg_color=BRANCO, corner_radius=10)
+        data_box.grid(row=0, column=1, sticky="e", padx=4)
+        ctk.CTkLabel(data_box, text="📅", font=("Segoe UI", 18)).pack(side="left", padx=(14, 6), pady=10)
+        txt_data = ctk.CTkFrame(data_box, fg_color="transparent")
+        txt_data.pack(side="left", padx=(0, 16), pady=8)
+        ctk.CTkLabel(txt_data, text=_hoje(), font=("Segoe UI", 12, "bold"),
+                      text_color=TEXTO_ESCURO).pack(anchor="w")
+        ctk.CTkLabel(txt_data, text=dias_semana_pt[hoje_dt.weekday()], font=("Segoe UI", 10),
+                      text_color=TEXTO_CINZA).pack(anchor="w")
+ 
+        # ── Cards de resumo ──────────────────────────────────────────
+        try:
+            refeitorio_hoje = _ler_refeitorio_hoje_db()
+        except Exception as e:
+            logger.error(f"Erro ao ler refeitorio do banco: {e}")
+            refeitorio_hoje = []
+ 
+        try:
+            freq_hoje = _ler_frequencia_hoje_db()
+        except Exception as e:
+            logger.error(f"Erro ao ler frequencia do banco: {e}")
+            freq_hoje = []
+ 
+        try:
+            avaliacoes_todas = _ler_avaliacoes_db()
+        except Exception as e:
+            logger.error(f"Erro ao ler avaliacoes do banco: {e}")
+            avaliacoes_todas = []
+ 
+        # Conta avaliações da semana atual (segunda a domingo)
+        inicio_semana = hoje_dt - datetime.timedelta(days=hoje_dt.weekday())
+        fim_semana = inicio_semana + datetime.timedelta(days=6)
+        avaliacoes_semana = 0
+        for av in avaliacoes_todas:
+            try:
+                d = datetime.datetime.strptime(av["Data"], "%d/%m/%Y").date()
+                if inicio_semana <= d <= fim_semana:
+                    avaliacoes_semana += 1
+            except Exception:
+                continue
+ 
+        card_resumo(page, 1, 0, "📋", VERDE_CLARO, VERDE_VIBRANTE,
+                       "Refeições hoje", str(len(refeitorio_hoje)), "registros no refeitório")
+        card_resumo(page, 1, 1, "👥", AZUL_CLARO, "#2196F3",
+                       "Presenças hoje", str(len(freq_hoje)), "alunos registrados")
+        card_resumo(page, 1, 2, "⭐", ROXO_CLARO, "#9C27B0",
+                       "Avaliações (semana)", str(avaliacoes_semana), "respostas esta semana")
+ 
+        # ── Últimas entradas no refeitório ─────────────────────────────
+        ultimas_refeicoes = refeitorio_hoje[-5:][::-1]  # 5 mais recentes
+        linhas_ref = [
+            (r[1], r[3], r[4], r[5], r[6])  # hora, nome, serie, curso, refeicao
+            for r in ultimas_refeicoes
+        ]
+        tabela1 = card_tabela(page, "📥  Últimas entradas no refeitório hoje",
+                                 ["HORA", "NOME", "SÉRIE", "CURSO", "REFEIÇÃO"],
+                                 linhas_ref, rodape=f"Total: {len(refeitorio_hoje)} registros")
+        tabela1.grid(row=2, column=0, columnspan=2, sticky="nsew", padx=(0, 8), pady=(8, 0))
+ 
+        # ── Últimas presenças registradas hoje ──────────────────────────
+        ultimas_presencas = freq_hoje[-5:][::-1]
+        linhas_freq = [
+            (f[1], f[3], f[4], f[5], f[6])  # hora, nome, serie, curso, aula
+            for f in ultimas_presencas
+        ]
+        tabela2 = card_tabela(page, "👥  Últimas presenças registradas hoje",
+                                 ["HORA", "NOME", "SÉRIE", "CURSO", "AULA"],
+                                 linhas_freq, rodape=f"Total: {len(freq_hoje)} registros")
+        tabela2.grid(row=2, column=2, columnspan=1, sticky="nsew", padx=(8, 0), pady=(8, 0))
+ 
+        # ── Eventos cadastrados ───────────────────────────────────────
+        try:
+            eventos = ler_json(EVENTOS_FILE, EVENTOS_PADRAO)
+        except Exception:
+            eventos = []
+        linhas_eventos = [(ev.get("data", ""), ev.get("evento", "")) for ev in eventos]
+        tabela_eventos = card_tabela(page, "📅  Eventos cadastrados",
+                                         ["DATA", "EVENTO"], linhas_eventos, larguras={0: 80})
+        tabela_eventos.grid(row=3, column=0, columnspan=3, sticky="nsew", pady=(16, 0))
+ 
+        return page
 
+    def criar_pagina_em_construcao(nome):
+        page = ctk.CTkFrame(container, fg_color=CINZA_BG)
+        page.grid_columnconfigure(0, weight=1)
+        page.grid_rowconfigure(0, weight=1)
+        ctk.CTkLabel(page, text=f"Página '{nome}' — em construção\n(em breve será migrada para o novo visual)",
+                      font=("Segoe UI", 16), text_color=TEXTO_CINZA, justify="center"
+                      ).grid(row=0, column=0)
+        return page
+ 
+    mostrar_pagina("Visão Geral")
+    # ──────────────────────────────────────────────────────────────────
+    # PÁGINA: AVALIAÇÕES (ligada ao banco)
+    # ──────────────────────────────────────────────────────────────────
+    def criar_pagina_avaliacoes():
+        page = ctk.CTkFrame(container, fg_color=CINZA_BG)
+        page.grid_columnconfigure(0, weight=1)
+        page.grid_rowconfigure(3, weight=1)
+ 
+        # Título
+        bloco = ctk.CTkFrame(page, fg_color="transparent")
+        bloco.grid(row=0, column=0, sticky="ew", padx=24, pady=(20, 12))
+        ctk.CTkLabel(bloco, text="📋  Avaliações", font=("Segoe UI", 20, "bold"),
+                      text_color=TEXTO_ESCURO).pack(anchor="w")
+        ctk.CTkLabel(bloco, text="Acompanhe e filtre as avaliações dos alunos.",
+                      font=("Segoe UI", 12), text_color=TEXTO_CINZA).pack(anchor="w")
+ 
+        # ── Card de filtros ────────────────────────────────────────────
+        filtros_card = ctk.CTkFrame(page, fg_color=BRANCO, corner_radius=12)
+        filtros_card.grid(row=1, column=0, sticky="ew", padx=24, pady=(0, 12))
+ 
+        linha1 = ctk.CTkFrame(filtros_card, fg_color="transparent")
+        linha1.pack(fill="x", padx=18, pady=(18, 6))
+ 
+        def _campo(parent, label, widget_cls, **kwargs):
+            blk = ctk.CTkFrame(parent, fg_color="transparent")
+            blk.pack(side="left", padx=(0, 16))
+            ctk.CTkLabel(blk, text=label, font=("Segoe UI", 11),
+                          text_color=TEXTO_CINZA).pack(anchor="w")
+            w = widget_cls(blk, width=170, height=34, **kwargs)
+            w.pack(anchor="w", pady=(4, 0))
+            return w
+ 
+        ent_nome = _campo(linha1, "Nome", ctk.CTkEntry, placeholder_text="Buscar por nome...")
+        ent_data = _campo(linha1, "Data (dd/mm/aaaa)", ctk.CTkEntry, placeholder_text="dd/mm/aaaa")
+ 
+        combo_est = _campo(linha1, "Estágio", ctk.CTkComboBox,
+                              values=["Todos", "Comida", "Limpeza", "Ensino", "Semana"])
+        combo_est.set("Todos")
+ 
+        # ── Estatísticas (preenchidas em carregar_dados) ────────────────
+        stats_frame = ctk.CTkFrame(page, fg_color="transparent")
+        stats_frame.grid(row=2, column=0, sticky="ew", padx=24, pady=(0, 12))
+        stats_frame.grid_columnconfigure((0, 1, 2, 3), weight=1)
+ 
+        lbl_total, _ = card_resumo(stats_frame, 0, 0, "📋", AZUL_CLARO, "#2196F3",
+                                       "Total de avaliações", "0", "")
+        lbl_pos, sub_pos = card_resumo(stats_frame, 0, 1, "🙂", VERDE_CLARO, "#4CAF50",
+                                           "Positivas", "0", "")
+        lbl_neu, sub_neu = card_resumo(stats_frame, 0, 2, "😐", "#FFF8E1", "#FBC02D",
+                                           "Neutras", "0", "")
+        lbl_neg, sub_neg = card_resumo(stats_frame, 0, 3, "🙁", VERMELHO_CLARO, "#F44336",
+                                           "Negativas", "0", "")
+ 
+        # ── Tabela (scrollable) ──────────────────────────────────────────
+        tabela_card = ctk.CTkFrame(page, fg_color=BRANCO, corner_radius=12)
+        tabela_card.grid(row=3, column=0, sticky="nsew", padx=24, pady=(0, 8))
+        tabela_card.grid_rowconfigure(1, weight=1)
+        tabela_card.grid_columnconfigure(0, weight=1)
+ 
+        colunas = ["DATA", "ALUNO", "SÉRIE", "CURSO", "ESTÁGIO", "CATEGORIA", "ITEM", "RESPOSTA"]
+        larguras = {0: 110, 1: 140, 2: 60, 3: 60, 4: 70, 5: 110, 6: 0, 7: 90}
+ 
+        header_t = ctk.CTkFrame(tabela_card, fg_color=VERDE_ESCURO, corner_radius=6)
+        header_t.grid(row=0, column=0, sticky="ew", padx=18, pady=(18, 0))
+        n = len(colunas)
+        for i, c in enumerate(colunas):
+            ctk.CTkLabel(header_t, text=c, font=("Segoe UI", 10, "bold"),
+                          text_color="white", width=larguras.get(i, 0),
+                          anchor="w").pack(side="left", expand=(i == n - 1), fill="x", padx=8, pady=8)
+ 
+        corpo = ctk.CTkScrollableFrame(tabela_card, fg_color="transparent")
+        corpo.grid(row=1, column=0, sticky="nsew", padx=18)
+ 
+        lbl_cnt = ctk.CTkLabel(tabela_card, text="0 registro(s)", font=("Segoe UI", 10),
+                                  text_color=TEXTO_CINZA)
+        lbl_cnt.grid(row=2, column=0, sticky="w", padx=18, pady=(4, 14))
+ 
+        # ── Lógica (igual ao painel antigo) ──────────────────────────────
+        MAPA_ESTAGIO = {"Comida": "1", "Limpeza": "2", "Ensino": "3", "Semana": "4"}
+ 
+        def _eh_almoco_favorito(item):
+            return "almoco favorito" in item.lower() or "almoço favorito" in item.lower()
+ 
+        def carregar_dados():
+            for w in corpo.winfo_children():
+                w.destroy()
+            lbl_cnt.configure(text="Carregando...")
 
-    # ── ABA EDITAR CARDAPIO ───────────────────────────────────────────────────
-    def setup_cardapio():
-        for w in aba_card_ed.winfo_children(): w.destroy()
-        hd = tk.Frame(aba_card_ed, bg=T["BG_CARD"]); hd.pack(fill="x", padx=20, pady=(15,5))
-        tk.Label(hd, text="Editar Cardapio da Semana", font=("Segoe UI",16,"bold"), bg=T["BG_CARD"], fg=T["ACCENT_VIBRANT"]).pack(side="left")
-        tk.Label(hd, text="Edite os campos e clique em Salvar", font=("Segoe UI",10), bg=T["BG_CARD"], fg=T["FRASE_FG"]).pack(side="left", padx=15)
-        tk.Frame(aba_card_ed, bg=T["BORDER_GRID"], height=2).pack(fill="x", padx=20, pady=(5,10))
+            # Captura os filtros antes de sair da thread principal
+            nome_f = ent_nome.get().strip().lower()
+            data_f = ent_data.get().strip()
+            est_f = combo_est.get()
+            est_f = MAPA_ESTAGIO.get(est_f) if est_f and est_f != "Todos" else None
+
+            def _buscar():
+                try:
+                    return _avaliacoes_para_linhas(), None
+                except Exception as e:
+                    return None, e
+
+            def _renderizar(linhas, erro):
+                if erro is not None:
+                    messagebox.showerror("Erro", f"Falha ao carregar avaliações do banco:\n{erro}")
+                    lbl_cnt.configure(text="0 registro(s)")
+                    return
+
+                total = pos = neu = neg = 0
+
+                for idx, r in enumerate(linhas):
+                    if len(r) < 7:
+                        continue
+                    data, aluno, serie, curso, estagio, item, nota = r
+
+                    if nome_f and nome_f not in str(aluno).lower():
+                        continue
+                    if data_f and data_f not in str(data):
+                        continue
+                    if est_f and str(estagio) != est_f:
+                        continue
+
+                    categoria = "Almoço favorito" if _eh_almoco_favorito(item) else "Avaliação"
+                    resposta = nota
+                    if str(estagio) == "4" and not _eh_almoco_favorito(item):
+                        try:
+                            n = float(nota)
+                            if n <= 1:
+                                resposta = "Ruim"
+                            elif n <= 3:
+                                resposta = "Medio"
+                            else:
+                                resposta = "Bom"
+                        except Exception:
+                            pass
+
+                    total += 1
+                    if resposta == "Bom":
+                        pos += 1
+                    elif resposta == "Medio":
+                        neu += 1
+                    elif resposta == "Ruim":
+                        neg += 1
+
+                    linha_frame = ctk.CTkFrame(corpo, fg_color="transparent")
+                    linha_frame.pack(fill="x")
+                    valores = [data, aluno, serie, curso, estagio, categoria, item, resposta]
+                    n = len(valores)
+                    for i, valor in enumerate(valores):
+                        ctk.CTkLabel(linha_frame, text=str(valor), font=("Segoe UI", 11),
+                                      width=larguras.get(i, 0), anchor="w",
+                                      text_color="#374151", wraplength=320 if i == 6 else 0
+                                      ).pack(side="left", expand=(i == n - 1), fill="x", padx=8, pady=6)
+                    ctk.CTkFrame(corpo, fg_color="#F0F0F0", height=1).pack(fill="x")
+
+                lbl_cnt.configure(text=f"{total} registro(s)")
+                lbl_total.configure(text=str(total))
+
+                def _pct(v):
+                    return f"{(v / total * 100):.1f}%" if total else "0%"
+
+                lbl_pos.configure(text=str(pos)); sub_pos.configure(text=_pct(pos))
+                lbl_neu.configure(text=str(neu)); sub_neu.configure(text=_pct(neu))
+                lbl_neg.configure(text=str(neg)); sub_neg.configure(text=_pct(neg))
+
+            def _thread_body():
+                linhas, erro = _buscar()
+                corpo.after(0, lambda: _renderizar(linhas, erro))
+
+            threading.Thread(target=_thread_body, daemon=True).start()
+ 
+        # Botões Buscar / Exportar PDF
+        ctk.CTkButton(linha1, text="🔍 Buscar", fg_color=VERDE_VIBRANTE, hover_color=VERDE_ESCURO,
+                        width=100, height=34, font=("Segoe UI", 11, "bold"),
+                        command=carregar_dados).pack(side="left", padx=(20, 4), pady=(18, 0))
+ 
+        def exportar_pdf():
+            def _gerar():
+                try:
+                    reader = [["Data", "Aluno", "Serie", "Curso", "Estagio", "Item", "Nota"]] + _avaliacoes_para_linhas()
+                except Exception as e:
+                    corpo.after(0, lambda: messagebox.showerror("Erro", f"Falha ao ler avaliações do banco:\n{e}"))
+                    return
+                if len(reader) <= 1:
+                    corpo.after(0, lambda: messagebox.showwarning("Aviso", "Não há avaliações para exportar."))
+                    return
+                try:
+                    from fpdf import FPDF
+                    pdf = FPDF()
+                    pdf.set_auto_page_break(True, margin=15)
+                    pdf.add_page()
+                    pdf.set_font("Arial", "B", 16)
+                    pdf.cell(0, 10, "AVALIACOES ESCOLARES - EEEP MARWIN", ln=True, align="C")
+                    pdf.set_font("Arial", "", 12)
+                    pdf.cell(0, 8, f"Data: {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}", ln=True)
+                    pdf.ln(6)
+                    pdf.set_font("Arial", "B", 11)
+                    pdf.cell(0, 8, "Registros de avaliacao:", ln=True)
+                    pdf.ln(3)
+                    pdf.set_font("Arial", "", 10)
+                    for row in reader[1:]:
+                        if len(row) < 7:
+                            continue
+                        pdf.multi_cell(0, 6, f"Data: {row[0]} | Aluno: {row[1]} | Serie: {row[2]} | Curso: {row[3]}")
+                        pdf.multi_cell(0, 6, f"Estagio: {row[4]} | Item: {row[5]} | Nota: {row[6]}")
+                        pdf.ln(2)
+                    nome_arq = f"avaliacoes_marwin_{datetime.datetime.now().strftime('%d_%m_%Y')}.pdf"
+                    pdf.output(nome_arq)
+                    corpo.after(0, lambda: messagebox.showinfo("Sucesso", f"PDF gerado com sucesso:\n{nome_arq}"))
+                except Exception as e:
+                    corpo.after(0, lambda: messagebox.showerror("Erro ao exportar", f"Falha ao gerar PDF:\n{e}"))
+
+            threading.Thread(target=_gerar, daemon=True).start()
+ 
+        ctk.CTkButton(linha1, text="⭳ Exportar PDF", fg_color="#374151", hover_color="#1F2937",
+                        width=130, height=34, font=("Segoe UI", 11, "bold"),
+                        command=exportar_pdf).pack(side="left", padx=4, pady=(18, 0))
+ 
+        # ── Linha 2: Avaliações ativas / modo de leitura / apagar tudo ───
+        linha2 = ctk.CTkFrame(filtros_card, fg_color="transparent")
+        linha2.pack(fill="x", padx=18, pady=(4, 18))
+ 
+        cfg_sys = ler_json(CONFIG_FILE, {"avaliacoes_ativas": True, "modo_leitura": "camera"})
+ 
+        var_ativas = ctk.BooleanVar(value=cfg_sys.get("avaliacoes_ativas", True))
+        var_modo = ctk.StringVar(value=cfg_sys.get("modo_leitura", "camera"))
+ 
+        def salvar_config():
+            cfg_sys["avaliacoes_ativas"] = var_ativas.get()
+            cfg_sys["modo_leitura"] = var_modo.get()
+            salvar_json(CONFIG_FILE, cfg_sys)
+            try:
+                _sync_nuvem("/admin/config", "PUT", cfg_sys)
+            except Exception:
+                pass
+ 
+        ctk.CTkCheckBox(linha2, text="Avaliações Ativas", variable=var_ativas,
+                          fg_color=VERDE_VIBRANTE, hover_color=VERDE_ESCURO,
+                          command=salvar_config).pack(side="left", padx=(0, 16))
+ 
+        ctk.CTkLabel(linha2, text="Modo de leitura:", font=("Segoe UI", 11),
+                      text_color=TEXTO_CINZA).pack(side="left", padx=(0, 8))
+        ctk.CTkRadioButton(linha2, text="Webcam", variable=var_modo, value="camera",
+                              fg_color=VERDE_VIBRANTE, command=salvar_config).pack(side="left", padx=6)
+        ctk.CTkRadioButton(linha2, text="Leitor USB", variable=var_modo, value="usb",
+                              fg_color=VERDE_VIBRANTE, command=salvar_config).pack(side="left", padx=6)
+ 
+        def apagar_tudo():
+            if messagebox.askyesno("Aviso", "Apagar todos os dados?"):
+                try:
+                    _apagar_avaliacoes_db()
+                    carregar_dados()
+                    messagebox.showinfo("Sucesso", "Avaliações apagadas do banco.")
+                except Exception as e:
+                    messagebox.showerror("Erro", f"Falha ao apagar avaliações:\n{e}")
+ 
+        ctk.CTkButton(linha2, text="Apagar tudo", fg_color="#C62828", hover_color="#8E1F1F",
+                        height=32, font=("Segoe UI", 11, "bold"),
+                        command=apagar_tudo).pack(side="right")
+ 
+        carregar_dados()
+        return page
+    
+    def criar_pagina_relatorio_semanal():
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+        import matplotlib.dates as mdates
+        from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+        import tkinter as tk
+ 
+        page = ctk.CTkScrollableFrame(container, fg_color=CINZA_BG)
+        page.grid_columnconfigure(0, weight=1)
+ 
+        # ── Cabeçalho ────────────────────────────────────────────────
+        cab = ctk.CTkFrame(page, fg_color="transparent")
+        cab.grid(row=0, column=0, sticky="ew", pady=(4, 16))
+        ctk.CTkLabel(cab, text="Relatório Semanal 📊",
+                      font=("Segoe UI", 22, "bold"), text_color=TEXTO_ESCURO).pack(anchor="w")
+        ctk.CTkLabel(cab, text="Refeições e presenças dos últimos 7 dias.",
+                      font=("Segoe UI", 12), text_color=TEXTO_CINZA).pack(anchor="w")
+ 
+        # ── Cards de resumo semanal ───────────────────────────────────
+        cards_row = ctk.CTkFrame(page, fg_color="transparent")
+        cards_row.grid(row=1, column=0, sticky="ew", pady=(0, 16))
+        cards_row.grid_columnconfigure((0, 1, 2), weight=1)
+ 
+        lbl_ref_sem,  sub_ref_sem  = card_resumo(cards_row, 0, 0, "🍽️", VERDE_CLARO,  VERDE_VIBRANTE, "Refeições (semana)", "...", "registros")
+        lbl_freq_sem, sub_freq_sem = card_resumo(cards_row, 0, 1, "⏱️", AZUL_CLARO,   "#1565C0",       "Presenças (semana)", "...", "alunos únicos")
+        lbl_aval_sem, sub_aval_sem = card_resumo(cards_row, 0, 2, "📋", ROXO_CLARO,   "#6A1B9A",       "Avaliações (semana)", "...", "respostas")
+ 
+        # ── Gráfico de linha matplotlib ───────────────────────────────
+        grafico_card = ctk.CTkFrame(page, fg_color=BRANCO, corner_radius=12)
+        grafico_card.grid(row=2, column=0, sticky="ew", pady=(0, 16))
+ 
+        topo_graf = ctk.CTkFrame(grafico_card, fg_color="transparent")
+        topo_graf.pack(fill="x", padx=18, pady=(16, 4))
+        ctk.CTkLabel(topo_graf, text="Atividade diária — últimos 7 dias",
+                      font=("Segoe UI", 13, "bold"), text_color=TEXTO_ESCURO).pack(side="left")
+        lbl_atualizado = ctk.CTkLabel(topo_graf, text="", font=("Segoe UI", 10),
+                                       text_color=TEXTO_CINZA)
+        lbl_atualizado.pack(side="right")
+ 
+        # Placeholder enquanto carrega
+        frame_graf = ctk.CTkFrame(grafico_card, fg_color="transparent")
+        frame_graf.pack(fill="x", padx=18, pady=(0, 16))
+        lbl_carregando = ctk.CTkLabel(frame_graf, text="Carregando gráfico...",
+                                       font=("Segoe UI", 12), text_color=TEXTO_CINZA)
+        lbl_carregando.pack(pady=40)
+ 
+        canvas_ref = {}  # guarda referência do canvas matplotlib
+ 
+        def _renderizar_grafico(dados_ref, dados_freq, dados_aval):
+            """Roda na thread principal — cria/atualiza o gráfico."""
+            lbl_carregando.pack_forget()
+            if "canvas" in canvas_ref:
+                canvas_ref["canvas"].get_tk_widget().destroy()
+                plt.close(canvas_ref.get("fig"))
+ 
+            datas_str = sorted(set(list(dados_ref.keys()) + list(dados_freq.keys()) + list(dados_aval.keys())))
+ 
+            if not datas_str:
+                ctk.CTkLabel(frame_graf, text="Sem dados na semana.",
+                              font=("Segoe UI", 12), text_color=TEXTO_CINZA).pack(pady=40)
+                return
+ 
+            try:
+                datas_dt = [datetime.datetime.strptime(d, "%d/%m/%Y") for d in datas_str]
+            except Exception:
+                datas_dt = list(range(len(datas_str)))
+ 
+            y_ref  = [dados_ref.get(d, 0)  for d in datas_str]
+            y_freq = [dados_freq.get(d, 0) for d in datas_str]
+            y_aval = [dados_aval.get(d, 0) for d in datas_str]
+ 
+            fig, ax = plt.subplots(figsize=(10, 3.8))
+            fig.patch.set_facecolor(BRANCO)
+            ax.set_facecolor(CINZA_BG)
+ 
+            ax.plot(datas_dt, y_ref,  marker="o", linewidth=2.5, color=VERDE_VIBRANTE,
+                    label="Refeições",  markersize=7)
+            ax.plot(datas_dt, y_freq, marker="s", linewidth=2.5, color="#1565C0",
+                    label="Presenças", markersize=7)
+            ax.plot(datas_dt, y_aval, marker="^", linewidth=2.5, color="#6A1B9A",
+                    label="Avaliações", markersize=7, linestyle="--")
+ 
+            for x, y in zip(datas_dt, y_ref):
+                if y: ax.annotate(str(y), (x, y), textcoords="offset points",
+                                  xytext=(0, 8), ha="center", fontsize=9, color=VERDE_VIBRANTE)
+            for x, y in zip(datas_dt, y_freq):
+                if y: ax.annotate(str(y), (x, y), textcoords="offset points",
+                                  xytext=(0, 8), ha="center", fontsize=9, color="#1565C0")
+ 
+            ax.xaxis.set_major_formatter(mdates.DateFormatter("%d/%m") if datas_dt and isinstance(datas_dt[0], datetime.datetime) else plt.FuncFormatter(lambda v, _: datas_str[int(v)] if int(v) < len(datas_str) else ""))
+            ax.xaxis.set_major_locator(mdates.DayLocator() if datas_dt and isinstance(datas_dt[0], datetime.datetime) else plt.MaxNLocator(integer=True))
+            plt.setp(ax.xaxis.get_majorticklabels(), rotation=0, ha="center", fontsize=9)
+ 
+            ax.set_ylabel("Quantidade", fontsize=10)
+            ax.legend(loc="upper left", fontsize=10, frameon=False)
+            ax.spines[["top", "right"]].set_visible(False)
+            ax.grid(axis="y", linestyle="--", alpha=0.4)
+            ax.set_ylim(bottom=0)
+            fig.tight_layout()
+ 
+            canvas_tk = FigureCanvasTkAgg(fig, master=frame_graf)
+            canvas_tk.draw()
+            canvas_tk.get_tk_widget().pack(fill="x")
+            canvas_ref["canvas"] = canvas_tk
+            canvas_ref["fig"]    = fig
+ 
+            lbl_atualizado.configure(
+                text=f"Atualizado em {datetime.datetime.now().strftime('%H:%M:%S')}")
+ 
+        # ── Tabela diária detalhada ───────────────────────────────────
+        tabela_card = ctk.CTkFrame(page, fg_color=BRANCO, corner_radius=12)
+        tabela_card.grid(row=3, column=0, sticky="ew", pady=(0, 16))
+        topo_tab = ctk.CTkFrame(tabela_card, fg_color="transparent")
+        topo_tab.pack(fill="x", padx=18, pady=(16, 10))
+        ctk.CTkLabel(topo_tab, text="Detalhe por dia",
+                      font=("Segoe UI", 13, "bold"), text_color=TEXTO_ESCURO).pack(side="left")
+ 
+        # Cabeçalho da tabela
+        header_tab = ctk.CTkFrame(tabela_card, fg_color=VERDE_ESCURO, corner_radius=6)
+        header_tab.pack(fill="x", padx=18)
+        COLS_TAB = [("Data", 120), ("Dia da Semana", 160), ("Refeições", 120),
+                    ("Presenças", 120), ("Avaliações", 120)]
+        for i, (col, w) in enumerate(COLS_TAB):
+            ctk.CTkLabel(header_tab, text=col, font=("Segoe UI", 10, "bold"),
+                          text_color="white", width=w, anchor="w"
+                          ).pack(side="left", expand=(i == len(COLS_TAB)-1),
+                                 fill="x", padx=8, pady=8)
+ 
+        corpo_tab = ctk.CTkFrame(tabela_card, fg_color="transparent")
+        corpo_tab.pack(fill="x", padx=18)
+ 
+        DIAS_SEMANA = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"]
+ 
+        # ── Função de carga de dados ──────────────────────────────────
+        def _carregar():
+            hoje_d  = datetime.date.today()
+            dias    = [hoje_d - datetime.timedelta(days=i) for i in range(6, -1, -1)]
+            datas_s = [d.strftime("%d/%m/%Y") for d in dias]
+ 
+            dados_ref  = {}
+            dados_freq = {}
+            dados_aval = {}
+ 
+            try:
+                for row in _ler_refeitorio_todos_db():
+                    d = row[0]
+                    if d in datas_s:
+                        dados_ref[d] = dados_ref.get(d, 0) + 1
+            except Exception:
+                pass
+ 
+            try:
+                vistos = {}
+                for row in _ler_frequencia_todos_db():
+                    d, mat = row[0], row[2]
+                    if d in datas_s:
+                        key = (d, mat)
+                        if key not in vistos:
+                            vistos[key] = True
+                            dados_freq[d] = dados_freq.get(d, 0) + 1
+            except Exception:
+                pass
+ 
+            try:
+                for a in _ler_avaliacoes_db():
+                    d = a.get("Data", "").split(" ")[0]
+                    if d in datas_s:
+                        dados_aval[d] = dados_aval.get(d, 0) + 1
+            except Exception:
+                pass
+ 
+            total_ref  = sum(dados_ref.values())
+            total_freq = sum(dados_freq.values())
+            total_aval = sum(dados_aval.values())
+ 
+            # Atualiza na thread principal
+            def _atualizar_ui():
+                lbl_ref_sem.configure(text=str(total_ref))
+                lbl_freq_sem.configure(text=str(total_freq))
+                lbl_aval_sem.configure(text=str(total_aval))
+ 
+                # Limpa corpo da tabela
+                for w in corpo_tab.winfo_children():
+                    w.destroy()
+ 
+                for i, (data_s, dia_d) in enumerate(zip(datas_s, dias)):
+                    r_ref  = dados_ref.get(data_s, 0)
+                    r_freq = dados_freq.get(data_s, 0)
+                    r_aval = dados_aval.get(data_s, 0)
+                    dia_nome = DIAS_SEMANA[dia_d.weekday()]
+ 
+                    bg = BRANCO if i % 2 == 0 else "#F8F9FA"
+                    linha_f = ctk.CTkFrame(corpo_tab, fg_color=bg, corner_radius=0)
+                    linha_f.pack(fill="x")
+ 
+                    valores = [(data_s, 120), (dia_nome, 160),
+                               (str(r_ref),  120), (str(r_freq), 120), (str(r_aval), 120)]
+                    n = len(valores)
+                    for j, (val, w) in enumerate(valores):
+                        cor_val = VERDE_VIBRANTE if j >= 2 and int(val) > 0 else "#374151"
+                        ctk.CTkLabel(linha_f, text=val, font=("Segoe UI", 11),
+                                      width=w, anchor="w",
+                                      text_color=cor_val
+                                      ).pack(side="left", expand=(j == n-1),
+                                             fill="x", padx=8, pady=7)
+                    ctk.CTkFrame(corpo_tab, fg_color="#F0F0F0", height=1).pack(fill="x")
+ 
+                # Gráfico
+                _renderizar_grafico(dados_ref, dados_freq, dados_aval)
+ 
+            page.after(0, _atualizar_ui)
+ 
+        threading.Thread(target=_carregar, daemon=True).start()
+ 
+        # Botão Atualizar
+        btn_row = ctk.CTkFrame(page, fg_color="transparent")
+        btn_row.grid(row=4, column=0, sticky="w", pady=(0, 24))
+        ctk.CTkButton(btn_row, text="↻  Atualizar", fg_color=VERDE_VIBRANTE,
+                       hover_color=VERDE_ESCURO, width=130, height=36,
+                       font=("Segoe UI", 11, "bold"),
+                       command=lambda: threading.Thread(target=_carregar, daemon=True).start()
+                       ).pack(side="left")
+        return page
+    def criar_pagina_cardapio():
+        page = ctk.CTkScrollableFrame(container, fg_color=CINZA_BG)
+        page.grid_columnconfigure(0, weight=1)
+ 
+        # ── Cabeçalho ─────────────────────────────────────────────────────────
+        cab = ctk.CTkFrame(page, fg_color="transparent")
+        cab.grid(row=0, column=0, sticky="ew", pady=(4, 8))
+        ctk.CTkLabel(cab, text="Editar Cardápio 🍽️",
+                      font=("Segoe UI", 22, "bold"), text_color=TEXTO_ESCURO).pack(anchor="w")
+        ctk.CTkLabel(cab, text="Edite as refeições de cada dia e clique em Salvar.",
+                      font=("Segoe UI", 12), text_color=TEXTO_CINZA).pack(anchor="w")
+ 
+        # ── Botão Salvar (topo) ───────────────────────────────────────────────
+        btn_bar = ctk.CTkFrame(page, fg_color="transparent")
+        btn_bar.grid(row=1, column=0, sticky="ew", pady=(0, 16))
+ 
+        lbl_status = ctk.CTkLabel(btn_bar, text="", font=("Segoe UI", 11),
+                                   text_color=VERDE_VIBRANTE)
+        lbl_status.pack(side="right", padx=(12, 0))
+ 
+        # Constantes dos dias
+        DIAS = ["SEGUNDA", "TERCA", "QUARTA", "QUINTA", "SEXTA"]
+        DIAS_LABEL = {
+            "SEGUNDA": "Segunda-feira",
+            "TERCA":   "Terça-feira",
+            "QUARTA":  "Quarta-feira",
+            "QUINTA":  "Quinta-feira",
+            "SEXTA":   "Sexta-feira",
+        }
+        REFEICOES = ["Merenda Manhã", "Almoço", "Merenda Tarde"]
+        CORES_DIA = {
+            "SEGUNDA": VERDE_VIBRANTE,
+            "TERCA":   "#1565C0",
+            "QUARTA":  "#6A1B9A",
+            "QUINTA":  "#E65100",
+            "SEXTA":   "#C62828",
+        }
+ 
+        # Carrega cardápio atual
         ca = ler_json(CARDAPIO_FILE, CARDAPIO_PADRAO)
-        dias = ["SEGUNDA", "TERCA", "QUARTA", "QUINTA", "SEXTA"]
-        cores_dia  = {"SEGUNDA":"#2e7d32","TERCA":"#1565c0","QUARTA":"#6a1b9a","QUINTA":"#e65100","SEXTA":"#c62828"}
-        refeicoes  = [("Merenda Manha"),("Almoco"),("Merenda Tarde")]
-        ents = {}
-        def salvar_card():
-            novo = {d:[e.get() for e in ents[d]] for d in dias}
-            salvar_json(CARDAPIO_FILE, novo)
-            _sync_nuvem("/admin/cardapio", "PUT", novo)
-            messagebox.showinfo("Sucesso", "Cardapio atualizado!")
-        tk.Button(aba_card_ed, text="SALVAR ALTERACOES", command=salvar_card, bg=T["ACCENT_VIBRANT"], fg="white", font=("Segoe UI",11,"bold"), pady=9, padx=25, bd=0, cursor="hand2").pack(fill="x", padx=20, pady=(0,8))
-        tk.Frame(aba_card_ed, bg=T["BORDER_GRID"], height=2).pack(fill="x", padx=20, pady=(0,4))
-        cs = tk.Canvas(aba_card_ed, bg=T["BG_CARD"], highlightthickness=0)
-        sb = ttk.Scrollbar(aba_card_ed, orient="vertical", command=cs.yview)
-        sf = tk.Frame(cs, bg=T["BG_CARD"])
-        sf.bind("<Configure>", lambda e: cs.configure(scrollregion=cs.bbox("all")))
-        wid = cs.create_window((0,0), window=sf, anchor="nw")
-        cs.bind("<Configure>", lambda e: cs.itemconfig(wid, width=e.width))
-        cs.configure(yscrollcommand=sb.set); cs.pack(side="left", fill="both", expand=True); sb.pack(side="right", fill="y")
-        cs.bind_all("<MouseWheel>", lambda e: cs.yview_scroll(int(-1*(e.delta/120)), "units"))
-        grade = tk.Frame(sf, bg=T["BG_CARD"]); grade.pack(fill="both", expand=True, padx=15, pady=10)
-        grade.grid_columnconfigure(0, weight=1, uniform="col"); grade.grid_columnconfigure(1, weight=1, uniform="col")
-        posicoes = [(0,0),(0,1),(1,0),(1,1),(2,0)]
-        for idx_dia, dia in enumerate(dias):
-            gr, gc = posicoes[idx_dia]; cor = cores_dia[dia]
-            if idx_dia == 4:
-                card = tk.Frame(grade, bg=T["BG_CARD"], highlightbackground=T["BORDER_GRID"], highlightthickness=1)
-                card.grid(row=gr, column=0, columnspan=2, sticky="nsew", padx=5, pady=5)
+        ents = {}  # dia -> [Entry, Entry, Entry]
+ 
+        # ── Grade de cards ─────────────────────────────────────────────────────
+        grade = ctk.CTkFrame(page, fg_color="transparent")
+        grade.grid(row=2, column=0, sticky="ew")
+        grade.grid_columnconfigure(0, weight=1, uniform="col")
+        grade.grid_columnconfigure(1, weight=1, uniform="col")
+ 
+        def _criar_card_dia(parent, dia, row, col, colspan=1):
+            cor = CORES_DIA[dia]
+            card = ctk.CTkFrame(parent, fg_color=BRANCO, corner_radius=12)
+            if colspan == 2:
+                card.grid(row=row, column=col, columnspan=2, sticky="ew",
+                          padx=6, pady=6)
             else:
-                card = tk.Frame(grade, bg=T["BG_CARD"], highlightbackground=T["BORDER_GRID"], highlightthickness=1)
-                card.grid(row=gr, column=gc, sticky="nsew", padx=5, pady=5)
-            dia_hd = tk.Frame(card, bg=cor); dia_hd.pack(fill="x")
-            tk.Label(dia_hd, text=f"  {dia}", font=("Segoe UI",13,"bold"), bg=cor, fg="white", pady=9).pack(side="left")
+                card.grid(row=row, column=col, sticky="nsew", padx=6, pady=6)
+ 
+            # Cabeçalho colorido
+            hd = ctk.CTkFrame(card, fg_color=cor, corner_radius=8,
+                               height=44)
+            hd.pack(fill="x", padx=8, pady=(8, 0))
+            hd.pack_propagate(False)
+            ctk.CTkLabel(hd, text=f"  {DIAS_LABEL[dia]}",
+                          font=("Segoe UI", 13, "bold"),
+                          text_color="white").place(relx=0, rely=0.5, anchor="w", x=8)
+ 
+            # Campos de refeição
             ents[dia] = []
-            if idx_dia == 4:
-                inner = tk.Frame(card, bg=T["BG_CARD"], padx=14, pady=10); inner.pack(fill="both", expand=True)
-                for j, nome_ref in enumerate(refeicoes):
-                    col2 = tk.Frame(inner, bg=T["BG_CARD"]); col2.pack(side="left", expand=True, fill="both", padx=(0,12 if j<2 else 0))
-                    tk.Label(col2, text=nome_ref, font=("Segoe UI",9,"bold"), bg=T["BG_CARD"], fg=T["FRASE_FG"]).pack(anchor="w", pady=(0,4))
-                    e = tk.Entry(col2, font=("Segoe UI",11), bg=T["ENTRY_BG"], fg=T["FG_TEXT"], relief="solid", bd=1, insertbackground=cor)
-                    e.insert(0, ca.get(dia, ["","",""])[j]); e.pack(fill="x", ipady=8); ents[dia].append(e)
+            valores_dia = ca.get(dia, ["", "", ""])
+            inner = ctk.CTkFrame(card, fg_color="transparent")
+            inner.pack(fill="x", padx=14, pady=(10, 14))
+ 
+            if colspan == 2:
+                # Sexta: 3 campos lado a lado
+                for j, nome_ref in enumerate(REFEICOES):
+                    col_frame = ctk.CTkFrame(inner, fg_color="transparent")
+                    col_frame.pack(side="left", expand=True, fill="both",
+                                   padx=(0, 12 if j < 2 else 0))
+                    ctk.CTkLabel(col_frame, text=nome_ref,
+                                  font=("Segoe UI", 10, "bold"),
+                                  text_color=TEXTO_CINZA).pack(anchor="w", pady=(0, 4))
+                    e = ctk.CTkEntry(col_frame, font=("Segoe UI", 11),
+                                      height=38, border_color=cor,
+                                      border_width=2)
+                    e.insert(0, valores_dia[j] if j < len(valores_dia) else "")
+                    e.pack(fill="x")
+                    ents[dia].append(e)
             else:
-                inner = tk.Frame(card, bg=T["BG_CARD"], padx=14, pady=10); inner.pack(fill="both", expand=True)
-                for j, nome_ref in enumerate(refeicoes):
-                    tk.Label(inner, text=nome_ref, font=("Segoe UI",9,"bold"), bg=T["BG_CARD"], fg=T["FRASE_FG"]).pack(anchor="w", pady=(4,2))
-                    e = tk.Entry(inner, font=("Segoe UI",11), bg=T["ENTRY_BG"], fg=T["FG_TEXT"], relief="solid", bd=1, insertbackground=cor)
-                    e.insert(0, ca.get(dia, ["","",""])[j]); e.pack(fill="x", ipady=8); ents[dia].append(e)
-
-    # ── ABA EDITAR EVENTOS ────────────────────────────────────────────────────
-    def setup_eventos():
-        for w in aba_ev_ed.winfo_children(): w.destroy()
-        corpo = tk.Frame(aba_ev_ed, bg=T["BG_CARD"]); corpo.pack(fill="both", expand=True)
-        esq = tk.Frame(corpo, bg=T["OBS_BG"], width=280); esq.pack(side="left", fill="y"); esq.pack_propagate(False)
+                # Seg–Qui: 3 campos empilhados
+                for j, nome_ref in enumerate(REFEICOES):
+                    ctk.CTkLabel(inner, text=nome_ref,
+                                  font=("Segoe UI", 10, "bold"),
+                                  text_color=TEXTO_CINZA).pack(anchor="w",
+                                                               pady=(6 if j > 0 else 0, 4))
+                    e = ctk.CTkEntry(inner, font=("Segoe UI", 11),
+                                      height=38, border_color=cor,
+                                      border_width=2)
+                    e.insert(0, valores_dia[j] if j < len(valores_dia) else "")
+                    e.pack(fill="x")
+                    ents[dia].append(e)
+ 
+        # Seg / Ter  (linha 0)
+        _criar_card_dia(grade, "SEGUNDA", row=0, col=0)
+        _criar_card_dia(grade, "TERCA",   row=0, col=1)
+        # Qua / Qui  (linha 1)
+        _criar_card_dia(grade, "QUARTA",  row=1, col=0)
+        _criar_card_dia(grade, "QUINTA",  row=1, col=1)
+        # Sexta em linha cheia (linha 2)
+        _criar_card_dia(grade, "SEXTA",   row=2, col=0, colspan=2)
+ 
+        # ── Salvar ────────────────────────────────────────────────────────────
+        def salvar():
+            novo = {dia: [e.get() for e in ents[dia]] for dia in DIAS}
+            salvar_json(CARDAPIO_FILE, novo)
+            try:
+                _sync_nuvem("/admin/cardapio", "PUT", novo)
+            except Exception:
+                pass
+            lbl_status.configure(text="✔  Cardápio salvo com sucesso!")
+            page.after(3000, lambda: lbl_status.configure(text=""))
+ 
+        ctk.CTkButton(btn_bar, text="💾  Salvar Alterações",
+                       fg_color=VERDE_VIBRANTE, hover_color=VERDE_ESCURO,
+                       font=("Segoe UI", 12, "bold"), height=40, width=200,
+                       command=salvar).pack(side="left")
+        return page
+    def criar_pagina_eventos():
+        page = ctk.CTkFrame(container, fg_color=CINZA_BG)
+        page.grid_columnconfigure(0, weight=0)
+        page.grid_columnconfigure(1, weight=1)
+        page.grid_rowconfigure(1, weight=1)
+ 
+        # ── Cabeçalho ─────────────────────────────────────────────────────────
+        cab = ctk.CTkFrame(page, fg_color="transparent")
+        cab.grid(row=0, column=0, columnspan=2, sticky="ew", padx=4, pady=(4, 16))
+        ctk.CTkLabel(cab, text="Editar Eventos 📅",
+                      font=("Segoe UI", 22, "bold"), text_color=TEXTO_ESCURO).pack(anchor="w")
+        ctk.CTkLabel(cab, text="Adicione datas e descrições ao calendário escolar.",
+                      font=("Segoe UI", 12), text_color=TEXTO_CINZA).pack(anchor="w")
+ 
+        # ── Coluna esquerda: formulário de novo evento ──────────────────────────
+        form_card = ctk.CTkFrame(page, fg_color=BRANCO, corner_radius=12, width=300)
+        form_card.grid(row=1, column=0, sticky="ns", padx=(0, 16))
+        form_card.grid_propagate(False)
+ 
+        # Logo (se existir)
         logo_path = _buscar_logo_png()
         if logo_path:
             try:
-                from PIL import Image as _PilImg, ImageTk as _PilImgTk
+                from PIL import Image as _PilImg
                 _img_logo = _PilImg.open(logo_path).convert("RGBA")
-                _img_logo.thumbnail((140, 140), _PilImg.LANCZOS)
-                _logo_evento_tk = _PilImgTk.PhotoImage(_img_logo, master=esq)
-                tk.Label(esq, image=_logo_evento_tk, bg=T["OBS_BG"]).pack(pady=(24, 8))
-                esq._logo_evento_ref = _logo_evento_tk
+                _img_logo.thumbnail((110, 110), _PilImg.LANCZOS)
+                _ctk_logo = ctk.CTkImage(light_image=_img_logo, dark_image=_img_logo,
+                                          size=_img_logo.size)
+                ctk.CTkLabel(form_card, image=_ctk_logo, text="").pack(pady=(24, 8))
             except Exception:
                 pass
-        tk.Label(esq, text="Novo Evento", font=("Segoe UI",15,"bold"), bg=T["OBS_BG"], fg=T["ACCENT_VIBRANT"]).pack(pady=(12,4))
-        tk.Label(esq, text="Adicione datas e descricoes ao calendario", font=("Segoe UI",9), bg=T["OBS_BG"], fg=T["FRASE_FG"], justify="center").pack(pady=(0,20))
-        tk.Frame(esq, bg=T["BORDER_GRID"], height=1).pack(fill="x", padx=20, pady=(0,20))
-        tk.Label(esq, text="Data", font=("Segoe UI",10,"bold"), bg=T["OBS_BG"], fg=T["ACCENT_VIBRANT"]).pack(anchor="w", padx=20)
-        tk.Label(esq, text="Formato: DD/MM  (ex: 15/07)", font=("Segoe UI",8), bg=T["OBS_BG"], fg=T["FRASE_FG"]).pack(anchor="w", padx=20, pady=(2,4))
-        ed = tk.Entry(esq, font=("Segoe UI",13), relief="solid", bd=1, bg=T["BG_CARD"], fg=T["FG_TEXT"], insertbackground=T["ACCENT_VIBRANT"])
-        ed.pack(fill="x", padx=20, ipady=7, pady=(0,16)); ed.insert(0,"01/01")
-        tk.Label(esq, text="Descricao", font=("Segoe UI",10,"bold"), bg=T["OBS_BG"], fg=T["ACCENT_VIBRANT"]).pack(anchor="w", padx=20)
-        tk.Label(esq, text="Nome do evento ou feriado", font=("Segoe UI",8), bg=T["OBS_BG"], fg=T["FRASE_FG"]).pack(anchor="w", padx=20, pady=(2,4))
-        edesc = tk.Entry(esq, font=("Segoe UI",13), relief="solid", bd=1, bg=T["BG_CARD"], fg=T["FG_TEXT"], insertbackground=T["ACCENT_VIBRANT"])
-        edesc.pack(fill="x", padx=20, ipady=7, pady=(0,24))
-        dir2 = tk.Frame(corpo, bg=T["BG_CARD"]); dir2.pack(side="left", fill="both", expand=True)
-        _configurar_layout_portrait(corpo, esq, dir2)
-        dir_hd = tk.Frame(dir2, bg=T["BG_CARD"]); dir_hd.pack(fill="x", padx=25, pady=(20,5))
-        tk.Label(dir_hd, text="Eventos Cadastrados", font=("Segoe UI",15,"bold"), bg=T["BG_CARD"], fg=T["ACCENT_VIBRANT"]).pack(side="left")
-        tk.Frame(dir2, bg=T["BORDER_GRID"], height=1).pack(fill="x", padx=25, pady=(0,10))
-        fte = tk.Frame(dir2, bg=T["BORDER_GRID"], padx=1, pady=1); fte.pack(fill="both", expand=True, padx=25)
-        tev = ttk.Treeview(fte, columns=("D","E"), show="headings")
-        tev.heading("D", text="Data"); tev.column("D", width=90, anchor="center")
-        tev.heading("E", text="Evento"); tev.column("E", width=400, anchor="w")
-        tev.pack(fill="both", expand=True)
-        tev.tag_configure("even", background=T["ENTRY_BG"]); tev.tag_configure("odd", background=T["BG_CARD"])
-        def carregar_ev():
-            for i in tev.get_children(): tev.delete(i)
+ 
+        ctk.CTkLabel(form_card, text="Novo Evento",
+                      font=("Segoe UI", 15, "bold"), text_color=TEXTO_ESCURO).pack(pady=(8, 2))
+        ctk.CTkLabel(form_card, text="Cadastre datas especiais\ndo calendário escolar",
+                      font=("Segoe UI", 10), text_color=TEXTO_CINZA,
+                      justify="center").pack(pady=(0, 16))
+ 
+        linha_div = ctk.CTkFrame(form_card, fg_color="#E5E7EB", height=1)
+        linha_div.pack(fill="x", padx=20, pady=(0, 16))
+ 
+        ctk.CTkLabel(form_card, text="Data", font=("Segoe UI", 11, "bold"),
+                      text_color=TEXTO_ESCURO).pack(anchor="w", padx=20)
+        ctk.CTkLabel(form_card, text="Formato: DD/MM  (ex: 15/07)",
+                      font=("Segoe UI", 9), text_color=TEXTO_CINZA).pack(anchor="w", padx=20, pady=(0, 4))
+        ent_data = ctk.CTkEntry(form_card, font=("Segoe UI", 13), height=38,
+                                 border_color=VERDE_VIBRANTE, border_width=2,
+                                 placeholder_text="01/01")
+        ent_data.pack(fill="x", padx=20, pady=(0, 16))
+ 
+        ctk.CTkLabel(form_card, text="Descrição", font=("Segoe UI", 11, "bold"),
+                      text_color=TEXTO_ESCURO).pack(anchor="w", padx=20)
+        ctk.CTkLabel(form_card, text="Nome do evento ou feriado",
+                      font=("Segoe UI", 9), text_color=TEXTO_CINZA).pack(anchor="w", padx=20, pady=(0, 4))
+        ent_desc = ctk.CTkEntry(form_card, font=("Segoe UI", 13), height=38,
+                                 border_color=VERDE_VIBRANTE, border_width=2,
+                                 placeholder_text="Ex: Feira Científica")
+        ent_desc.pack(fill="x", padx=20, pady=(0, 8))
+ 
+        lbl_form_status = ctk.CTkLabel(form_card, text="", font=("Segoe UI", 10),
+                                        text_color=VERDE_VIBRANTE)
+        lbl_form_status.pack(pady=(0, 4))
+ 
+        # ── Coluna direita: lista de eventos cadastrados ────────────────────────
+        lista_card = ctk.CTkFrame(page, fg_color=BRANCO, corner_radius=12)
+        lista_card.grid(row=1, column=1, sticky="nsew")
+        lista_card.grid_rowconfigure(2, weight=1)
+        lista_card.grid_columnconfigure(0, weight=1)
+ 
+        topo_lista = ctk.CTkFrame(lista_card, fg_color="transparent")
+        topo_lista.grid(row=0, column=0, sticky="ew", padx=18, pady=(16, 4))
+        ctk.CTkLabel(topo_lista, text="Eventos Cadastrados",
+                      font=("Segoe UI", 14, "bold"), text_color=TEXTO_ESCURO).pack(side="left")
+        lbl_total = ctk.CTkLabel(topo_lista, text="", font=("Segoe UI", 10),
+                                  text_color=TEXTO_CINZA)
+        lbl_total.pack(side="right")
+ 
+        # Cabeçalho da tabela
+        header_ev = ctk.CTkFrame(lista_card, fg_color=VERDE_ESCURO, corner_radius=6)
+        header_ev.grid(row=1, column=0, sticky="ew", padx=18)
+        ctk.CTkLabel(header_ev, text="Data", font=("Segoe UI", 10, "bold"),
+                      text_color="white", width=90, anchor="w"
+                      ).pack(side="left", padx=8, pady=8)
+        ctk.CTkLabel(header_ev, text="Evento", font=("Segoe UI", 10, "bold"),
+                      text_color="white", anchor="w"
+                      ).pack(side="left", expand=True, fill="x", padx=8, pady=8)
+        ctk.CTkLabel(header_ev, text="", font=("Segoe UI", 10, "bold"),
+                      text_color="white", width=40
+                      ).pack(side="right", padx=8, pady=8)
+ 
+        # Corpo scrollável da lista
+        corpo_ev = ctk.CTkScrollableFrame(lista_card, fg_color="transparent")
+        corpo_ev.grid(row=2, column=0, sticky="nsew", padx=18, pady=(0, 16))
+        corpo_ev.grid_columnconfigure(0, weight=1)
+ 
+        # ── Funções de carregar / adicionar / remover ───────────────────────────
+        def _ordenar_eventos(evs):
+            try:
+                return sorted(evs, key=lambda x: (int(x["data"].split("/")[1]),
+                                                    int(x["data"].split("/")[0])))
+            except Exception:
+                return evs
+ 
+        def carregar_eventos():
+            for w in corpo_ev.winfo_children():
+                w.destroy()
+ 
             evs = ler_json(EVENTOS_FILE, EVENTOS_PADRAO)
-            try: evs.sort(key=lambda x:(int(x["data"].split("/")[1]),int(x["data"].split("/")[0])))
-            except: pass
-            for idx,ev in enumerate(evs):
-                tev.insert("","end",values=(ev["data"],ev["evento"]),tags=("even" if idx%2==0 else "odd",))
-            lbl_total.config(text=f"{len(evs)} evento(s) cadastrado(s)")
-        lbl_total = tk.Label(dir2, text="", font=("Segoe UI",9), bg=T["BG_CARD"], fg=T["FRASE_FG"]); lbl_total.pack(anchor="e", padx=25, pady=(4,0))
-        btns = tk.Frame(dir2, bg=T["BG_CARD"]); btns.pack(fill="x", padx=25, pady=12)
-        def rem_ev():
-            sel = tev.selection()
-            if not sel: messagebox.showwarning("Aviso","Selecione um evento na lista primeiro."); return
-            if messagebox.askyesno("Confirmar","Remover o evento selecionado?"):
-                val = tev.item(sel[0],"values"); evs = ler_json(EVENTOS_FILE, EVENTOS_PADRAO)
-                evs = [e for e in evs if not (e["data"]==val[0] and e["evento"]==val[1])]
-                salvar_json(EVENTOS_FILE, evs)
-                _sync_nuvem("/admin/eventos", "PUT", evs)
-                carregar_ev()
-        tk.Button(btns, text="Remover Selecionado", command=rem_ev, bg="#c62828", fg="white", font=("Segoe UI",10,"bold"), pady=9, padx=20, bd=0, cursor="hand2").pack(side="right")
-        def add_ev():
-            data = ed.get().strip(); desc = edesc.get().strip()
-            if not data or not desc: messagebox.showwarning("Campos vazios","Preencha a data e a descricao."); return
-            if "/" not in data or len(data)!=5: messagebox.showwarning("Formato invalido","Use o formato DD/MM  ex: 15/07"); return
-            evs = ler_json(EVENTOS_FILE, EVENTOS_PADRAO); evs.append({"data":data,"evento":desc})
+            evs = _ordenar_eventos(evs)
+            lbl_total.configure(text=f"{len(evs)} evento(s) cadastrado(s)")
+ 
+            if not evs:
+                ctk.CTkLabel(corpo_ev, text="Nenhum evento cadastrado.",
+                              font=("Segoe UI", 12), text_color=TEXTO_CINZA
+                              ).grid(row=0, column=0, pady=24)
+                return
+ 
+            for i, ev in enumerate(evs):
+                bg = BRANCO if i % 2 == 0 else "#F8F9FA"
+                linha = ctk.CTkFrame(corpo_ev, fg_color=bg, corner_radius=6)
+                linha.grid(row=i, column=0, sticky="ew", pady=2)
+                linha.grid_columnconfigure(1, weight=1)
+ 
+                ctk.CTkLabel(linha, text=ev["data"], font=("Segoe UI", 11, "bold"),
+                              text_color=VERDE_VIBRANTE, width=90, anchor="w"
+                              ).grid(row=0, column=0, padx=8, pady=8, sticky="w")
+                ctk.CTkLabel(linha, text=ev["evento"], font=("Segoe UI", 11),
+                              text_color="#374151", anchor="w"
+                              ).grid(row=0, column=1, padx=8, pady=8, sticky="ew")
+ 
+                def _remover(e=ev):
+                    if not messagebox.askyesno("Confirmar", f"Remover o evento '{e['evento']}' ({e['data']})?"):
+                        return
+                    atuais = ler_json(EVENTOS_FILE, EVENTOS_PADRAO)
+                    atuais = [x for x in atuais if not (x["data"] == e["data"] and x["evento"] == e["evento"])]
+                    salvar_json(EVENTOS_FILE, atuais)
+                    try:
+                        _sync_nuvem("/admin/eventos", "PUT", atuais)
+                    except Exception:
+                        pass
+                    carregar_eventos()
+ 
+                ctk.CTkButton(linha, text="🗑", width=36, height=28,
+                               fg_color="#FEE2E2", hover_color="#FCA5A5",
+                               text_color="#C62828", font=("Segoe UI", 12),
+                               command=_remover
+                               ).grid(row=0, column=2, padx=8, pady=8)
+ 
+        def adicionar_evento():
+            data = ent_data.get().strip()
+            desc = ent_desc.get().strip()
+ 
+            if not data or not desc:
+                lbl_form_status.configure(text="⚠ Preencha a data e a descrição.",
+                                           text_color="#C62828")
+                return
+            if "/" not in data or len(data) != 5:
+                lbl_form_status.configure(text="⚠ Use o formato DD/MM (ex: 15/07).",
+                                           text_color="#C62828")
+                return
+ 
+            evs = ler_json(EVENTOS_FILE, EVENTOS_PADRAO)
+            evs.append({"data": data, "evento": desc})
             salvar_json(EVENTOS_FILE, evs)
-            _sync_nuvem("/admin/eventos", "PUT", evs)
-            carregar_ev()
-            ed.delete(0,"end"); ed.insert(0,"01/01"); edesc.delete(0,"end"); edesc.focus()
-        tk.Button(esq, text="Adicionar Evento", command=add_ev, bg=T["ACCENT_VIBRANT"], fg="white", font=("Segoe UI",12,"bold"), pady=13, bd=0, cursor="hand2").pack(fill="x", padx=20)
-        esq.bind_all("<Return>", lambda e: add_ev()); carregar_ev()
+            try:
+                _sync_nuvem("/admin/eventos", "PUT", evs)
+            except Exception:
+                pass
+ 
+            lbl_form_status.configure(text="✔ Evento adicionado!", text_color=VERDE_VIBRANTE)
+            ent_data.delete(0, "end")
+            ent_desc.delete(0, "end")
+            ent_data.focus()
+            carregar_eventos()
+            page.after(2500, lambda: lbl_form_status.configure(text=""))
+ 
+        ctk.CTkButton(form_card, text="➕  Adicionar Evento",
+                       fg_color=VERDE_VIBRANTE, hover_color=VERDE_ESCURO,
+                       font=("Segoe UI", 12, "bold"), height=40,
+                       command=adicionar_evento
+                       ).pack(fill="x", padx=20, pady=(4, 24))
+ 
+        ent_desc.bind("<Return>", lambda e: adicionar_evento())
+        ent_data.bind("<Return>", lambda e: ent_desc.focus())
+ 
+        carregar_eventos()
+        return page
 
-    # ── ABA REFEITÓRIO ────────────────────────────────────────────────────────
-    def setup_refeitorio():
-        for w in aba_ref.winfo_children(): w.destroy()
 
-        # Mapeamento de siglas de sala para série/curso
+    def criar_pagina_refeitorio():
+        import unicodedata as _ud
+ 
+        page = ctk.CTkFrame(container, fg_color=CINZA_BG)
+        page.grid_columnconfigure(0, weight=1)
+        page.grid_rowconfigure(4, weight=1)
+ 
+        # ── Mapas de siglas / cursos / normalização (mesma lógica do painel antigo) ──
+        SIGLAS_LABEL = {
+            "1DS": "1º DS",  "1HOS": "1º HOS", "1ENF": "1º ENF", "1MOD": "1º MOD",
+            "2DS": "2º DS",  "2HOS": "2º HOS", "2ENF": "2º ENF", "2MOD": "2º MOD",
+            "3DS": "3º DS",  "3HOS": "3º HOS", "3ENF": "3º ENF", "3MOD": "3º MOD",
+        }
         SIGLAS = {
             "1DS":  {"serie": "1 Ano", "curso": "Desenvolvimento de Sistemas"},
             "1HOS": {"serie": "1 Ano", "curso": "Hospedagem"},
@@ -2668,260 +2824,233 @@ def abrir_painel_admin(event=None):
             "3ENF": {"serie": "3 Ano", "curso": "Enfermagem"},
             "3MOD": {"serie": "3 Ano", "curso": "Modelagem do Vestuario"},
         }
-        SIGLAS_LABEL = {
-            "1DS": "1º DS",  "1HOS": "1º HOS", "1ENF": "1º ENF", "1MOD": "1º MOD",
-            "2DS": "2º DS",  "2HOS": "2º HOS", "2ENF": "2º ENF", "2MOD": "2º MOD",
-            "3DS": "3º DS",  "3HOS": "3º HOS", "3ENF": "3º ENF", "3MOD": "3º MOD",
-        }
-        CORES_ANO = {"1": "#1565c0", "2": "#6a1b9a", "3": "#c62828"}
-
-        # ── Cabeçalho ─────────────────────────────────────────────────────────
-        hd = tk.Frame(aba_ref, bg=T["BG_CARD"]); hd.pack(fill="x", padx=20, pady=(15, 5))
-        tk.Label(hd, text="Controle de Refeições - Hoje", font=("Segoe UI", 16, "bold"),
-                 bg=T["BG_CARD"], fg=T["ACCENT_VIBRANT"]).pack(side="left")
-        tk.Label(hd, text=f"  ({_hoje()})", font=("Segoe UI", 11),
-                 bg=T["BG_CARD"], fg=T["FRASE_FG"]).pack(side="left")
-        tk.Frame(aba_ref, bg=T["BORDER_GRID"], height=2).pack(fill="x", padx=20, pady=(5, 0))
-
-        # ── Linha de filtros por texto / combo ────────────────────────────────
-        container_filtros = tk.Frame(aba_ref, bg=T["OBS_BG"])
-        container_filtros.pack(fill="x", padx=20, pady=(6, 0))
-
-        filtro_frame = tk.Frame(container_filtros, bg=T["OBS_BG"])
-        filtro_frame.pack(fill="x", padx=10, pady=(0, 0))
-
-        tk.Label(filtro_frame, text="Filtrar por:", font=("Segoe UI", 10, "bold"),
-                 bg=T["OBS_BG"], fg=T["ACCENT_VIBRANT"]).pack(side="left", padx=(10, 8), pady=8)
-
-        fv_serie = tk.StringVar()
-        fv_curso  = tk.StringVar()
-        fv_nome   = tk.StringVar()
-
-        tk.Label(filtro_frame, text="Série:", font=("Segoe UI", 9),
-                 bg=T["OBS_BG"], fg=T["FG_TEXT"]).pack(side="left")
-        cb_serie = ttk.Combobox(filtro_frame, textvariable=fv_serie, state="readonly",
-                                values=["(Todas)", "1 Ano", "2 Ano", "3 Ano"],
-                                width=9, font=("Segoe UI", 10))
-        cb_serie.set("(Todas)")
-        cb_serie.pack(side="left", padx=(4, 14), pady=6)
-
-        tk.Label(filtro_frame, text="Curso:", font=("Segoe UI", 9),
-                 bg=T["OBS_BG"], fg=T["FG_TEXT"]).pack(side="left")
-        cursos_opcoes = [
-            "(Todos)",
-            "Desenvolvimento de Sistemas",
-            "Hospedagem",
-            "Enfermagem",
-            "Modelagem do Vestuario",
-        ]
-        cb_curso = ttk.Combobox(filtro_frame, textvariable=fv_curso, state="readonly",
-                                values=cursos_opcoes, width=26, font=("Segoe UI", 10))
-        cb_curso.set("(Todos)")
-        cb_curso.pack(side="left", padx=(4, 14), pady=6)
-
-        tk.Label(filtro_frame, text="Nome:", font=("Segoe UI", 9),
-                 bg=T["OBS_BG"], fg=T["FG_TEXT"]).pack(side="left")
-        entry_nome = tk.Entry(filtro_frame, textvariable=fv_nome, font=("Segoe UI", 10),
-                              bg=T["ENTRY_BG"], fg=T["FG_TEXT"], relief="solid", bd=1,
-                              insertbackground=T["ACCENT_VIBRANT"], width=20)
-        entry_nome.pack(side="left", ipady=4, padx=(4, 14), pady=6)
-
-        btn_limpar = tk.Button(filtro_frame, text="✕ Limpar", font=("Segoe UI", 9, "bold"),
-                               bg=T["OBS_BG"], fg=T["ACCENT_VIBRANT"], bd=0,
-                               cursor="hand2", padx=8, pady=4)
-        btn_limpar.pack(side="left", padx=(0, 10), pady=6)
-
-        # ── Botões de atalho por sala ──────────────────────────────────────────
-        sala_frame = tk.Frame(aba_ref, bg=T["BG_CARD"])
-        sala_frame.pack(fill="x", padx=20, pady=(6, 0))
-        tk.Label(sala_frame, text="Sala rápida:", font=("Segoe UI", 9, "bold"),
-                 bg=T["BG_CARD"], fg=T["FRASE_FG"]).pack(side="left", padx=(4, 8))
-
-        btn_sala_refs = {}
-
-        def _filtrar_por_sigla(sigla):
-            info = SIGLAS[sigla]
-            fv_serie.set(info["serie"])
-            fv_curso.set(info["curso"])
-            fv_nome.set("")
-            # destaca botão ativo, reseta os demais
-            for s, b in btn_sala_refs.items():
-                b.configure(relief="flat", bg=CORES_ANO[s[0]], fg="white")
-            btn_sala_refs[sigla].configure(relief="solid", bg="white",
-                                           fg=CORES_ANO[sigla[0]])
-            atualizar_ref()
-
-        for sigla, label in SIGLAS_LABEL.items():
-            ano = sigla[0]
-            cor = CORES_ANO[ano]
-            b = tk.Button(sala_frame, text=label, font=("Segoe UI", 8, "bold"),
-                          bg=cor, fg="white", bd=0, padx=9, pady=4,
-                          cursor="hand2",
-                          command=lambda s=sigla: _filtrar_por_sigla(s))
-            b.pack(side="left", padx=2, pady=4)
-            btn_sala_refs[sigla] = b
-
-        # ── Barra de botões e contadores ──────────────────────────────────────
-        btn_row = tk.Frame(aba_ref, bg=T["BG_CARD"])
-        btn_row.pack(fill="x", padx=20, pady=(8, 4))
-
-        lbl_total_ref = tk.Label(btn_row, text="Total: 0", font=("Segoe UI", 12, "bold"),
-                                 bg=T["ENTRY_BG"], fg=T["ACCENT_VIBRANT"], padx=14, pady=6)
-        lbl_total_ref.pack(side="left", padx=(0, 10))
-
-        lbl_filtro_ativo = tk.Label(btn_row, text="", font=("Segoe UI", 9, "italic"),
-                                    bg=T["BG_CARD"], fg=T["FRASE_FG"])
-        lbl_filtro_ativo.pack(side="left", padx=(0, 16))
-
-        def exportar_csv_ref():
-            try:
-                nome_arq = f"refeitorio_{_hoje().replace('/', '_')}.csv"
-                _escrever_csv(
-                    nome_arq,
-                    ["Data", "HoraEntrada", "Matricula", "Nome", "Serie", "Curso", "Refeicao"],
-                    _ler_refeitorio_todos_db(),
-                )
-                messagebox.showinfo("Exportado", f"Arquivo salvo como:\n{nome_arq}")
-            except Exception as e:
-                messagebox.showerror("Erro", f"Falha ao exportar:\n{e}")
-
-        def apagar_hoje():
-            if messagebox.askyesno("Confirmar", f"Apagar todos os registros de hoje ({_hoje()})?"):
-                try:
-                    _apagar_refeitorio_data_db(_hoje())
-                    messagebox.showinfo("Sucesso", "Registros de hoje apagados do banco.")
-                except Exception as e:
-                    messagebox.showerror("Erro", f"Falha ao apagar registros:\n{e}")
-                atualizar_ref()
-
-        tk.Button(btn_row, text="↻  Atualizar", command=lambda: atualizar_ref(),
-                  bg=T["ACCENT_SOFT"], fg="white", font=("Segoe UI", 10, "bold"),
-                  padx=14, pady=6, bd=0, cursor="hand2").pack(side="left", padx=(0, 8))
-        tk.Button(btn_row, text="⬇  Exportar CSV", command=exportar_csv_ref,
-                  bg=T["BTN_CARDAPIO"], fg="white", font=("Segoe UI", 10, "bold"),
-                  padx=14, pady=6, bd=0, cursor="hand2").pack(side="left", padx=(0, 8))
-        tk.Button(btn_row, text="🗑  Apagar hoje", command=apagar_hoje,
-                  bg="#c62828", fg="white", font=("Segoe UI", 10, "bold"),
-                  padx=14, pady=6, bd=0, cursor="hand2").pack(side="right")
-
-        # ── Tabela: NOME | SÉRIE | CURSO | STATUS ─────────────────────────────
-        ft = tk.Frame(aba_ref, bg=T["BORDER_GRID"], padx=1, pady=1)
-        ft.pack(expand=True, fill="both", padx=20, pady=(4, 20))
-
-        tref = ttk.Treeview(ft, columns=("N", "S", "C", "AL", "A"), show="headings")
-        tref.heading("N",  text="ALUNO");  tref.column("N",  width=320, anchor="w")
-        tref.heading("S",  text="SÉRIE");  tref.column("S",  width=90,  anchor="center")
-        tref.heading("C",  text="CURSO");  tref.column("C",  width=220, anchor="w")
-        tref.heading("AL", text="ALMOÇO"); tref.column("AL", width=130, anchor="center")
-        tref.heading("A",  text="AULA");   tref.column("A",  width=120, anchor="center")
-
-        sb_ref = ttk.Scrollbar(ft, orient="vertical", command=tref.yview)
-        tref.configure(yscrollcommand=sb_ref.set)
-        tref.pack(side="left", expand=True, fill="both")
-        sb_ref.pack(side="right", fill="y")
-
-        tref.tag_configure("almoca",
-                           foreground="#1b5e20", background="#e8f5e9",
-                           font=("Segoe UI", 11, "bold"))
-        tref.tag_configure("nao_almoca",
-                           foreground="#b71c1c", background="#ffebee",
-                           font=("Segoe UI", 11, "bold"))
-
-        # ======================================================================
-        # CORREÇÃO: normalização e mapas de equivalência para série e curso.
-        # O JSON dos alunos usa "1º","2º","3º" e siglas "DS","ENF","HOSP","MOD".
-        # O cliente pode gravar no CSV qualquer uma dessas variações.
-        # Os filtros do combo usam nomes completos ("1 Ano", "Enfermagem", etc.).
-        # As funções abaixo resolvem todas as variantes para um mesmo grupo,
-        # permitindo que o filtro funcione independentemente do formato gravado.
-        # ======================================================================
-        import unicodedata as _ud
-
+        CORES_ANO = {"1": VERDE_VIBRANTE, "2": "#6A1B9A", "3": "#C62828"}
+ 
         def _norm(texto):
-            """Remove acentos e converte para minúsculas."""
             return _ud.normalize("NFD", str(texto).lower()).encode("ascii", "ignore").decode("ascii")
-
-        # Grupos de série: chave = identificador canônico, valor = lista de variantes normalizadas
+ 
         _GRUPOS_SERIE = {
             "1": ["1º", "1o", "1 ano", "primeiro ano", "primeiro", "1"],
             "2": ["2º", "2o", "2 ano", "segundo ano",  "segundo",  "2"],
             "3": ["3º", "3o", "3 ano", "terceiro ano", "terceiro", "3"],
         }
-
-        # Grupos de curso
         _GRUPOS_CURSO = {
             "ds":   ["ds", "desenvolvimento de sistemas", "dev. sistemas", "dev sistemas", "desenv. sistemas"],
             "enf":  ["enf", "enfermagem"],
             "hosp": ["hosp", "hospedagem"],
             "mod":  ["mod", "modelagem do vestuario", "modelagem", "vestuario"],
         }
-
+ 
         def _grupo_serie(texto):
-            """Retorna a chave canônica do grupo de série, ou None."""
             t = _norm(texto).strip()
             for chave, variantes in _GRUPOS_SERIE.items():
                 for v in variantes:
                     if t == v or t.startswith(v) or v.startswith(t):
                         return chave
             return None
-
+ 
         def _grupo_curso(texto):
-            """Retorna a chave canônica do grupo de curso, ou None."""
             t = _norm(texto).strip()
             for chave, variantes in _GRUPOS_CURSO.items():
                 for v in variantes:
                     if t == v or t in v or v in t:
                         return chave
             return None
-
+ 
         def _serie_bate(serie_aluno, filtro_serie):
             if filtro_serie in ("(Todas)", ""):
                 return True
-            g_aluno  = _grupo_serie(serie_aluno)
-            g_filtro = _grupo_serie(filtro_serie)
-            if g_aluno is None or g_filtro is None:
-                # fallback: substring normalizado
+            g_a, g_f = _grupo_serie(serie_aluno), _grupo_serie(filtro_serie)
+            if g_a is None or g_f is None:
                 return _norm(filtro_serie) in _norm(serie_aluno)
-            return g_aluno == g_filtro
-
+            return g_a == g_f
+ 
         def _curso_bate(curso_aluno, filtro_curso):
             if filtro_curso in ("(Todos)", ""):
                 return True
-            g_aluno  = _grupo_curso(curso_aluno)
-            g_filtro = _grupo_curso(filtro_curso)
-            if g_aluno is None or g_filtro is None:
+            g_a, g_f = _grupo_curso(curso_aluno), _grupo_curso(filtro_curso)
+            if g_a is None or g_f is None:
                 return _norm(filtro_curso) in _norm(curso_aluno)
-            return g_aluno == g_filtro
-
-        def _canonizar_serie(serie):
-            grupo = _grupo_serie(serie)
-            if grupo == "1":
-                return "1 Ano"
-            if grupo == "2":
-                return "2 Ano"
-            if grupo == "3":
-                return "3 Ano"
-            return serie.strip() if serie else "Sem Serie"
-
-        def _canonizar_curso(curso):
-            grupo = _grupo_curso(curso)
-            if grupo == "ds":
-                return "Desenvolvimento de Sistemas"
-            if grupo == "enf":
-                return "Enfermagem"
-            if grupo == "hosp":
-                return "Hospedagem"
-            if grupo == "mod":
-                return "Modelagem do Vestuario"
-            return curso.strip() if curso else "Sem Curso"
-        # ======================================================================
-
-        # ── Atualização da tabela com filtros aplicados ───────────────────────
+            return g_a == g_f
+ 
+        # ── Cabeçalho ─────────────────────────────────────────────────────────
+        cab = ctk.CTkFrame(page, fg_color="transparent")
+        cab.grid(row=0, column=0, sticky="ew", padx=4, pady=(4, 12))
+        ctk.CTkLabel(cab, text="Refeitório 🍽️",
+                      font=("Segoe UI", 22, "bold"), text_color=TEXTO_ESCURO).pack(anchor="w")
+        ctk.CTkLabel(cab, text=f"Controle de refeições — hoje ({_hoje()})",
+                      font=("Segoe UI", 12), text_color=TEXTO_CINZA).pack(anchor="w")
+ 
+        # ── Filtros ───────────────────────────────────────────────────────────
+        filtro_card = ctk.CTkFrame(page, fg_color=BRANCO, corner_radius=12)
+        filtro_card.grid(row=1, column=0, sticky="ew", pady=(0, 12))
+ 
+        filtro_row = ctk.CTkFrame(filtro_card, fg_color="transparent")
+        filtro_row.pack(fill="x", padx=14, pady=(12, 8))
+ 
+        ctk.CTkLabel(filtro_row, text="Série:", font=("Segoe UI", 11, "bold"),
+                      text_color=TEXTO_ESCURO).pack(side="left", padx=(0, 6))
+        cb_serie = ctk.CTkOptionMenu(filtro_row, values=["(Todas)", "1 Ano", "2 Ano", "3 Ano"],
+                                      width=110, fg_color=VERDE_VIBRANTE,
+                                      button_color=VERDE_ESCURO, button_hover_color=VERDE_ESCURO)
+        cb_serie.set("(Todas)")
+        cb_serie.pack(side="left", padx=(0, 14))
+ 
+        ctk.CTkLabel(filtro_row, text="Curso:", font=("Segoe UI", 11, "bold"),
+                      text_color=TEXTO_ESCURO).pack(side="left", padx=(0, 6))
+        cb_curso = ctk.CTkOptionMenu(filtro_row,
+                                      values=["(Todos)", "Desenvolvimento de Sistemas", "Hospedagem",
+                                              "Enfermagem", "Modelagem do Vestuario"],
+                                      width=220, fg_color=VERDE_VIBRANTE,
+                                      button_color=VERDE_ESCURO, button_hover_color=VERDE_ESCURO)
+        cb_curso.set("(Todos)")
+        cb_curso.pack(side="left", padx=(0, 14))
+ 
+        ctk.CTkLabel(filtro_row, text="Nome:", font=("Segoe UI", 11, "bold"),
+                      text_color=TEXTO_ESCURO).pack(side="left", padx=(0, 6))
+        ent_nome = ctk.CTkEntry(filtro_row, width=180, height=30,
+                                 placeholder_text="Buscar por nome...")
+        ent_nome.pack(side="left", padx=(0, 14))
+ 
+        # Salas rápidas
+        sala_row = ctk.CTkFrame(filtro_card, fg_color="transparent")
+        sala_row.pack(fill="x", padx=14, pady=(0, 12))
+        ctk.CTkLabel(sala_row, text="Sala rápida:", font=("Segoe UI", 10, "bold"),
+                      text_color=TEXTO_CINZA).pack(side="left", padx=(0, 8))
+ 
+        btn_sala_refs = {}
+ 
+        # ── Cards de resumo ───────────────────────────────────────────────────
+        cards_row = ctk.CTkFrame(page, fg_color="transparent")
+        cards_row.grid(row=2, column=0, sticky="ew", pady=(0, 12))
+        cards_row.grid_columnconfigure((0, 1, 2, 3), weight=1)
+ 
+        lbl_total, sub_total = card_resumo(cards_row, 0, 0, "👥", VERDE_CLARO, VERDE_VIBRANTE,
+                                            "Total Filtrado", "0", "alunos")
+        lbl_sim,   sub_sim   = card_resumo(cards_row, 0, 1, "✔️", "#E8F5E9", "#2E7D32",
+                                            "Almoçaram", "0", "confirmados")
+        lbl_nao,   sub_nao   = card_resumo(cards_row, 0, 2, "✘", "#FFEBEE", "#C62828",
+                                            "Não Almoçaram", "0", "pendentes")
+        lbl_pct,   sub_pct   = card_resumo(cards_row, 0, 3, "📊", ROXO_CLARO, "#6A1B9A",
+                                            "Adesão", "0%", "geral hoje")
+ 
+        # ── Linha: gráfico de rosca + tabela ────────────────────────────────────
+        meio_row = ctk.CTkFrame(page, fg_color="transparent")
+        meio_row.grid(row=3, column=0, sticky="ew", pady=(0, 12))
+        meio_row.grid_columnconfigure(0, weight=0)
+        meio_row.grid_columnconfigure(1, weight=1)
+ 
+        # Donut
+        donut_card = ctk.CTkFrame(meio_row, fg_color=BRANCO, corner_radius=12, width=260)
+        donut_card.grid(row=0, column=0, sticky="ns", padx=(0, 12))
+        donut_card.grid_propagate(False)
+        ctk.CTkLabel(donut_card, text="Adesão Geral",
+                      font=("Segoe UI", 13, "bold"), text_color=TEXTO_ESCURO).pack(pady=(16, 4))
+ 
+        cv_donut = tk.Canvas(donut_card, bg=BRANCO, highlightthickness=0, height=180)
+        cv_donut.pack(fill="x", padx=20, pady=(4, 8))
+ 
+        legenda_donut = ctk.CTkFrame(donut_card, fg_color="transparent")
+        legenda_donut.pack(pady=(0, 16))
+ 
+        # Tabela de alunos
+        tabela_card = ctk.CTkFrame(meio_row, fg_color=BRANCO, corner_radius=12)
+        tabela_card.grid(row=0, column=1, sticky="nsew")
+        tabela_card.grid_rowconfigure(2, weight=1)
+        tabela_card.grid_columnconfigure(0, weight=1)
+ 
+        topo_tab = ctk.CTkFrame(tabela_card, fg_color="transparent")
+        topo_tab.grid(row=0, column=0, sticky="ew", padx=14, pady=(14, 6))
+        ctk.CTkLabel(topo_tab, text="Alunos — hoje",
+                      font=("Segoe UI", 13, "bold"), text_color=TEXTO_ESCURO).pack(side="left")
+        lbl_filtro_ativo = ctk.CTkLabel(topo_tab, text="", font=("Segoe UI", 9),
+                                         text_color=TEXTO_CINZA)
+        lbl_filtro_ativo.pack(side="right")
+ 
+        header_tab = ctk.CTkFrame(tabela_card, fg_color=VERDE_ESCURO, corner_radius=6)
+        header_tab.grid(row=1, column=0, sticky="ew", padx=14)
+        COLS = [("Aluno", 220), ("Série", 80), ("Curso", 200), ("Almoço", 90), ("Aula", 110)]
+        for i, (col, w) in enumerate(COLS):
+            ctk.CTkLabel(header_tab, text=col, font=("Segoe UI", 10, "bold"),
+                          text_color="white", width=w, anchor="w"
+                          ).pack(side="left", expand=(i == len(COLS)-1),
+                                 fill="x", padx=6, pady=8)
+ 
+        corpo_tab = ctk.CTkScrollableFrame(tabela_card, fg_color="transparent", height=300)
+        corpo_tab.grid(row=2, column=0, sticky="nsew", padx=14, pady=(0, 14))
+        corpo_tab.grid_columnconfigure(0, weight=1)
+ 
+        # ── Botões de ação ────────────────────────────────────────────────────
+        btn_row = ctk.CTkFrame(page, fg_color="transparent")
+        btn_row.grid(row=4, column=0, sticky="sw", pady=(0, 4))
+ 
+        lbl_acao_status = ctk.CTkLabel(btn_row, text="", font=("Segoe UI", 10),
+                                        text_color=VERDE_VIBRANTE)
+ 
+        # ── Função de desenho do donut ───────────────────────────────────────
+        def _desenhar_donut(sim, nao):
+            cv_donut.delete("all")
+            cv_donut.update_idletasks()
+            w = cv_donut.winfo_width() or 220
+            h = cv_donut.winfo_height() or 180
+            cx, cy = w / 2, h / 2
+            r_ext, r_int = min(w, h) / 2 - 10, (min(w, h) / 2 - 10) * 0.55
+ 
+            total = sim + nao
+            if total == 0:
+                cv_donut.create_oval(cx - r_ext, cy - r_ext, cx + r_ext, cy + r_ext,
+                                      fill="#F0F0F0", outline="")
+                cv_donut.create_oval(cx - r_int, cy - r_int, cx + r_int, cy + r_int,
+                                      fill=BRANCO, outline="")
+                cv_donut.create_text(cx, cy, text="Sem\ndados", font=("Segoe UI", 11),
+                                      fill=TEXTO_CINZA)
+                return
+ 
+            angulo = 90
+            for valor, cor in [(sim, "#4CAF50"), (nao, "#F44336")]:
+                if valor <= 0:
+                    continue
+                ext_ang = -(valor / total) * 360
+                cv_donut.create_arc(cx - r_ext, cy - r_ext, cx + r_ext, cy + r_ext,
+                                     start=angulo, extent=ext_ang,
+                                     fill=cor, outline=BRANCO, width=2, style="pieslice")
+                angulo += ext_ang
+ 
+            cv_donut.create_oval(cx - r_int, cy - r_int, cx + r_int, cy + r_int,
+                                  fill=BRANCO, outline="")
+            pct = (sim / total * 100) if total else 0
+            cv_donut.create_text(cx, cy - 8, text=f"{pct:.0f}%",
+                                  font=("Segoe UI", 16, "bold"), fill="#2E7D32")
+            cv_donut.create_text(cx, cy + 12, text="almoçaram",
+                                  font=("Segoe UI", 8), fill=TEXTO_CINZA)
+ 
+        def _atualizar_legenda(sim, nao):
+            for w in legenda_donut.winfo_children():
+                w.destroy()
+            total = sim + nao
+            for label_l, val_l, cor_l in [("Almoçaram", sim, "#4CAF50"), ("Não almoçaram", nao, "#F44336")]:
+                pct_l = (val_l / total * 100) if total else 0
+                row_l = ctk.CTkFrame(legenda_donut, fg_color="transparent")
+                row_l.pack(fill="x", pady=1, padx=4)
+                ctk.CTkFrame(row_l, fg_color=cor_l, width=12, height=12, corner_radius=2).pack(side="left", padx=(0, 6))
+                ctk.CTkLabel(row_l, text=label_l, font=("Segoe UI", 10),
+                              text_color=TEXTO_ESCURO).pack(side="left")
+                ctk.CTkLabel(row_l, text=f"{val_l} ({pct_l:.0f}%)", font=("Segoe UI", 10, "bold"),
+                              text_color=TEXTO_CINZA).pack(side="right")
+ 
+        # ── Atualização principal ────────────────────────────────────────────
         def atualizar_ref():
-            for i in tref.get_children(): tref.delete(i)
-            registros = _registros_hoje()
-
-            # r = [Data, HoraEntrada, Matricula, Nome, Serie, Curso, Refeicao]
+            f_serie = cb_serie.get()
+            f_curso = cb_curso.get()
+            f_nome = ent_nome.get().strip().lower()
+ 
+            def _thread_body():
+                registros = _registros_hoje()
+                page.after(0, lambda: _renderizar(registros, f_serie, f_curso, f_nome))
+ 
+            threading.Thread(target=_thread_body, daemon=True).start()
+ 
+        def _renderizar(registros, f_serie, f_curso, f_nome):
             alunos = {}
             for r in registros:
                 mat   = r[2]
@@ -2932,304 +3061,1082 @@ def abrir_painel_admin(event=None):
                 hora  = r[1] if len(r) > 1 else ""
                 if mat not in alunos:
                     aula = _aula_por_hora(hora)
-                    alunos[mat] = {"nome": nome, "serie": serie,
-                                   "curso": curso, "almoca": False,
-                                   "hora": hora, "aula": aula}
+                    alunos[mat] = {"nome": nome, "serie": serie, "curso": curso,
+                                   "almoca": False, "hora": hora, "aula": aula}
                 else:
                     if hora and alunos[mat].get("hora", "") and hora < alunos[mat]["hora"]:
                         alunos[mat]["hora"] = hora
                         alunos[mat]["aula"] = _aula_por_hora(hora)
                 if ref == "almoco":
                     alunos[mat]["almoca"] = True
-
-            f_serie = fv_serie.get()
-            f_curso  = fv_curso.get()
-            f_nome   = fv_nome.get().strip().lower()
-
+ 
             exibidos = []
             for info in alunos.values():
                 if not _serie_bate(info["serie"], f_serie): continue
                 if not _curso_bate(info["curso"], f_curso): continue
                 if f_nome and f_nome not in info["nome"].lower(): continue
                 exibidos.append(info)
-
+ 
             cnt_total = len(exibidos)
-            cnt_sim   = sum(1 for a in exibidos if a["almoca"])
-            cnt_nao   = cnt_total - cnt_sim
-            lbl_total_ref.config(
-                text=f"Total: {cnt_total}   ✔ {cnt_sim}   ✘ {cnt_nao}")
-
+            cnt_sim = sum(1 for a in exibidos if a["almoca"])
+            cnt_nao = cnt_total - cnt_sim
+            pct = (cnt_sim / cnt_total * 100) if cnt_total else 0
+ 
+            lbl_total.configure(text=str(cnt_total))
+            lbl_sim.configure(text=str(cnt_sim))
+            lbl_nao.configure(text=str(cnt_nao))
+            lbl_pct.configure(text=f"{pct:.0f}%")
+ 
             partes_filtro = []
             if f_serie not in ("(Todas)", ""): partes_filtro.append(f_serie)
-            if f_curso  not in ("(Todos)", ""): partes_filtro.append(f_curso)
-            if f_nome:                          partes_filtro.append(f'"{f_nome}"')
-            lbl_filtro_ativo.config(
-                text=("Filtro ativo: " + " | ".join(partes_filtro)) if partes_filtro else "")
-
-            for info in sorted(exibidos, key=lambda a: a["nome"].lower()):
-                serie_exib = info["serie"] if info["serie"] else "-"
-                curso_exib = info["curso"] if info["curso"] else "-"
-                status = "✔ Sim" if info["almoca"] else "✘ Não"
-                aula    = info.get("aula", "Fora do horário")
-                if info["almoca"]:
-                    tref.insert("", "end",
-                                values=(info["nome"], serie_exib, curso_exib, status, aula),
-                                tags=("almoca",))
-                else:
-                    tref.insert("", "end",
-                                values=(info["nome"], serie_exib, curso_exib, status, aula),
-                                tags=("nao_almoca",))
-
-        # ── Limpar todos os filtros ────────────────────────────────────────────
-        def limpar_filtros():
-            fv_serie.set("(Todas)")
-            fv_curso.set("(Todos)")
-            fv_nome.set("")
-            for sigla, b in btn_sala_refs.items():
-                b.configure(relief="flat", bg=CORES_ANO[sigla[0]], fg="white")
-            atualizar_ref()
-
-        btn_limpar.configure(command=limpar_filtros)
-
-        # Gatilhos automáticos de filtro
-        cb_serie.bind("<<ComboboxSelected>>", lambda e: atualizar_ref())
-        cb_curso.bind("<<ComboboxSelected>>", lambda e: atualizar_ref())
-        fv_nome.trace_add("write", lambda *_: atualizar_ref())
-        
-        # ── Painel de Taxa de Adesão por Turma ─────────────────────────────────
-        taxa_frame = tk.Frame(aba_ref, bg=T["BG_CARD"])
-        taxa_frame.pack(fill="x", padx=20, pady=(10, 0))
-        
-        tk.Label(taxa_frame, text="Taxa de Adesão por Turma (Hoje)", font=("Segoe UI", 12, "bold"),
-                bg=T["BG_CARD"], fg=T["ACCENT_VIBRANT"]).pack(anchor="w", pady=(0, 10))
-        
-        def _desenhar_taxa_adesao():
-            # Limpar widgets anteriores
-            for w in taxa_frame.winfo_children()[1:]:
+            if f_curso not in ("(Todos)", ""): partes_filtro.append(f_curso)
+            if f_nome: partes_filtro.append(f'"{f_nome}"')
+            lbl_filtro_ativo.configure(
+                text=("Filtro: " + " | ".join(partes_filtro)) if partes_filtro else "")
+ 
+            _desenhar_donut(cnt_sim, cnt_nao)
+            _atualizar_legenda(cnt_sim, cnt_nao)
+ 
+            # Tabela
+            for w in corpo_tab.winfo_children():
                 w.destroy()
-            
-            # Ler lista_alunos.json
-            lista = []
-            if os.path.exists(LISTA_ALUNOS_FILE):
-                with open(LISTA_ALUNOS_FILE, "r", encoding="utf-8") as f:
-                    lista = json.load(f)
-            
-            if not lista:
-                tk.Label(taxa_frame, text="Cadastre alunos na aba QR Codes para ver a taxa de adesão.",
-                        font=("Segoe UI", 10), bg=T["BG_CARD"], fg=T["FRASE_FG"]).pack(pady=10)
+ 
+            if not exibidos:
+                ctk.CTkLabel(corpo_tab, text="Nenhum registro encontrado.",
+                              font=("Segoe UI", 12), text_color=TEXTO_CINZA
+                              ).grid(row=0, column=0, pady=24)
                 return
-            
-            # Inicializar todas as turmas padrão para exibir todas elas mesmo sem alunos
-            grupos = {}
-            turma_ordem = []
-            for sigla, label in SIGLAS_LABEL.items():
-                info = SIGLAS[sigla]
-                chave = f"{info['serie']} - {info['curso']}"
-                grupos[chave] = []
-                turma_ordem.append((chave, label))
-            
-            # Agrupar alunos por serie + curso canônicos
-            for al in lista:
-                serie = _canonizar_serie(al.get("serie", ""))
-                curso = _canonizar_curso(al.get("curso", ""))
-                chave = f"{serie} - {curso}"
-                if chave not in grupos:
-                    grupos[chave] = []
-                    turma_ordem.append((chave, chave))
-                grupos[chave].append(al)
-            
-            # Contar quem almoçou hoje
-            registros_hoje = _registros_hoje()
-            almocou = set()
-            for r in registros_hoje:
-                if len(r) > 6 and r[6].strip().lower() == "almoco":
-                    almocou.add(r[2])  # matricula
-            
-            # Criar cards por turma em grid para manter o layout
-            cards_frame = tk.Frame(taxa_frame, bg=T["BG_CARD"])
-            cards_frame.pack(fill="x", pady=(0, 10))
-            for col in range(4):
-                cards_frame.grid_columnconfigure(col, weight=1, uniform="cards")
-            
-            idx = 0
-            for chave, label in turma_ordem:
-                total = len(grupos.get(chave, []))
-                almocou_count = sum(1 for al in grupos.get(chave, []) if al.get("matricula", "") in almocou)
-                pct = (almocou_count / total * 100) if total > 0 else 0
-                
-                # Determinar cor
-                if pct > 70:
-                    cor = "#4caf50"  # Verde
-                elif pct > 40:
-                    cor = "#fdd835"  # Amarelo
+ 
+            for i, info in enumerate(sorted(exibidos, key=lambda a: a["nome"].lower())):
+                bg = BRANCO if i % 2 == 0 else "#F8F9FA"
+                cor_status = "#2E7D32" if info["almoca"] else "#C62828"
+                texto_status = "✔ Sim" if info["almoca"] else "✘ Não"
+ 
+                linha = ctk.CTkFrame(corpo_tab, fg_color=bg, corner_radius=4)
+                linha.grid(row=i, column=0, sticky="ew", pady=1)
+ 
+                valores = [(info["nome"] or "-", 220, "#374151"),
+                           (info["serie"] or "-", 80, "#374151"),
+                           (info["curso"] or "-", 200, "#374151"),
+                           (texto_status, 90, cor_status),
+                           (info.get("aula", "Fora do horário"), 110, "#374151")]
+                n = len(valores)
+                for j, (val, w, cor_t) in enumerate(valores):
+                    ctk.CTkLabel(linha, text=val, font=("Segoe UI", 11),
+                                  width=w, anchor="w", text_color=cor_t
+                                  ).pack(side="left", expand=(j == n-1), fill="x", padx=6, pady=6)
+ 
+        # ── Filtro por sala rápida ────────────────────────────────────────────
+        def _filtrar_por_sigla(sigla):
+            info = SIGLAS[sigla]
+            cb_serie.set(info["serie"])
+            cb_curso.set(info["curso"])
+            ent_nome.delete(0, "end")
+            for s, b in btn_sala_refs.items():
+                b.configure(fg_color=CORES_ANO[s[0]], text_color="white")
+            btn_sala_refs[sigla].configure(fg_color="white", text_color=CORES_ANO[sigla[0]])
+            atualizar_ref()
+ 
+        for sigla, label in SIGLAS_LABEL.items():
+            ano = sigla[0]
+            cor = CORES_ANO[ano]
+            b = ctk.CTkButton(sala_row, text=label, font=("Segoe UI", 9, "bold"),
+                               fg_color=cor, hover_color=VERDE_ESCURO,
+                               text_color="white", width=64, height=26,
+                               command=lambda s=sigla: _filtrar_por_sigla(s))
+            b.pack(side="left", padx=2)
+            btn_sala_refs[sigla] = b
+ 
+        # ── Limpar filtros ────────────────────────────────────────────────────
+        def limpar_filtros():
+            cb_serie.set("(Todas)")
+            cb_curso.set("(Todos)")
+            ent_nome.delete(0, "end")
+            for sigla, b in btn_sala_refs.items():
+                b.configure(fg_color=CORES_ANO[sigla[0]], text_color="white")
+            atualizar_ref()
+ 
+        ctk.CTkButton(filtro_row, text="✕ Limpar", font=("Segoe UI", 10, "bold"),
+                       fg_color="transparent", hover_color="#F0F0F0",
+                       text_color=VERDE_VIBRANTE, width=80, height=30,
+                       command=limpar_filtros).pack(side="left")
+ 
+        # ── Exportar CSV ──────────────────────────────────────────────────────
+        def exportar_csv_ref():
+            try:
+                nome_arq = f"refeitorio_{_hoje().replace('/', '_')}.csv"
+                _escrever_csv(
+                    nome_arq,
+                    ["Data", "HoraEntrada", "Matricula", "Nome", "Serie", "Curso", "Refeicao"],
+                    _ler_refeitorio_todos_db(),
+                )
+                lbl_acao_status.configure(text=f"✔ Exportado: {nome_arq}", text_color=VERDE_VIBRANTE)
+            except Exception as e:
+                lbl_acao_status.configure(text=f"⚠ Falha ao exportar: {e}", text_color="#C62828")
+            page.after(4000, lambda: lbl_acao_status.configure(text=""))
+ 
+        # ── Apagar registros de hoje ──────────────────────────────────────────
+        def apagar_hoje():
+            if not messagebox.askyesno("Confirmar", f"Apagar todos os registros de hoje ({_hoje()})?"):
+                return
+            try:
+                _apagar_refeitorio_data_db(_hoje())
+                lbl_acao_status.configure(text="✔ Registros de hoje apagados.", text_color=VERDE_VIBRANTE)
+            except Exception as e:
+                lbl_acao_status.configure(text=f"⚠ Falha ao apagar: {e}", text_color="#C62828")
+            page.after(4000, lambda: lbl_acao_status.configure(text=""))
+            atualizar_ref()
+ 
+        ctk.CTkButton(btn_row, text="↻  Atualizar", fg_color=VERDE_VIBRANTE,
+                       hover_color=VERDE_ESCURO, font=("Segoe UI", 11, "bold"),
+                       height=36, width=130, command=atualizar_ref).pack(side="left", padx=(0, 8))
+        ctk.CTkButton(btn_row, text="⬇  Exportar CSV", fg_color="#1565C0",
+                       hover_color="#0D47A1", font=("Segoe UI", 11, "bold"),
+                       height=36, width=150, command=exportar_csv_ref).pack(side="left", padx=(0, 8))
+        ctk.CTkButton(btn_row, text="🗑  Apagar hoje", fg_color="#C62828",
+                       hover_color="#8E1010", font=("Segoe UI", 11, "bold"),
+                       height=36, width=140, command=apagar_hoje).pack(side="left", padx=(0, 12))
+        lbl_acao_status.pack(side="left")
+ 
+        # Gatilhos automáticos de filtro
+        cb_serie.configure(command=lambda _: atualizar_ref())
+        cb_curso.configure(command=lambda _: atualizar_ref())
+        ent_nome.bind("<KeyRelease>", lambda e: atualizar_ref())
+ 
+        # Carrega na primeira abertura
+        page.after(150, atualizar_ref)
+        cv_donut.bind("<Configure>", lambda e: atualizar_ref())
+ 
+        return page
+    def criar_pagina_frequencia():
+        import unicodedata as _ud
+ 
+        page = ctk.CTkFrame(container, fg_color=CINZA_BG)
+        page.grid_columnconfigure(0, weight=1)
+        page.grid_rowconfigure(3, weight=1)
+ 
+        # ── Mapas de siglas / cursos / normalização ──────────────────────────
+        SIGLAS_LABEL = {
+            "1DS": "1º DS",  "1HOS": "1º HOS", "1ENF": "1º ENF", "1MOD": "1º MOD",
+            "2DS": "2º DS",  "2HOS": "2º HOS", "2ENF": "2º ENF", "2MOD": "2º MOD",
+            "3DS": "3º DS",  "3HOS": "3º HOS", "3ENF": "3º ENF", "3MOD": "3º MOD",
+        }
+        SIGLAS = {
+            "1DS":  {"serie": "1 Ano", "curso": "Desenvolvimento de Sistemas"},
+            "1HOS": {"serie": "1 Ano", "curso": "Hospedagem"},
+            "1ENF": {"serie": "1 Ano", "curso": "Enfermagem"},
+            "1MOD": {"serie": "1 Ano", "curso": "Modelagem do Vestuario"},
+            "2DS":  {"serie": "2 Ano", "curso": "Desenvolvimento de Sistemas"},
+            "2HOS": {"serie": "2 Ano", "curso": "Hospedagem"},
+            "2ENF": {"serie": "2 Ano", "curso": "Enfermagem"},
+            "2MOD": {"serie": "2 Ano", "curso": "Modelagem do Vestuario"},
+            "3DS":  {"serie": "3 Ano", "curso": "Desenvolvimento de Sistemas"},
+            "3HOS": {"serie": "3 Ano", "curso": "Hospedagem"},
+            "3ENF": {"serie": "3 Ano", "curso": "Enfermagem"},
+            "3MOD": {"serie": "3 Ano", "curso": "Modelagem do Vestuario"},
+        }
+        CORES_ANO = {"1": VERDE_VIBRANTE, "2": "#6A1B9A", "3": "#C62828"}
+ 
+        def _norm(texto):
+            return _ud.normalize("NFD", str(texto).lower()).encode("ascii", "ignore").decode("ascii")
+ 
+        _GRUPOS_SERIE = {
+            "1": ["1º", "1o", "1 ano", "primeiro ano", "primeiro", "1"],
+            "2": ["2º", "2o", "2 ano", "segundo ano",  "segundo",  "2"],
+            "3": ["3º", "3o", "3 ano", "terceiro ano", "terceiro", "3"],
+        }
+        _GRUPOS_CURSO = {
+            "ds":   ["ds", "desenvolvimento de sistemas", "dev. sistemas", "dev sistemas", "desenv. sistemas"],
+            "enf":  ["enf", "enfermagem"],
+            "hosp": ["hosp", "hospedagem"],
+            "mod":  ["mod", "modelagem do vestuario", "modelagem", "vestuario"],
+        }
+ 
+        def _grupo_serie(texto):
+            t = _norm(texto).strip()
+            for chave, variantes in _GRUPOS_SERIE.items():
+                for v in variantes:
+                    if t == v or t.startswith(v) or v.startswith(t):
+                        return chave
+            return None
+ 
+        def _grupo_curso(texto):
+            t = _norm(texto).strip()
+            for chave, variantes in _GRUPOS_CURSO.items():
+                for v in variantes:
+                    if t == v or t in v or v in t:
+                        return chave
+            return None
+ 
+        def _serie_bate(serie_aluno, filtro_serie):
+            if filtro_serie in ("(Todas)", ""):
+                return True
+            g_a, g_f = _grupo_serie(serie_aluno), _grupo_serie(filtro_serie)
+            if g_a is None or g_f is None:
+                return _norm(filtro_serie) in _norm(serie_aluno)
+            return g_a == g_f
+ 
+        def _curso_bate(curso_aluno, filtro_curso):
+            if filtro_curso in ("(Todos)", ""):
+                return True
+            g_a, g_f = _grupo_curso(curso_aluno), _grupo_curso(filtro_curso)
+            if g_a is None or g_f is None:
+                return _norm(filtro_curso) in _norm(curso_aluno)
+            return g_a == g_f
+ 
+        # ── Cabeçalho ─────────────────────────────────────────────────────────
+        cab = ctk.CTkFrame(page, fg_color="transparent")
+        cab.grid(row=0, column=0, sticky="ew", padx=4, pady=(4, 12))
+        ctk.CTkLabel(cab, text="Frequência ⏱️",
+                      font=("Segoe UI", 22, "bold"), text_color=TEXTO_ESCURO).pack(anchor="w")
+        ctk.CTkLabel(cab, text=f"Controle de presença — hoje ({_hoje()})",
+                      font=("Segoe UI", 12), text_color=TEXTO_CINZA).pack(anchor="w")
+ 
+        # ── Filtros ───────────────────────────────────────────────────────────
+        filtro_card = ctk.CTkFrame(page, fg_color=BRANCO, corner_radius=12)
+        filtro_card.grid(row=1, column=0, sticky="ew", pady=(0, 12))
+ 
+        filtro_row = ctk.CTkFrame(filtro_card, fg_color="transparent")
+        filtro_row.pack(fill="x", padx=14, pady=(12, 8))
+ 
+        ctk.CTkLabel(filtro_row, text="Série:", font=("Segoe UI", 11, "bold"),
+                      text_color=TEXTO_ESCURO).pack(side="left", padx=(0, 6))
+        cb_serie = ctk.CTkOptionMenu(filtro_row, values=["(Todas)", "1 Ano", "2 Ano", "3 Ano"],
+                                      width=110, fg_color=VERDE_VIBRANTE,
+                                      button_color=VERDE_ESCURO, button_hover_color=VERDE_ESCURO)
+        cb_serie.set("(Todas)")
+        cb_serie.pack(side="left", padx=(0, 14))
+ 
+        ctk.CTkLabel(filtro_row, text="Curso:", font=("Segoe UI", 11, "bold"),
+                      text_color=TEXTO_ESCURO).pack(side="left", padx=(0, 6))
+        cb_curso = ctk.CTkOptionMenu(filtro_row,
+                                      values=["(Todos)", "Desenvolvimento de Sistemas", "Hospedagem",
+                                              "Enfermagem", "Modelagem do Vestuario"],
+                                      width=220, fg_color=VERDE_VIBRANTE,
+                                      button_color=VERDE_ESCURO, button_hover_color=VERDE_ESCURO)
+        cb_curso.set("(Todos)")
+        cb_curso.pack(side="left", padx=(0, 14))
+ 
+        ctk.CTkLabel(filtro_row, text="Nome:", font=("Segoe UI", 11, "bold"),
+                      text_color=TEXTO_ESCURO).pack(side="left", padx=(0, 6))
+        ent_nome = ctk.CTkEntry(filtro_row, width=180, height=30,
+                                 placeholder_text="Buscar por nome...")
+        ent_nome.pack(side="left", padx=(0, 14))
+ 
+        # Salas rápidas
+        sala_row = ctk.CTkFrame(filtro_card, fg_color="transparent")
+        sala_row.pack(fill="x", padx=14, pady=(0, 12))
+        ctk.CTkLabel(sala_row, text="Sala rápida:", font=("Segoe UI", 10, "bold"),
+                      text_color=TEXTO_CINZA).pack(side="left", padx=(0, 8))
+ 
+        btn_sala_refs = {}
+ 
+        # ── Cards de resumo ───────────────────────────────────────────────────
+        cards_row = ctk.CTkFrame(page, fg_color="transparent")
+        cards_row.grid(row=2, column=0, sticky="ew", pady=(0, 12))
+        cards_row.grid_columnconfigure((0, 1, 2), weight=1)
+ 
+        lbl_total, sub_total = card_resumo(cards_row, 0, 0, "👥", VERDE_CLARO, VERDE_VIBRANTE,
+                                            "Presentes (filtro)", "0", "alunos")
+        lbl_cad,   sub_cad   = card_resumo(cards_row, 0, 1, "📋", AZUL_CLARO, "#1565C0",
+                                            "Total Cadastrados", "0", "alunos na lista")
+        lbl_aus,   sub_aus   = card_resumo(cards_row, 0, 2, "🚫", "#FFEBEE", "#C62828",
+                                            "Ausentes", "0", "ainda não vieram")
+ 
+        # ── Tabela de presentes ──────────────────────────────────────────────
+        tabela_card = ctk.CTkFrame(page, fg_color=BRANCO, corner_radius=12)
+        tabela_card.grid(row=3, column=0, sticky="nsew")
+        tabela_card.grid_rowconfigure(2, weight=1)
+        tabela_card.grid_columnconfigure(0, weight=1)
+ 
+        topo_tab = ctk.CTkFrame(tabela_card, fg_color="transparent")
+        topo_tab.grid(row=0, column=0, sticky="ew", padx=14, pady=(14, 6))
+        ctk.CTkLabel(topo_tab, text="Alunos Presentes — hoje",
+                      font=("Segoe UI", 13, "bold"), text_color=TEXTO_ESCURO).pack(side="left")
+        lbl_filtro_ativo = ctk.CTkLabel(topo_tab, text="", font=("Segoe UI", 9),
+                                         text_color=TEXTO_CINZA)
+        lbl_filtro_ativo.pack(side="right")
+ 
+        header_tab = ctk.CTkFrame(tabela_card, fg_color=VERDE_ESCURO, corner_radius=6)
+        header_tab.grid(row=1, column=0, sticky="ew", padx=14)
+        COLS = [("Aluno", 240), ("Série", 80), ("Curso", 220), ("Hora Entrada", 120), ("Aula", 110)]
+        for i, (col, w) in enumerate(COLS):
+            ctk.CTkLabel(header_tab, text=col, font=("Segoe UI", 10, "bold"),
+                          text_color="white", width=w, anchor="w"
+                          ).pack(side="left", expand=(i == len(COLS)-1),
+                                 fill="x", padx=6, pady=8)
+ 
+        corpo_tab = ctk.CTkScrollableFrame(tabela_card, fg_color="transparent")
+        corpo_tab.grid(row=2, column=0, sticky="nsew", padx=14, pady=(0, 14))
+        corpo_tab.grid_columnconfigure(0, weight=1)
+ 
+        # ── Botões de ação ────────────────────────────────────────────────────
+        btn_row = ctk.CTkFrame(page, fg_color="transparent")
+        btn_row.grid(row=4, column=0, sticky="w", pady=(12, 4))
+ 
+        lbl_acao_status = ctk.CTkLabel(btn_row, text="", font=("Segoe UI", 10),
+                                        text_color=VERDE_VIBRANTE)
+ 
+        # ── Estado interno ────────────────────────────────────────────────────
+        _estado = {"alunos_unicos": {}, "lista_todos": []}
+ 
+        # ── Atualização principal ────────────────────────────────────────────
+        def atualizar_freq():
+            f_serie = cb_serie.get()
+            f_curso = cb_curso.get()
+            f_nome = ent_nome.get().strip().lower()
+ 
+            def _thread_body():
+                registros = _registros_freq_hoje()
+                lista_todos = []
+                if os.path.exists(LISTA_ALUNOS_FILE):
+                    try:
+                        with open(LISTA_ALUNOS_FILE, "r", encoding="utf-8") as f:
+                            lista_todos = json.load(f)
+                    except Exception:
+                        lista_todos = []
+                page.after(0, lambda: _renderizar(registros, lista_todos, f_serie, f_curso, f_nome))
+ 
+            threading.Thread(target=_thread_body, daemon=True).start()
+ 
+        def _renderizar(registros, lista_todos, f_serie, f_curso, f_nome):
+            alunos_unicos = {}
+            for r in registros:
+                mat   = r[2]
+                nome  = r[3]
+                serie = r[4] if len(r) > 4 else ""
+                curso = r[5] if len(r) > 5 else ""
+                hora  = r[1] if len(r) > 1 else ""
+                aula  = r[6] if len(r) > 6 else _aula_por_hora(hora)
+                if mat not in alunos_unicos:
+                    alunos_unicos[mat] = {"nome": nome, "serie": serie,
+                                           "curso": curso, "hora": hora, "aula": aula}
                 else:
-                    cor = "#f44336"  # Vermelho
-                
-                card = tk.Frame(cards_frame, bg=T["BG_CARD"],
-                              highlightbackground=T["BORDER_GRID"], highlightthickness=1, padx=12, pady=10)
-                card.grid(row=idx // 4, column=idx % 4, sticky="nsew", padx=6, pady=6)
-                idx += 1
-                
-                tk.Label(card, text=label, font=("Segoe UI", 9, "bold"),
-                        bg=T["BG_CARD"], fg=T["FG_TEXT"]).pack(anchor="w")
-                
-                tk.Label(card, text=f"{almocou_count} / {total}", font=("Segoe UI", 11, "bold"),
-                        bg=T["BG_CARD"], fg=cor).pack(anchor="w", pady=(4, 0))
-                
-                canvas_barra = tk.Canvas(card, bg=T["ENTRY_BG"], highlightthickness=0, height=8)
-                canvas_barra.pack(fill="x", pady=(6, 0))
-                canvas_barra.create_rectangle(0, 0, 180, 8, fill=T["ENTRY_BG"], outline=T["BORDER_GRID"])
-                largura_preenchida = (pct / 100) * 180
-                canvas_barra.create_rectangle(0, 0, largura_preenchida, 8, fill=cor, outline="")
-                
-                tk.Label(card, text=f"{pct:.1f}%", font=("Segoe UI", 9),
-                        bg=T["BG_CARD"], fg=T["FRASE_FG"]).pack(anchor="w", pady=(4, 0))
-        
+                    if hora and alunos_unicos[mat].get("hora", "") and hora < alunos_unicos[mat]["hora"]:
+                        alunos_unicos[mat]["hora"] = hora
+                        alunos_unicos[mat]["aula"] = aula
+ 
+            _estado["alunos_unicos"] = alunos_unicos
+            _estado["lista_todos"] = lista_todos
+ 
+            exibidos = []
+            for info in alunos_unicos.values():
+                if not _serie_bate(info["serie"], f_serie): continue
+                if not _curso_bate(info["curso"], f_curso): continue
+                if f_nome and f_nome not in info["nome"].lower(): continue
+                exibidos.append(info)
+ 
+            presentes_total = len(alunos_unicos)
+            cadastrados_total = len(lista_todos)
+            ausentes_total = max(0, cadastrados_total - presentes_total) if cadastrados_total else 0
+ 
+            lbl_total.configure(text=str(len(exibidos)))
+            lbl_cad.configure(text=str(cadastrados_total))
+            lbl_aus.configure(text=str(ausentes_total))
+ 
+            partes_filtro = []
+            if f_serie not in ("(Todas)", ""): partes_filtro.append(f_serie)
+            if f_curso not in ("(Todos)", ""): partes_filtro.append(f_curso)
+            if f_nome: partes_filtro.append(f'"{f_nome}"')
+            lbl_filtro_ativo.configure(
+                text=("Filtro: " + " | ".join(partes_filtro)) if partes_filtro else "")
+ 
+            for w in corpo_tab.winfo_children():
+                w.destroy()
+ 
+            if not exibidos:
+                ctk.CTkLabel(corpo_tab, text="Nenhum registro encontrado.",
+                              font=("Segoe UI", 12), text_color=TEXTO_CINZA
+                              ).grid(row=0, column=0, pady=24)
+                return
+ 
+            for i, info in enumerate(sorted(exibidos, key=lambda a: a["nome"].lower())):
+                bg = BRANCO if i % 2 == 0 else "#F8F9FA"
+                linha = ctk.CTkFrame(corpo_tab, fg_color=bg, corner_radius=4)
+                linha.grid(row=i, column=0, sticky="ew", pady=1)
+ 
+                valores = [(info["nome"] or "-", 240),
+                           (info["serie"] or "-", 80),
+                           (info["curso"] or "-", 220),
+                           (info.get("hora", "") or "-", 120),
+                           (info.get("aula", "Fora do horário"), 110)]
+                n = len(valores)
+                for j, (val, w) in enumerate(valores):
+                    cor_t = "#2E7D32" if j == 0 else "#374151"
+                    fonte = ("Segoe UI", 11, "bold") if j == 0 else ("Segoe UI", 11)
+                    ctk.CTkLabel(linha, text=val, font=fonte,
+                                  width=w, anchor="w", text_color=cor_t
+                                  ).pack(side="left", expand=(j == n-1), fill="x", padx=6, pady=6)
+ 
+        # ── Filtro por sala rápida ────────────────────────────────────────────
+        def _filtrar_por_sigla(sigla):
+            info = SIGLAS[sigla]
+            cb_serie.set(info["serie"])
+            cb_curso.set(info["curso"])
+            ent_nome.delete(0, "end")
+            for s, b in btn_sala_refs.items():
+                b.configure(fg_color=CORES_ANO[s[0]], text_color="white")
+            btn_sala_refs[sigla].configure(fg_color="white", text_color=CORES_ANO[sigla[0]])
+            atualizar_freq()
+ 
+        for sigla, label in SIGLAS_LABEL.items():
+            ano = sigla[0]
+            cor = CORES_ANO[ano]
+            b = ctk.CTkButton(sala_row, text=label, font=("Segoe UI", 9, "bold"),
+                               fg_color=cor, hover_color=VERDE_ESCURO,
+                               text_color="white", width=64, height=26,
+                               command=lambda s=sigla: _filtrar_por_sigla(s))
+            b.pack(side="left", padx=2)
+            btn_sala_refs[sigla] = b
+ 
+        # ── Limpar filtros ────────────────────────────────────────────────────
+        def limpar_filtros():
+            cb_serie.set("(Todas)")
+            cb_curso.set("(Todos)")
+            ent_nome.delete(0, "end")
+            for sigla, b in btn_sala_refs.items():
+                b.configure(fg_color=CORES_ANO[sigla[0]], text_color="white")
+            atualizar_freq()
+ 
+        ctk.CTkButton(filtro_row, text="✕ Limpar", font=("Segoe UI", 10, "bold"),
+                       fg_color="transparent", hover_color="#F0F0F0",
+                       text_color=VERDE_VIBRANTE, width=80, height=30,
+                       command=limpar_filtros).pack(side="left")
+ 
+        # ── Ver ausentes (janela secundária CTk) ─────────────────────────────
         def abrir_ausentes():
-            win_aus = tk.Toplevel(jd)
-            win_aus.title("Alunos Ausentes Hoje")
-            win_aus.state("zoomed")
-            win_aus.configure(bg=T["BG_MAIN"])
-            
-            criar_barra_topo(win_aus, "👥  Alunos Ausentes", cmd_voltar=win_aus.destroy)
-            
-            # Ler lista de alunos
-            lista_todos = []
-            if os.path.exists(LISTA_ALUNOS_FILE):
-                with open(LISTA_ALUNOS_FILE, "r", encoding="utf-8") as f:
-                    lista_todos = json.load(f)
-            
-            # Ler registros de hoje
-            registros_hoje = _registros_hoje()
-            matriculas_presentes = set(r[2] for r in registros_hoje if len(r) > 2)
-            
-            # Filtrar ausentes
-            ausentes = [al for al in lista_todos if al.get("matricula", "") not in matriculas_presentes]
-            
-            # Filtros
-            filt_frame = tk.Frame(win_aus, bg=T["OBS_BG"])
-            filt_frame.pack(fill="x", padx=20, pady=(10, 0))
-            
-            fv_serie_aus = tk.StringVar()
-            fv_curso_aus = tk.StringVar()
-            
-            tk.Label(filt_frame, text="Filtrar:", font=("Segoe UI", 10, "bold"),
-                    bg=T["OBS_BG"], fg=T["ACCENT_VIBRANT"]).pack(side="left", padx=(10, 8), pady=8)
-            
-            tk.Label(filt_frame, text="Série:", font=("Segoe UI", 9),
-                    bg=T["OBS_BG"], fg=T["FG_TEXT"]).pack(side="left")
-            cb_serie_aus = ttk.Combobox(filt_frame, textvariable=fv_serie_aus, state="readonly",
-                        values=["(Todas)", "1 Ano", "2 Ano", "3 Ano"],
-                        width=9, font=("Segoe UI", 10))
-            cb_serie_aus.pack(side="left", padx=(4, 14), pady=6)
+            lista_todos = _estado["lista_todos"]
+            presentes = set(_estado["alunos_unicos"].keys())
+            ausentes = [al for al in lista_todos if al.get("matricula", "") not in presentes]
+ 
+            win = ctk.CTkToplevel(page)
+            win.title("Alunos Ausentes Hoje")
+            win.geometry("760x560")
+            win.configure(fg_color=CINZA_BG)
+ 
+            ctk.CTkLabel(win, text="👥  Alunos Ausentes Hoje",
+                          font=("Segoe UI", 16, "bold"), text_color=TEXTO_ESCURO
+                          ).pack(anchor="w", padx=20, pady=(16, 4))
+ 
+            filt = ctk.CTkFrame(win, fg_color="transparent")
+            filt.pack(fill="x", padx=20, pady=(0, 8))
+            ctk.CTkLabel(filt, text="Série:", font=("Segoe UI", 11, "bold"),
+                          text_color=TEXTO_ESCURO).pack(side="left", padx=(0, 6))
+            cb_serie_aus = ctk.CTkOptionMenu(filt, values=["(Todas)", "1 Ano", "2 Ano", "3 Ano"],
+                                              width=100, fg_color=VERDE_VIBRANTE,
+                                              button_color=VERDE_ESCURO, button_hover_color=VERDE_ESCURO)
             cb_serie_aus.set("(Todas)")
-            
-            tk.Label(filt_frame, text="Curso:", font=("Segoe UI", 9),
-                    bg=T["OBS_BG"], fg=T["FG_TEXT"]).pack(side="left")
-            cb_curso_aus = ttk.Combobox(filt_frame, textvariable=fv_curso_aus, state="readonly",
-                        values=["(Todos)", "Desenvolvimento de Sistemas", "Hospedagem",
-                               "Enfermagem", "Modelagem do Vestuario"],
-                        width=26, font=("Segoe UI", 10))
-            cb_curso_aus.pack(side="left", padx=(4, 14), pady=6)
+            cb_serie_aus.pack(side="left", padx=(0, 14))
+ 
+            ctk.CTkLabel(filt, text="Curso:", font=("Segoe UI", 11, "bold"),
+                          text_color=TEXTO_ESCURO).pack(side="left", padx=(0, 6))
+            cb_curso_aus = ctk.CTkOptionMenu(filt, values=["(Todos)", "Desenvolvimento de Sistemas",
+                                                            "Hospedagem", "Enfermagem", "Modelagem do Vestuario"],
+                                              width=200, fg_color=VERDE_VIBRANTE,
+                                              button_color=VERDE_ESCURO, button_hover_color=VERDE_ESCURO)
             cb_curso_aus.set("(Todos)")
-            
-            # Treeview ausentes
-            ft_aus = tk.Frame(win_aus, bg=T["BORDER_GRID"], padx=1, pady=1)
-            ft_aus.pack(expand=True, fill="both", padx=20, pady=(10, 15))
-            
-            taus = ttk.Treeview(ft_aus, columns=("Nome", "Série", "Curso"), show="headings")
-            taus.heading("Nome", text="NOME")
-            taus.column("Nome", width=300, anchor="w")
-            taus.heading("Série", text="SÉRIE")
-            taus.column("Série", width=100, anchor="center")
-            taus.heading("Curso", text="CURSO")
-            taus.column("Curso", width=250, anchor="w")
-            
-            sb_aus = ttk.Scrollbar(ft_aus, orient="vertical", command=taus.yview)
-            taus.configure(yscrollcommand=sb_aus.set)
-            taus.pack(side="left", expand=True, fill="both")
-            sb_aus.pack(side="right", fill="y")
-            
-            taus.tag_configure("even", background=T["ENTRY_BG"])
-            taus.tag_configure("odd", background=T["BG_CARD"])
-            
-            def atualizar_ausentes():
-                for i in taus.get_children(): taus.delete(i)
-                
-                f_serie = fv_serie_aus.get()
-                f_curso = fv_curso_aus.get()
-                
+            cb_curso_aus.pack(side="left")
+ 
+            lista_card = ctk.CTkFrame(win, fg_color=BRANCO, corner_radius=12)
+            lista_card.pack(fill="both", expand=True, padx=20, pady=(0, 8))
+            lista_card.grid_rowconfigure(1, weight=1)
+            lista_card.grid_columnconfigure(0, weight=1)
+ 
+            hdr = ctk.CTkFrame(lista_card, fg_color=VERDE_ESCURO, corner_radius=6)
+            hdr.grid(row=0, column=0, sticky="ew", padx=14, pady=(14, 0))
+            ctk.CTkLabel(hdr, text="Nome", font=("Segoe UI", 10, "bold"),
+                          text_color="white", width=280, anchor="w").pack(side="left", padx=6, pady=8)
+            ctk.CTkLabel(hdr, text="Série", font=("Segoe UI", 10, "bold"),
+                          text_color="white", width=100, anchor="w").pack(side="left", padx=6, pady=8)
+            ctk.CTkLabel(hdr, text="Curso", font=("Segoe UI", 10, "bold"),
+                          text_color="white", anchor="w").pack(side="left", expand=True, fill="x", padx=6, pady=8)
+ 
+            corpo_aus = ctk.CTkScrollableFrame(lista_card, fg_color="transparent")
+            corpo_aus.grid(row=1, column=0, sticky="nsew", padx=14, pady=(0, 14))
+            corpo_aus.grid_columnconfigure(0, weight=1)
+ 
+            lbl_cnt_aus = ctk.CTkLabel(win, text="", font=("Segoe UI", 10), text_color=TEXTO_CINZA)
+            lbl_cnt_aus.pack(anchor="w", padx=20, pady=(0, 12))
+ 
+            def _preencher():
+                for w in corpo_aus.winfo_children():
+                    w.destroy()
+                f_serie = cb_serie_aus.get()
+                f_curso = cb_curso_aus.get()
                 exibidos = []
                 for al in ausentes:
                     if not _serie_bate(al.get("serie", ""), f_serie): continue
                     if not _curso_bate(al.get("curso", ""), f_curso): continue
                     exibidos.append(al)
-                
-                for idx, al in enumerate(sorted(exibidos, key=lambda a: a.get("nome", ""))):
-                    tag = "even" if idx % 2 == 0 else "odd"
-                    taus.insert("", "end", values=(al.get("nome", ""), al.get("serie", ""), al.get("curso", "")), tags=(tag,))
-                
-                lbl_aus_cnt.config(text=f"{len(exibidos)} ausente(s) de {len(lista_todos)} cadastrado(s)")
-            
-            def exportar_ausentes():
+ 
+                lbl_cnt_aus.configure(text=f"{len(exibidos)} ausente(s) de {len(lista_todos)} cadastrado(s)")
+ 
+                if not exibidos:
+                    ctk.CTkLabel(corpo_aus, text="Nenhum ausente encontrado.",
+                                  font=("Segoe UI", 12), text_color=TEXTO_CINZA
+                                  ).grid(row=0, column=0, pady=24)
+                    return
+ 
+                for i, al in enumerate(sorted(exibidos, key=lambda a: a.get("nome", "").lower())):
+                    bg = BRANCO if i % 2 == 0 else "#F8F9FA"
+                    linha = ctk.CTkFrame(corpo_aus, fg_color=bg, corner_radius=4)
+                    linha.grid(row=i, column=0, sticky="ew", pady=1)
+                    ctk.CTkLabel(linha, text=al.get("nome", "-"), font=("Segoe UI", 11),
+                                  width=280, anchor="w", text_color="#C62828"
+                                  ).pack(side="left", padx=6, pady=6)
+                    ctk.CTkLabel(linha, text=al.get("serie", "-"), font=("Segoe UI", 11),
+                                  width=100, anchor="w", text_color="#374151"
+                                  ).pack(side="left", padx=6, pady=6)
+                    ctk.CTkLabel(linha, text=al.get("curso", "-"), font=("Segoe UI", 11),
+                                  anchor="w", text_color="#374151"
+                                  ).pack(side="left", expand=True, fill="x", padx=6, pady=6)
+ 
+            def _exportar():
                 try:
-                    nome_arq = f"ausentes_marwin_{_hoje().replace('/', '_')}.csv"
+                    nome_arq = f"ausentes_frequencia_{_hoje().replace('/', '_')}.csv"
+                    f_serie = cb_serie_aus.get()
+                    f_curso = cb_curso_aus.get()
+                    exibidos = [al for al in ausentes
+                                 if _serie_bate(al.get("serie", ""), f_serie)
+                                 and _curso_bate(al.get("curso", ""), f_curso)]
                     with open(nome_arq, "w", newline="", encoding="utf-8") as f:
                         w = csv.writer(f)
                         w.writerow(["Nome", "Série", "Curso"])
-                        for item in taus.get_children():
-                            vals = taus.item(item)["values"]
-                            w.writerow(vals)
+                        for al in sorted(exibidos, key=lambda a: a.get("nome", "").lower()):
+                            w.writerow([al.get("nome", ""), al.get("serie", ""), al.get("curso", "")])
                     messagebox.showinfo("Sucesso", f"CSV exportado:\n{nome_arq}")
                 except Exception as e:
                     messagebox.showerror("Erro", f"Falha ao exportar:\n{e}")
-            
-            btn_aus_frame = tk.Frame(win_aus, bg=T["BG_CARD"])
-            btn_aus_frame.pack(fill="x", padx=20, pady=(0, 10))
-            
-            tk.Button(btn_aus_frame, text="Exportar CSV", command=exportar_ausentes,
-                     bg=T["BTN_CARDAPIO"], fg="white", font=("Segoe UI", 10, "bold"),
-                     padx=14, pady=6, bd=0, cursor="hand2").pack(side="left", padx=(0, 8))
-            
-            lbl_aus_cnt = tk.Label(btn_aus_frame, text="0 ausente(s)", font=("Segoe UI", 10),
-                                   bg=T["BG_CARD"], fg=T["FRASE_FG"])
-            lbl_aus_cnt.pack(side="left")
-            
-            # Gatilhos
-            fv_serie_aus.trace_add("write", lambda *_: atualizar_ausentes())
-            fv_curso_aus.trace_add("write", lambda *_: atualizar_ausentes())
-            
-            atualizar_ausentes()
+ 
+            btn_row_aus = ctk.CTkFrame(win, fg_color="transparent")
+            btn_row_aus.pack(anchor="w", padx=20, pady=(0, 16))
+            ctk.CTkButton(btn_row_aus, text="⬇  Exportar CSV", fg_color="#1565C0",
+                           hover_color="#0D47A1", font=("Segoe UI", 11, "bold"),
+                           height=34, command=_exportar).pack(side="left")
+ 
+            cb_serie_aus.configure(command=lambda _: _preencher())
+            cb_curso_aus.configure(command=lambda _: _preencher())
+            _preencher()
+ 
+        # ── Exportar CSV ──────────────────────────────────────────────────────
+        def exportar_csv_freq():
+            try:
+                nome_arq = f"frequencia_{_hoje().replace('/', '_')}.csv"
+                _escrever_csv(
+                    nome_arq,
+                    ["Data", "HoraEntrada", "Matricula", "Nome", "Serie", "Curso", "Aula"],
+                    _ler_frequencia_todos_db(),
+                )
+                lbl_acao_status.configure(text=f"✔ Exportado: {nome_arq}", text_color=VERDE_VIBRANTE)
+            except Exception as e:
+                lbl_acao_status.configure(text=f"⚠ Falha ao exportar: {e}", text_color="#C62828")
+            page.after(4000, lambda: lbl_acao_status.configure(text=""))
+ 
+        # ── Apagar registros de hoje ──────────────────────────────────────────
+        def apagar_hoje_freq():
+            if not messagebox.askyesno("Confirmar", f"Apagar todos os registros de hoje ({_hoje()})?"):
+                return
+            try:
+                _apagar_frequencia_data_db(_hoje())
+                lbl_acao_status.configure(text="✔ Registros de hoje apagados.", text_color=VERDE_VIBRANTE)
+            except Exception as e:
+                lbl_acao_status.configure(text=f"⚠ Falha ao apagar: {e}", text_color="#C62828")
+            page.after(4000, lambda: lbl_acao_status.configure(text=""))
+            atualizar_freq()
+ 
+        ctk.CTkButton(btn_row, text="👁  Ver Ausentes", fg_color=VERDE_VIBRANTE,
+                       hover_color=VERDE_ESCURO, font=("Segoe UI", 11, "bold"),
+                       height=36, width=140, command=abrir_ausentes).pack(side="left", padx=(0, 8))
+        ctk.CTkButton(btn_row, text="↻  Atualizar", fg_color="#1565C0",
+                       hover_color="#0D47A1", font=("Segoe UI", 11, "bold"),
+                       height=36, width=130, command=atualizar_freq).pack(side="left", padx=(0, 8))
+        ctk.CTkButton(btn_row, text="⬇  Exportar CSV", fg_color="#6A1B9A",
+                       hover_color="#4A148C", font=("Segoe UI", 11, "bold"),
+                       height=36, width=150, command=exportar_csv_freq).pack(side="left", padx=(0, 8))
+        ctk.CTkButton(btn_row, text="🗑  Apagar hoje", fg_color="#C62828",
+                       hover_color="#8E1010", font=("Segoe UI", 11, "bold"),
+                       height=36, width=140, command=apagar_hoje_freq).pack(side="left", padx=(0, 12))
+        lbl_acao_status.pack(side="left")
+ 
+        # Gatilhos automáticos de filtro
+        cb_serie.configure(command=lambda _: atualizar_freq())
+        cb_curso.configure(command=lambda _: atualizar_freq())
+        ent_nome.bind("<KeyRelease>", lambda e: atualizar_freq())
+ 
+        atualizar_freq()
+        return page
+    def criar_pagina_historico():
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+        from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+ 
+        page = ctk.CTkScrollableFrame(container, fg_color=CINZA_BG)
+        page.grid_columnconfigure(0, weight=1)
+ 
+        # ── Estado ────────────────────────────────────────────────────────────
+        _estado = {"tipo": "refeitorio", "periodo": "hoje", "dados_por_data": {}}
+ 
+        # ── Cabeçalho ─────────────────────────────────────────────────────────
+        cab = ctk.CTkFrame(page, fg_color="transparent")
+        cab.grid(row=0, column=0, sticky="ew", pady=(4, 12))
+        ctk.CTkLabel(cab, text="Histórico 📚",
+                      font=("Segoe UI", 22, "bold"), text_color=TEXTO_ESCURO).pack(anchor="w")
+        ctk.CTkLabel(cab, text="Consulte o histórico de refeições ou frequência por período.",
+                      font=("Segoe UI", 12), text_color=TEXTO_CINZA).pack(anchor="w")
+ 
+        # ── Card de filtros ───────────────────────────────────────────────────
+        filtro_card = ctk.CTkFrame(page, fg_color=BRANCO, corner_radius=12)
+        filtro_card.grid(row=1, column=0, sticky="ew", pady=(0, 12))
+ 
+        # Linha 1: seletor de tipo (segmented button)
+        topo_filtro = ctk.CTkFrame(filtro_card, fg_color="transparent")
+        topo_filtro.pack(fill="x", padx=14, pady=(14, 8))
+        ctk.CTkLabel(topo_filtro, text="Histórico de:", font=("Segoe UI", 12, "bold"),
+                      text_color=TEXTO_ESCURO).pack(side="left", padx=(0, 10))
+ 
+        seg_tipo = ctk.CTkSegmentedButton(topo_filtro, values=["Refeitório", "Frequência"],
+                                           fg_color="#F0F0F0", selected_color=VERDE_VIBRANTE,
+                                           selected_hover_color=VERDE_ESCURO,
+                                           unselected_color="#F0F0F0",
+                                           text_color=TEXTO_ESCURO)
+        seg_tipo.set("Refeitório")
+        seg_tipo.pack(side="left")
+ 
+        # Linha 2: período
+        periodo_row = ctk.CTkFrame(filtro_card, fg_color="transparent")
+        periodo_row.pack(fill="x", padx=14, pady=(0, 8))
+        ctk.CTkLabel(periodo_row, text="Período:", font=("Segoe UI", 12, "bold"),
+                      text_color=TEXTO_ESCURO).pack(side="left", padx=(0, 10))
+ 
+        seg_periodo = ctk.CTkSegmentedButton(periodo_row,
+                                              values=["Hoje", "Esta semana", "Este mês", "Personalizado"],
+                                              fg_color="#F0F0F0", selected_color="#1565C0",
+                                              selected_hover_color="#0D47A1",
+                                              unselected_color="#F0F0F0",
+                                              text_color=TEXTO_ESCURO)
+        seg_periodo.set("Hoje")
+        seg_periodo.pack(side="left")
+ 
+        # Linha 3: período personalizado (oculta por padrão)
+        custom_row = ctk.CTkFrame(filtro_card, fg_color="transparent")
+ 
+        ctk.CTkLabel(custom_row, text="De:", font=("Segoe UI", 11),
+                      text_color=TEXTO_ESCURO).pack(side="left", padx=(0, 6))
+        ent_data_ini = ctk.CTkEntry(custom_row, width=110, height=30, placeholder_text="01/01/2026")
+        ent_data_ini.insert(0, "01/01/2026")
+        ent_data_ini.pack(side="left", padx=(0, 14))
+ 
+        ctk.CTkLabel(custom_row, text="Até:", font=("Segoe UI", 11),
+                      text_color=TEXTO_ESCURO).pack(side="left", padx=(0, 6))
+        ent_data_fim = ctk.CTkEntry(custom_row, width=110, height=30)
+        ent_data_fim.insert(0, datetime.date.today().strftime("%d/%m/%Y"))
+        ent_data_fim.pack(side="left")
+ 
+        # Linha 4: série / curso
+        serie_curso_row = ctk.CTkFrame(filtro_card, fg_color="transparent")
+        serie_curso_row.pack(fill="x", padx=14, pady=(0, 14))
+ 
+        ctk.CTkLabel(serie_curso_row, text="Série:", font=("Segoe UI", 11, "bold"),
+                      text_color=TEXTO_ESCURO).pack(side="left", padx=(0, 6))
+        cb_serie = ctk.CTkOptionMenu(serie_curso_row, values=["(Todas)", "1 Ano", "2 Ano", "3 Ano"],
+                                      width=110, fg_color=VERDE_VIBRANTE,
+                                      button_color=VERDE_ESCURO, button_hover_color=VERDE_ESCURO)
+        cb_serie.set("(Todas)")
+        cb_serie.pack(side="left", padx=(0, 14))
+ 
+        ctk.CTkLabel(serie_curso_row, text="Curso:", font=("Segoe UI", 11, "bold"),
+                      text_color=TEXTO_ESCURO).pack(side="left", padx=(0, 6))
+        cb_curso = ctk.CTkOptionMenu(serie_curso_row,
+                                      values=["(Todos)", "Desenvolvimento de Sistemas", "Hospedagem",
+                                              "Enfermagem", "Modelagem do Vestuario"],
+                                      width=220, fg_color=VERDE_VIBRANTE,
+                                      button_color=VERDE_ESCURO, button_hover_color=VERDE_ESCURO)
+        cb_curso.set("(Todos)")
+        cb_curso.pack(side="left", padx=(0, 14))
+ 
+        ctk.CTkButton(serie_curso_row, text="🔍  Buscar", fg_color=VERDE_VIBRANTE,
+                       hover_color=VERDE_ESCURO, font=("Segoe UI", 11, "bold"),
+                       height=32, width=110,
+                       command=lambda: buscar_historico()).pack(side="left")
+ 
+        # ── Resumo geral ──────────────────────────────────────────────────────
+        resumo_row = ctk.CTkFrame(page, fg_color="transparent")
+        resumo_row.grid(row=2, column=0, sticky="ew", pady=(0, 12))
+        resumo_row.grid_columnconfigure((0, 1, 2), weight=1)
+ 
+        lbl_total, sub_total = card_resumo(resumo_row, 0, 0, "📋", AZUL_CLARO, "#1565C0",
+                                            "Total Geral", "0", "registros")
+        lbl_pos,   sub_pos   = card_resumo(resumo_row, 0, 1, "✔️", "#E8F5E9", "#2E7D32",
+                                            "Almoços / Presentes", "0", "no período")
+        lbl_pct,   sub_pct   = card_resumo(resumo_row, 0, 2, "📊", ROXO_CLARO, "#6A1B9A",
+                                            "% Geral", "0%", "adesão / presença")
+ 
+        # ── Gráfico ───────────────────────────────────────────────────────────
+        grafico_card = ctk.CTkFrame(page, fg_color=BRANCO, corner_radius=12)
+        grafico_card.grid(row=3, column=0, sticky="ew", pady=(0, 12))
+        ctk.CTkLabel(grafico_card, text="Evolução diária (últimos 30 dias do período)",
+                      font=("Segoe UI", 13, "bold"), text_color=TEXTO_ESCURO
+                      ).pack(anchor="w", padx=18, pady=(16, 4))
+        frame_graf = ctk.CTkFrame(grafico_card, fg_color="transparent")
+        frame_graf.pack(fill="x", padx=18, pady=(0, 16))
+        canvas_ref = {}
+ 
+        # ── Tabela ────────────────────────────────────────────────────────────
+        tabela_card = ctk.CTkFrame(page, fg_color=BRANCO, corner_radius=12)
+        tabela_card.grid(row=4, column=0, sticky="ew", pady=(0, 12))
+ 
+        topo_tab = ctk.CTkFrame(tabela_card, fg_color="transparent")
+        topo_tab.pack(fill="x", padx=14, pady=(14, 6))
+        ctk.CTkLabel(topo_tab, text="Detalhe por dia",
+                      font=("Segoe UI", 13, "bold"), text_color=TEXTO_ESCURO).pack(side="left")
+ 
+        header_tab = ctk.CTkFrame(tabela_card, fg_color=VERDE_ESCURO, corner_radius=6)
+        header_tab.pack(fill="x", padx=14)
+        col_labels = {}
+        COLS = [("Data", 110), ("Total", 130), ("Almoços", 130), ("Não Almoços", 150), ("% Adesão", 110)]
+        for i, (col, w) in enumerate(COLS):
+            lbl = ctk.CTkLabel(header_tab, text=col, font=("Segoe UI", 10, "bold"),
+                                text_color="white", width=w, anchor="w")
+            lbl.pack(side="left", expand=(i == len(COLS)-1), fill="x", padx=6, pady=8)
+            col_labels[col] = lbl
+ 
+        corpo_tab = ctk.CTkFrame(tabela_card, fg_color="transparent")
+        corpo_tab.pack(fill="x", padx=14, pady=(0, 14))
+ 
+        # ── Botões inferiores ─────────────────────────────────────────────────
+        btn_row = ctk.CTkFrame(page, fg_color="transparent")
+        btn_row.grid(row=5, column=0, sticky="w", pady=(0, 24))
+        lbl_status = ctk.CTkLabel(btn_row, text="", font=("Segoe UI", 10), text_color=VERDE_VIBRANTE)
+ 
+        # ── Lógica de busca ───────────────────────────────────────────────────
+        def buscar_historico():
+            tipo_label = seg_tipo.get()
+            eh_frequencia = (tipo_label == "Frequência")
+            _estado["tipo"] = "frequencia" if eh_frequencia else "refeitorio"
+ 
+            periodo_label = seg_periodo.get()
+            hoje = datetime.date.today()
+            if periodo_label == "Hoje":
+                d_inicio = d_fim = hoje
+            elif periodo_label == "Esta semana":
+                d_inicio = hoje - datetime.timedelta(days=hoje.weekday())
+                d_fim = hoje
+            elif periodo_label == "Este mês":
+                d_inicio = hoje.replace(day=1)
+                d_fim = hoje
+            else:
+                try:
+                    d_inicio = datetime.datetime.strptime(ent_data_ini.get().strip(), "%d/%m/%Y").date()
+                    d_fim = datetime.datetime.strptime(ent_data_fim.get().strip(), "%d/%m/%Y").date()
+                except Exception:
+                    lbl_status.configure(text="⚠ Data inválida. Use DD/MM/AAAA.", text_color="#C62828")
+                    return
+ 
+            f_serie = cb_serie.get()
+            f_curso = cb_curso.get()
+ 
+            def _thread_body():
+                try:
+                    linhas = _ler_frequencia_todos_db() if eh_frequencia else _ler_refeitorio_todos_db()
+                except Exception as e:
+                    page.after(0, lambda: lbl_status.configure(
+                        text=f"⚠ Falha ao carregar: {e}", text_color="#C62828"))
+                    return
+ 
+                dados_por_data = {}
+                for row in linhas:
+                    if len(row) < 7:
+                        continue
+                    try:
+                        data_obj = datetime.datetime.strptime(row[0], "%d/%m/%Y").date()
+                    except Exception:
+                        continue
+                    if not (d_inicio <= data_obj <= d_fim):
+                        continue
+ 
+                    serie = row[4] if len(row) > 4 else ""
+                    curso = row[5] if len(row) > 5 else ""
+                    if f_serie != "(Todas)" and f_serie not in serie:
+                        continue
+                    if f_curso != "(Todos)" and f_curso not in curso:
+                        continue
+ 
+                    if data_obj not in dados_por_data:
+                        dados_por_data[data_obj] = {"total": 0, "presentes": 0,
+                                                       "almocou": 0, "nao_almocou": 0}
+ 
+                    if eh_frequencia:
+                        dados_por_data[data_obj]["presentes"] += 1
+                        dados_por_data[data_obj]["total"] += 1
+                    else:
+                        refeicao = row[6] if len(row) > 6 else ""
+                        if refeicao.strip().lower() == "almoco":
+                            dados_por_data[data_obj]["almocou"] += 1
+                        else:
+                            dados_por_data[data_obj]["nao_almocou"] += 1
+                        dados_por_data[data_obj]["total"] += 1
+ 
+                page.after(0, lambda: _renderizar(dados_por_data, eh_frequencia))
+ 
+            threading.Thread(target=_thread_body, daemon=True).start()
+ 
+        def _renderizar(dados_por_data, eh_frequencia):
+            _estado["dados_por_data"] = dados_por_data
+ 
+            if eh_frequencia:
+                col_labels["Total"].configure(text="Total Alunos")
+                col_labels["Almoços"].configure(text="Presentes")
+                col_labels["Não Almoços"].configure(text="Ausentes")
+                col_labels["% Adesão"].configure(text="% Presença")
+                sub_pos.configure(text="presentes")
+                sub_pct.configure(text="presença")
+            else:
+                col_labels["Total"].configure(text="Total Registros")
+                col_labels["Almoços"].configure(text="Total Almoços")
+                col_labels["Não Almoços"].configure(text="Não Almoços")
+                col_labels["% Adesão"].configure(text="% Adesão")
+                sub_pos.configure(text="almoços")
+                sub_pct.configure(text="adesão")
+ 
+            for w in corpo_tab.winfo_children():
+                w.destroy()
+ 
+            if not dados_por_data:
+                ctk.CTkLabel(corpo_tab, text="Nenhum dado para o período selecionado.",
+                              font=("Segoe UI", 12), text_color=TEXTO_CINZA).pack(pady=20)
+                lbl_total.configure(text="0")
+                lbl_pos.configure(text="0")
+                lbl_pct.configure(text="0%")
+                _renderizar_grafico({}, eh_frequencia)
+                return
+ 
+            total_geral = 0
+            pos_geral = 0  # presentes ou almoços, dependendo do tipo
+ 
+            for i, data_obj in enumerate(sorted(dados_por_data.keys(), reverse=True)):
+                dados = dados_por_data[data_obj]
+                data_str = data_obj.strftime("%d/%m/%Y")
+                total = dados["total"]
+ 
+                if eh_frequencia:
+                    valor_pos = dados["presentes"]
+                    valor_neg = total - valor_pos
+                else:
+                    valor_pos = dados["almocou"]
+                    valor_neg = dados["nao_almocou"]
+ 
+                pct = (valor_pos / total * 100) if total else 0
+                total_geral += total
+                pos_geral += valor_pos
+ 
+                if pct >= 70:
+                    cor_pct = "#2E7D32"
+                elif pct >= 40:
+                    cor_pct = "#E65100"
+                else:
+                    cor_pct = "#C62828"
+ 
+                bg = BRANCO if i % 2 == 0 else "#F8F9FA"
+                linha = ctk.CTkFrame(corpo_tab, fg_color=bg, corner_radius=4)
+                linha.pack(fill="x", pady=1)
+ 
+                valores = [(data_str, 110, "#374151"), (str(total), 130, "#374151"),
+                           (str(valor_pos), 130, "#2E7D32"), (str(valor_neg), 150, "#C62828"),
+                           (f"{pct:.1f}%", 110, cor_pct)]
+                n = len(valores)
+                for j, (val, w, cor_t) in enumerate(valores):
+                    ctk.CTkLabel(linha, text=val, font=("Segoe UI", 11, "bold" if j == 4 else "normal"),
+                                  width=w, anchor="w", text_color=cor_t
+                                  ).pack(side="left", expand=(j == n-1), fill="x", padx=6, pady=6)
+ 
+            pct_geral = (pos_geral / total_geral * 100) if total_geral else 0
+            lbl_total.configure(text=str(total_geral))
+            lbl_pos.configure(text=str(pos_geral))
+            lbl_pct.configure(text=f"{pct_geral:.1f}%")
+ 
+            _renderizar_grafico(dados_por_data, eh_frequencia)
+ 
+        # ── Gráfico matplotlib ────────────────────────────────────────────────
+        def _renderizar_grafico(dados_por_data, eh_frequencia):
+            if "canvas" in canvas_ref:
+                canvas_ref["canvas"].get_tk_widget().destroy()
+                plt.close(canvas_ref["fig"])
+                del canvas_ref["canvas"]
+ 
+            for w in frame_graf.winfo_children():
+                w.destroy()
+ 
+            if not dados_por_data:
+                ctk.CTkLabel(frame_graf, text="Sem dados para exibir.",
+                              font=("Segoe UI", 12), text_color=TEXTO_CINZA).pack(pady=40)
+                return
+ 
+            datas_ordenadas = sorted(dados_por_data.keys())[-30:]
+            labels = [d.strftime("%d/%m") for d in datas_ordenadas]
+ 
+            if eh_frequencia:
+                valores = [dados_por_data[d]["presentes"] for d in datas_ordenadas]
+                totais  = [dados_por_data[d]["total"] for d in datas_ordenadas]
+                cor_label = "Presentes"
+            else:
+                valores = [dados_por_data[d]["almocou"] for d in datas_ordenadas]
+                totais  = [dados_por_data[d]["total"] for d in datas_ordenadas]
+                cor_label = "Almoços"
+ 
+            cores = []
+            for v, t in zip(valores, totais):
+                pct = (v / t * 100) if t else 0
+                if pct >= 70:
+                    cores.append("#4CAF50")
+                elif pct >= 40:
+                    cores.append("#FDD835")
+                else:
+                    cores.append("#F44336")
+ 
+            fig, ax = plt.subplots(figsize=(10, 3.6))
+            fig.patch.set_facecolor(BRANCO)
+            ax.set_facecolor(CINZA_BG)
+ 
+            bars = ax.bar(labels, valores, color=cores, edgecolor="white", linewidth=1.5)
+            for b, v in zip(bars, valores):
+                if v > 0:
+                    ax.annotate(str(v), (b.get_x() + b.get_width() / 2, b.get_height()),
+                                 textcoords="offset points", xytext=(0, 4),
+                                 ha="center", fontsize=9, color="#374151")
+ 
+            ax.set_ylabel(cor_label, fontsize=10)
+            ax.spines[["top", "right"]].set_visible(False)
+            ax.grid(axis="y", linestyle="--", alpha=0.4)
+            plt.setp(ax.get_xticklabels(), rotation=45, ha="right", fontsize=8)
+            fig.tight_layout()
+ 
+            canvas_tk = FigureCanvasTkAgg(fig, master=frame_graf)
+            canvas_tk.draw()
+            canvas_tk.get_tk_widget().pack(fill="x")
+            canvas_ref["canvas"] = canvas_tk
+            canvas_ref["fig"] = fig
+ 
+        # ── Exportações ───────────────────────────────────────────────────────
+        def exportar_csv_historico():
+            dados = _estado["dados_por_data"]
+            if not dados:
+                lbl_status.configure(text="⚠ Nenhum dado para exportar.", text_color="#C62828")
+                page.after(4000, lambda: lbl_status.configure(text=""))
+                return
+            try:
+                nome_arq = f"historico_marwin_{datetime.datetime.now().strftime('%d_%m_%Y')}.csv"
+                eh_frequencia = _estado["tipo"] == "frequencia"
+                with open(nome_arq, "w", newline="", encoding="utf-8") as f:
+                    w = csv.writer(f)
+                    w.writerow(["Data", "Total", "Almocos/Presentes", "NaoAlmocos/Ausentes", "%Adesao/Presenca"])
+                    for data_obj in sorted(dados.keys(), reverse=True):
+                        d = dados[data_obj]
+                        total = d["total"]
+                        if eh_frequencia:
+                            pos, neg = d["presentes"], total - d["presentes"]
+                        else:
+                            pos, neg = d["almocou"], d["nao_almocou"]
+                        pct = (pos / total * 100) if total else 0
+                        w.writerow([data_obj.strftime("%d/%m/%Y"), total, pos, neg, f"{pct:.1f}%"])
+                lbl_status.configure(text=f"✔ CSV gerado: {nome_arq}", text_color=VERDE_VIBRANTE)
+            except Exception as e:
+                lbl_status.configure(text=f"⚠ Falha: {e}", text_color="#C62828")
+            page.after(4000, lambda: lbl_status.configure(text=""))
+ 
+        def exportar_pdf_historico():
+            dados = _estado["dados_por_data"]
+            if not dados:
+                lbl_status.configure(text="⚠ Nenhum dado para exportar.", text_color="#C62828")
+                page.after(4000, lambda: lbl_status.configure(text=""))
+                return
+            try:
+                from fpdf import FPDF
+                eh_frequencia = _estado["tipo"] == "frequencia"
+                pdf = FPDF()
+                pdf.add_page()
+                pdf.set_font("Arial", "B", 16)
+                titulo = "HISTORICO DE FREQUENCIA" if eh_frequencia else "HISTORICO DE REFEICOES"
+                pdf.cell(0, 10, f"{titulo} - EEEP MARWIN", ln=True, align="C")
+                pdf.set_font("Arial", "", 12)
+                pdf.cell(0, 8, f"Gerado em: {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}", ln=True)
+                pdf.ln(4)
+                pdf.set_font("Arial", "B", 11)
+                pdf.cell(40, 8, "Data", border=1)
+                pdf.cell(40, 8, "Total", border=1)
+                pdf.cell(50, 8, "Almocos/Pres.", border=1)
+                pdf.cell(50, 8, "Nao Alm./Aus.", border=1)
+                pdf.cell(0, 8, "% Adesao/Pres.", border=1, ln=True)
+                pdf.set_font("Arial", "", 10)
+                for data_obj in sorted(dados.keys(), reverse=True):
+                    d = dados[data_obj]
+                    total = d["total"]
+                    if eh_frequencia:
+                        pos, neg = d["presentes"], total - d["presentes"]
+                    else:
+                        pos, neg = d["almocou"], d["nao_almocou"]
+                    pct = (pos / total * 100) if total else 0
+                    pdf.cell(40, 7, data_obj.strftime("%d/%m/%Y"), border=1)
+                    pdf.cell(40, 7, str(total), border=1)
+                    pdf.cell(50, 7, str(pos), border=1)
+                    pdf.cell(50, 7, str(neg), border=1)
+                    pdf.cell(0, 7, f"{pct:.1f}%", border=1, ln=True)
+                nome_arq = f"historico_marwin_{datetime.datetime.now().strftime('%d_%m_%Y')}.pdf"
+                pdf.output(nome_arq)
+                lbl_status.configure(text=f"✔ PDF gerado: {nome_arq}", text_color=VERDE_VIBRANTE)
+            except Exception as e:
+                lbl_status.configure(text=f"⚠ Falha: {e}", text_color="#C62828")
+            page.after(4000, lambda: lbl_status.configure(text=""))
+ 
+        ctk.CTkButton(btn_row, text="⬇  Exportar CSV", fg_color="#1565C0",
+                       hover_color="#0D47A1", font=("Segoe UI", 11, "bold"),
+                       height=36, width=150, command=exportar_csv_historico).pack(side="left", padx=(0, 8))
+        ctk.CTkButton(btn_row, text="📄  Exportar PDF", fg_color="#6A1B9A",
+                       hover_color="#4A148C", font=("Segoe UI", 11, "bold"),
+                       height=36, width=150, command=exportar_pdf_historico).pack(side="left", padx=(0, 12))
+        lbl_status.pack(side="left")
+ 
+        # ── Mostrar/ocultar período personalizado ────────────────────────────
+        def _on_periodo_change(valor):
+            if valor == "Personalizado":
+                custom_row.pack(fill="x", padx=14, pady=(0, 8), after=periodo_row)
+            else:
+                custom_row.pack_forget()
+            buscar_historico()
+ 
+        def _on_tipo_change(valor):
+            buscar_historico()
+ 
+        seg_periodo.configure(command=_on_periodo_change)
+        seg_tipo.configure(command=_on_tipo_change)
+        cb_serie.configure(command=lambda _: buscar_historico())
+        cb_curso.configure(command=lambda _: buscar_historico())
+ 
+        buscar_historico()
+        return page
 
-        atualizar_ref()
-        _desenhar_taxa_adesao()
-
-        # Auto-refresh a cada 10 segundos
-        def _auto_update():
-            if aba_ref.winfo_exists():
-                atualizar_ref()
-                _desenhar_taxa_adesao()
-                aba_ref.after(10000, _auto_update)
-        aba_ref.after(10000, _auto_update)
-
-    # ── ABA QR CODES ─────────────────────────────────────────────────────────
-    def setup_qrcodes():
-        for w in aba_qr.winfo_children(): w.destroy()
-
+    def criar_pagina_qrcodes():
+        page = ctk.CTkFrame(container, fg_color=CINZA_BG)
+        page.grid_columnconfigure(0, weight=0)
+        page.grid_columnconfigure(1, weight=1)
+        page.grid_columnconfigure(2, weight=0)
+        page.grid_rowconfigure(1, weight=1)
+ 
+        # ── Helpers / lógica reaproveitada do painel antigo ─────────────────────
         LISTA_FILE = os.path.join(DADOS_DIR, "lista_alunos.json")
         QR_DIR     = "qrcodes_marwin"
         os.makedirs(QR_DIR, exist_ok=True)
-
+ 
         def _ler_lista():
             if os.path.exists(LISTA_FILE):
-                with open(LISTA_FILE,"r",encoding="utf-8") as f:
+                with open(LISTA_FILE, "r", encoding="utf-8") as f:
                     return json.load(f)
             return []
-
+ 
         def _salvar_lista(lista):
-            with open(LISTA_FILE,"w",encoding="utf-8") as f:
+            with open(LISTA_FILE, "w", encoding="utf-8") as f:
                 json.dump(lista, f, ensure_ascii=False, indent=2)
-
+ 
         def _extrair_ano_serie(serie):
             if not serie:
                 return ""
@@ -3247,14 +4154,14 @@ def abrir_painel_admin(event=None):
                 if ch.isdigit():
                     return ch
             return ""
-
+ 
         def _limpar_texto_pasta(texto):
             invalidos = r'\/:*?"<>|'
             resultado = ""
             for ch in str(texto):
                 resultado += "_" if ch in invalidos else ch
             return resultado.strip()
-
+ 
         def _limpar_texto_arquivo(texto):
             return (str(texto)
                     .replace(" ", "_")
@@ -3270,7 +4177,7 @@ def abrir_painel_admin(event=None):
                     .replace(">", "_")
                     .replace("|", "_")
                     .strip("_"))
-
+ 
         def _pasta_turma(al):
             serie = al.get("serie", "").strip()
             curso = al.get("curso", "").strip()
@@ -3280,7 +4187,7 @@ def abrir_painel_admin(event=None):
             pasta = os.path.join(QR_DIR, nome_serie, nome_curso)
             os.makedirs(pasta, exist_ok=True)
             return pasta
-
+ 
         def _nome_arquivo(al):
             matricula = _limpar_texto_arquivo(al.get("matricula", "sem_matricula"))
             nome      = _limpar_texto_arquivo(al.get("nome",      "sem_nome"))
@@ -3292,7 +4199,7 @@ def abrir_painel_admin(event=None):
             nome_arq = "_".join(partes) + ".png"
             pasta    = _pasta_turma(al)
             return os.path.join(pasta, nome_arq)
-
+ 
         def _gerar_png(al):
             payload = json.dumps({
                 "matricula": al["matricula"],
@@ -3309,76 +4216,89 @@ def abrir_painel_admin(event=None):
             caminho = _nome_arquivo(al)
             img.save(caminho)
             return caminho
-
-        corpo = tk.Frame(aba_qr, bg=T["BG_CARD"]); corpo.pack(fill="both", expand=True)
-
-        esq = tk.Frame(corpo, bg=T["OBS_BG"], width=290)
-        esq.pack(side="left", fill="y"); esq.pack_propagate(False)
-
-        tk.Label(esq, text="Novo Aluno", font=("Segoe UI",13,"bold"),
-                 bg=T["OBS_BG"], fg=T["ACCENT_VIBRANT"]).pack(pady=(18,2))
-        tk.Frame(esq, bg=T["BORDER_GRID"], height=1).pack(fill="x", padx=18, pady=(10,12))
-
+ 
+        # ── Cabeçalho ─────────────────────────────────────────────────────────
+        cab = ctk.CTkFrame(page, fg_color="transparent")
+        cab.grid(row=0, column=0, columnspan=3, sticky="ew", padx=4, pady=(4, 12))
+        ctk.CTkLabel(cab, text="QR Codes 🔳",
+                      font=("Segoe UI", 22, "bold"), text_color=TEXTO_ESCURO).pack(anchor="w")
+        ctk.CTkLabel(cab, text="Cadastre alunos e gere QR Codes individuais ou em lote.",
+                      font=("Segoe UI", 12), text_color=TEXTO_CINZA).pack(anchor="w")
+ 
+        # ══════════════════════════════════════════════════════════════════════
+        # COLUNA ESQUERDA — Novo aluno + preview QR
+        # ══════════════════════════════════════════════════════════════════════
+        esq = ctk.CTkFrame(page, fg_color=BRANCO, corner_radius=12, width=300)
+        esq.grid(row=1, column=0, sticky="ns", padx=(0, 12))
+        esq.grid_propagate(False)
+ 
+        ctk.CTkLabel(esq, text="Novo Aluno", font=("Segoe UI", 15, "bold"),
+                      text_color=TEXTO_ESCURO).pack(pady=(18, 2))
+        ctk.CTkFrame(esq, fg_color="#E5E7EB", height=1).pack(fill="x", padx=18, pady=(10, 12))
+ 
         campos = {}
-        defs = [("Matricula *","matricula","2026001"),
-                ("Nome *","nome","Nome do Aluno"),
-                ("Serie  (ex: 1 Ano, 2 Ano, 3 Ano)","serie","1 Ano"),
-                ("Curso","curso","Desenvolvimento de Sistemas")]
+        defs = [("Matrícula *", "matricula", "2026001"),
+                ("Nome *", "nome", "Nome do Aluno"),
+                ("Série (ex: 1 Ano, 2 Ano, 3 Ano)", "serie", "1 Ano"),
+                ("Curso", "curso", "Desenvolvimento de Sistemas")]
         for lbl_txt, key, ph in defs:
-            tk.Label(esq, text=lbl_txt, font=("Segoe UI",9,"bold"),
-                     bg=T["OBS_BG"], fg=T["ACCENT_VIBRANT"]).pack(anchor="w", padx=18)
-            e = tk.Entry(esq, font=("Segoe UI",11), relief="solid", bd=1,
-                         bg=T["BG_CARD"], fg=T["FG_TEXT"],
-                         insertbackground=T["ACCENT_VIBRANT"])
-            e.insert(0, ph)
-            e.pack(fill="x", padx=18, ipady=5, pady=(2,8))
+            ctk.CTkLabel(esq, text=lbl_txt, font=("Segoe UI", 10, "bold"),
+                          text_color=VERDE_VIBRANTE).pack(anchor="w", padx=18)
+            e = ctk.CTkEntry(esq, font=("Segoe UI", 11), height=34,
+                              placeholder_text=ph)
+            e.pack(fill="x", padx=18, pady=(2, 8))
             campos[key] = e
-
-        tk.Frame(esq, bg=T["BORDER_GRID"], height=1).pack(fill="x", padx=18, pady=(4,8))
-        dica_frame = tk.Frame(esq, bg=T["ENTRY_BG"],
-                              highlightbackground=T["BORDER_GRID"], highlightthickness=1)
-        dica_frame.pack(fill="x", padx=18, pady=(0,8))
-        tk.Label(dica_frame, text="Pasta gerada:", font=("Segoe UI",8,"bold"),
-                 bg=T["ENTRY_BG"], fg=T["ACCENT_VIBRANT"]).pack(anchor="w", padx=8, pady=(6,0))
-        dica_lbl = tk.Label(dica_frame,
-                            text="qrcodes_marwin/\n  1 Ano/\n    Desenvolvimento de Sistemas/",
-                            font=("Courier",8), bg=T["ENTRY_BG"], fg=T["FRASE_FG"],
-                            justify="left")
-        dica_lbl.pack(anchor="w", padx=8, pady=(2,6))
-
+ 
+        ctk.CTkFrame(esq, fg_color="#E5E7EB", height=1).pack(fill="x", padx=18, pady=(4, 8))
+ 
+        dica_frame = ctk.CTkFrame(esq, fg_color="#F8F9FA", corner_radius=6)
+        dica_frame.pack(fill="x", padx=18, pady=(0, 8))
+        ctk.CTkLabel(dica_frame, text="Pasta gerada:", font=("Segoe UI", 9, "bold"),
+                      text_color=VERDE_VIBRANTE).pack(anchor="w", padx=8, pady=(6, 0))
+        dica_lbl = ctk.CTkLabel(dica_frame,
+                                 text="qrcodes_marwin/\n  1 Ano/\n    Desenvolvimento de Sistemas/",
+                                 font=("Courier", 9), text_color=TEXTO_CINZA, justify="left")
+        dica_lbl.pack(anchor="w", padx=8, pady=(2, 6))
+ 
         def _atualizar_dica(*_):
             serie = campos["serie"].get().strip()
             curso = campos["curso"].get().strip()
             ano   = _extrair_ano_serie(serie)
             nome_s = f"{ano} Ano" if ano else "Sem Serie"
             nome_c = _limpar_texto_pasta(curso) if curso else "Sem Curso"
-            dica_lbl.config(text=f"qrcodes_marwin/\n  {nome_s}/\n    {nome_c}/")
-
+            dica_lbl.configure(text=f"qrcodes_marwin/\n  {nome_s}/\n    {nome_c}/")
+ 
         campos["serie"].bind("<KeyRelease>", _atualizar_dica)
         campos["curso"].bind("<KeyRelease>", _atualizar_dica)
-
-        preview_lbl = tk.Label(esq, text="QR Code preview", font=("Segoe UI",9),
-                       bg=T["OBS_BG"], fg=T["FRASE_FG"],
-                       relief="solid", bd=1, justify="center", anchor="center",
-                       wraplength=260)
-        preview_lbl.pack(pady=6)
+ 
+        # Preview QR
+        preview_frame = ctk.CTkFrame(esq, fg_color="#F8F9FA", corner_radius=8,
+                                       width=250, height=250)
+        preview_frame.pack(pady=6)
+        preview_frame.pack_propagate(False)
+        preview_lbl = ctk.CTkLabel(preview_frame, text="QR Code preview\nserá exibido aqui",
+                                    font=("Segoe UI", 10), text_color=TEXTO_CINZA)
+        preview_lbl.pack(expand=True)
         _img_ref = {}
-
+ 
         def _preview_qr(al):
             payload = json.dumps({
                 "matricula": al["matricula"], "nome": al["nome"],
-                "serie": al.get("serie",""), "curso": al.get("curso","")
+                "serie": al.get("serie", ""), "curso": al.get("curso", "")
             }, ensure_ascii=False)
-            qr2 = qrcode.QRCode(
-                error_correction=qrcode.constants.ERROR_CORRECT_M,
-                box_size=6, border=2)
+            qr2 = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_M,
+                                 box_size=6, border=2)
             qr2.add_data(payload); qr2.make(fit=True)
             img_pil = qr2.make_image(fill_color="black", back_color="white").convert("RGB")
-            img_pil = img_pil.resize((250,250), Image.NEAREST)
-            img_tk  = ImageTk.PhotoImage(img_pil)
-            _img_ref["img"] = img_tk
-            preview_lbl.config(image=img_tk, text="")
-
+            img_pil = img_pil.resize((230, 230), Image.NEAREST)
+            img_ctk = ctk.CTkImage(light_image=img_pil, dark_image=img_pil, size=(230, 230))
+            _img_ref["img"] = img_ctk
+            preview_lbl.configure(image=img_ctk, text="")
+ 
+        lbl_form_status = ctk.CTkLabel(esq, text="", font=("Segoe UI", 10),
+                                        text_color=VERDE_VIBRANTE, wraplength=260, justify="center")
+        lbl_form_status.pack(pady=(4, 4), padx=18)
+ 
         def _campos_para_dict():
             return {
                 "matricula": campos["matricula"].get().strip(),
@@ -3386,110 +4306,115 @@ def abrir_painel_admin(event=None):
                 "serie":     campos["serie"].get().strip(),
                 "curso":     campos["curso"].get().strip(),
             }
-
+ 
         def adicionar_aluno():
             al = _campos_para_dict()
             if not al["matricula"] or not al["nome"]:
-                messagebox.showwarning("Campos obrigatorios","Informe Matricula e Nome."); return
+                lbl_form_status.configure(text="⚠ Informe Matrícula e Nome.", text_color="#C62828")
+                return
             lista = _ler_lista()
-            if any(a["matricula"]==al["matricula"] for a in lista):
-                messagebox.showwarning("Duplicado",
-                    f"Matricula {al['matricula']} ja esta cadastrada."); return
+            if any(a["matricula"] == al["matricula"] for a in lista):
+                lbl_form_status.configure(text=f"⚠ Matrícula {al['matricula']} já cadastrada.",
+                                           text_color="#C62828")
+                return
             lista.append(al)
             _salvar_lista(lista)
             caminho = _gerar_png(al)
             _preview_qr(al)
             _atualizar_dica()
             carregar_lista()
-            messagebox.showinfo("Aluno adicionado",
-                f"QR Code gerado em:\n{caminho}")
-
+            lbl_form_status.configure(text=f"✔ Aluno adicionado!\nQR salvo em:\n{caminho}",
+                                       text_color=VERDE_VIBRANTE)
+ 
         def reemitir_selecionado():
-            sel = tlista.selection()
+            sel = _estado.get("selecionado")
             if not sel:
-                messagebox.showwarning("Aviso","Selecione um aluno na lista."); return
-            val = tlista.item(sel[0],"values")
-            lista = _ler_lista()
-            al = next((a for a in lista if a["matricula"]==val[1]), None)
-            if not al: return
-            caminho = _gerar_png(al)
-            _preview_qr(al)
-            for key, idx in [("matricula",1),("nome",2),("serie",3),("curso",4)]:
-                campos[key].delete(0,"end"); campos[key].insert(0, val[idx] if idx < len(val) else "")
-            _atualizar_dica()
-            messagebox.showinfo("QR Reemitido",
-                f"QR Code de {al['nome']} regenerado em:\n{caminho}")
-
-        tk.Button(esq, text="Adicionar e Gerar QR",
-                  command=adicionar_aluno,
-                  bg=T["ACCENT_VIBRANT"], fg="white", font=("Segoe UI",10,"bold"),
-                  pady=9, bd=0, cursor="hand2").pack(fill="x", padx=18, pady=(0,4))
-        tk.Button(esq, text="Reemitir QR Selecionado",
-                  command=reemitir_selecionado,
-                  bg=T["BTN_CARDAPIO"], fg="white", font=("Segoe UI",10,"bold"),
-                  pady=9, bd=0, cursor="hand2").pack(fill="x", padx=18, pady=(0,4))
-
-        mid = tk.Frame(corpo, bg=T["BG_CARD"]); mid.pack(side="left", fill="both", expand=True)
-        _configurar_layout_portrait(corpo, esq, mid)
-
-        bar = tk.Frame(mid, bg=T["BG_CARD"]); bar.pack(fill="x", padx=16, pady=(14,6))
-        tk.Label(bar, text="Alunos Cadastrados",
-                 font=("Segoe UI",13,"bold"), bg=T["BG_CARD"],
-                 fg=T["ACCENT_VIBRANT"]).pack(side="left")
-        lbl_cnt2 = tk.Label(bar, text="", font=("Segoe UI",9),
-                            bg=T["BG_CARD"], fg=T["FRASE_FG"])
-        lbl_cnt2.pack(side="left", padx=10)
-
-        busca_row = tk.Frame(mid, bg=T["BG_CARD"]); busca_row.pack(fill="x", padx=16, pady=(0,6))
-        tk.Label(busca_row, text="Buscar:", font=("Segoe UI",11),
-                 bg=T["BG_CARD"], fg=T["FRASE_FG"]).pack(side="left")
-        busca_var = tk.StringVar()
-        entry_busca = tk.Entry(busca_row, textvariable=busca_var, font=("Segoe UI",11),
-                               bg=T["ENTRY_BG"], fg=T["FG_TEXT"], relief="solid", bd=1,
-                               insertbackground=T["ACCENT_VIBRANT"])
-        entry_busca.pack(side="left", fill="x", expand=True, padx=(6,0), ipady=5)
-
-        tk.Frame(mid, bg=T["BORDER_GRID"], height=1).pack(fill="x", padx=16, pady=(0,6))
-
-        ft2 = tk.Frame(mid, bg=T["BORDER_GRID"], padx=1, pady=1)
-        ft2.pack(expand=True, fill="both", padx=16)
-
-        cols_t = ("QR","M","N","S","A","C")
-        hdrs_t = ("QR?","MATRIC.","NOME","SERIE","ANO","CURSO")
-        wids_t = (45,   90,       200,   120,    60,   180)
-        tlista  = ttk.Treeview(ft2, columns=cols_t, show="headings")
-        for c,h,w in zip(cols_t, hdrs_t, wids_t):
-            tlista.heading(c, text=h)
-            tlista.column(c, width=w, anchor="center" if w<=90 else "w")
-        tlista.column("A", anchor="center")
-        sb2 = ttk.Scrollbar(ft2, orient="vertical", command=tlista.yview)
-        sbx = ttk.Scrollbar(ft2, orient="horizontal", command=tlista.xview)
-        tlista.configure(yscrollcommand=sb2.set, xscrollcommand=sbx.set)
-        tlista.pack(side="left", expand=True, fill="both")
-        sb2.pack(side="right", fill="y")
-        sbx.pack(side="bottom", fill="x")
-        tlista.tag_configure("even",  background=T["ENTRY_BG"])
-        tlista.tag_configure("odd",   background=T["BG_CARD"])
-        tlista.tag_configure("semqr", background="#fff9c4")
-
-        btn_row3 = tk.Frame(mid, bg=T["BG_CARD"]); btn_row3.pack(fill="x", padx=16, pady=8)
-
-        def remover_aluno():
-            sel = tlista.selection()
-            if not sel:
-                messagebox.showwarning("Aviso","Selecione um aluno."); return
-            val = tlista.item(sel[0],"values")
-            if not messagebox.askyesno("Confirmar",
-                    f"Remover {val[2]} da lista?\n(O arquivo PNG nao sera apagado.)"):
+                lbl_form_status.configure(text="⚠ Selecione um aluno na lista.", text_color="#C62828")
                 return
             lista = _ler_lista()
-            lista = [a for a in lista if a["matricula"] != val[1]]
-            _salvar_lista(lista); carregar_lista()
-
+            al = next((a for a in lista if a["matricula"] == sel["matricula"]), None)
+            if not al:
+                return
+            caminho = _gerar_png(al)
+            _preview_qr(al)
+            for key in ("matricula", "nome", "serie", "curso"):
+                campos[key].delete(0, "end")
+                campos[key].insert(0, al.get(key, ""))
+            _atualizar_dica()
+            lbl_form_status.configure(text=f"✔ QR reemitido!\nSalvo em:\n{caminho}",
+                                       text_color=VERDE_VIBRANTE)
+ 
+        ctk.CTkButton(esq, text="➕  Adicionar e Gerar QR", fg_color=VERDE_VIBRANTE,
+                       hover_color=VERDE_ESCURO, font=("Segoe UI", 11, "bold"),
+                       height=38, command=adicionar_aluno).pack(fill="x", padx=18, pady=(4, 4))
+        ctk.CTkButton(esq, text="🔁  Reemitir QR Selecionado", fg_color="#1565C0",
+                       hover_color="#0D47A1", font=("Segoe UI", 11, "bold"),
+                       height=38, command=reemitir_selecionado).pack(fill="x", padx=18, pady=(0, 16))
+ 
+        # ══════════════════════════════════════════════════════════════════════
+        # COLUNA CENTRAL — Lista de alunos cadastrados
+        # ══════════════════════════════════════════════════════════════════════
+        mid = ctk.CTkFrame(page, fg_color=BRANCO, corner_radius=12)
+        mid.grid(row=1, column=1, sticky="nsew", padx=(0, 12))
+        mid.grid_rowconfigure(3, weight=1)
+        mid.grid_columnconfigure(0, weight=1)
+ 
+        topo_mid = ctk.CTkFrame(mid, fg_color="transparent")
+        topo_mid.grid(row=0, column=0, sticky="ew", padx=14, pady=(14, 4))
+        ctk.CTkLabel(topo_mid, text="Alunos Cadastrados", font=("Segoe UI", 14, "bold"),
+                      text_color=TEXTO_ESCURO).pack(side="left")
+        lbl_cnt = ctk.CTkLabel(topo_mid, text="", font=("Segoe UI", 10), text_color=TEXTO_CINZA)
+        lbl_cnt.pack(side="left", padx=10)
+ 
+        busca_row = ctk.CTkFrame(mid, fg_color="transparent")
+        busca_row.grid(row=1, column=0, sticky="ew", padx=14, pady=(0, 8))
+        ctk.CTkLabel(busca_row, text="Buscar:", font=("Segoe UI", 11),
+                      text_color=TEXTO_ESCURO).pack(side="left", padx=(0, 6))
+        ent_busca = ctk.CTkEntry(busca_row, height=32,
+                                  placeholder_text="Nome, matrícula, série ou curso...")
+        ent_busca.pack(side="left", fill="x", expand=True)
+ 
+        header_lista = ctk.CTkFrame(mid, fg_color=VERDE_ESCURO, corner_radius=6)
+        header_lista.grid(row=2, column=0, sticky="ew", padx=14)
+        COLS = [("QR", 50), ("Matrícula", 100), ("Nome", 220), ("Série", 110), ("Curso", 200)]
+        for i, (col, w) in enumerate(COLS):
+            ctk.CTkLabel(header_lista, text=col, font=("Segoe UI", 10, "bold"),
+                          text_color="white", width=w, anchor="w"
+                          ).pack(side="left", expand=(i == len(COLS)-1), fill="x", padx=6, pady=8)
+ 
+        corpo_lista = ctk.CTkScrollableFrame(mid, fg_color="transparent")
+        corpo_lista.grid(row=3, column=0, sticky="nsew", padx=14, pady=(0, 8))
+        corpo_lista.grid_columnconfigure(0, weight=1)
+ 
+        _estado = {"selecionado": None, "linha_widgets": {}}
+ 
+        # Botões inferiores da coluna central
+        btn_row_mid = ctk.CTkFrame(mid, fg_color="transparent")
+        btn_row_mid.grid(row=4, column=0, sticky="ew", padx=14, pady=(0, 14))
+        lbl_mid_status = ctk.CTkLabel(btn_row_mid, text="", font=("Segoe UI", 10),
+                                       text_color=VERDE_VIBRANTE)
+ 
+        def remover_aluno():
+            sel = _estado.get("selecionado")
+            if not sel:
+                lbl_mid_status.configure(text="⚠ Selecione um aluno.", text_color="#C62828")
+                page.after(3000, lambda: lbl_mid_status.configure(text=""))
+                return
+            if not messagebox.askyesno("Confirmar",
+                    f"Remover {sel['nome']} da lista?\n(O arquivo PNG não será apagado.)"):
+                return
+            lista = _ler_lista()
+            lista = [a for a in lista if a["matricula"] != sel["matricula"]]
+            _salvar_lista(lista)
+            _estado["selecionado"] = None
+            carregar_lista()
+ 
         def gerar_lote():
             lista = _ler_lista()
             if not lista:
-                messagebox.showwarning("Lista vazia","Nenhum aluno cadastrado."); return
+                lbl_mid_status.configure(text="⚠ Nenhum aluno cadastrado.", text_color="#C62828")
+                page.after(3000, lambda: lbl_mid_status.configure(text=""))
+                return
             if not messagebox.askyesno("Confirmar",
                     f"Gerar/atualizar QR Codes para {len(lista)} aluno(s)?\n\n"
                     f"Estrutura de pastas:\n"
@@ -3497,23 +4422,30 @@ def abrir_painel_admin(event=None):
                     f"    1 Ano/\n"
                     f"      Desenvolvimento de Sistemas/\n"
                     f"    2 Ano/\n"
-                    f"      Redes de Computadores/\n"
-                    f"    ..."):
+                    f"      ...\n"
+                    f"    3 Ano/\n"
+                    f"      ..."):
                 return
-            erros = 0
-            pastas_criadas = set()
-            for al in lista:
-                try:
-                    _gerar_png(al)
-                    pastas_criadas.add(_pasta_turma(al))
-                except Exception:
-                    erros += 1
-            carregar_lista()
-            msg = (f"{len(lista)-erros} QR Code(s) gerados em "
-                   f"{len(pastas_criadas)} pasta(s) dentro de '{QR_DIR}/'.")
-            if erros: msg += f"\n{erros} erro(s)."
-            messagebox.showinfo("Lote concluido", msg)
-
+ 
+            def _thread_body():
+                erros = 0
+                pastas_criadas = set()
+                for al in lista:
+                    try:
+                        _gerar_png(al)
+                        pastas_criadas.add(_pasta_turma(al))
+                    except Exception:
+                        erros += 1
+                msg = (f"✔ {len(lista)-erros} QR Code(s) gerados em "
+                       f"{len(pastas_criadas)} pasta(s) dentro de '{QR_DIR}/'.")
+                if erros:
+                    msg += f" ({erros} erro(s))"
+                page.after(0, lambda: (lbl_mid_status.configure(text=msg, text_color=VERDE_VIBRANTE),
+                                        carregar_lista(ent_busca.get())))
+                page.after(6000, lambda: lbl_mid_status.configure(text=""))
+ 
+            threading.Thread(target=_thread_body, daemon=True).start()
+ 
         def abrir_pasta():
             import subprocess as sp
             try:
@@ -3525,159 +4457,217 @@ def abrir_painel_admin(event=None):
                 else:
                     sp.Popen(["xdg-open", pasta])
             except Exception as e:
-                messagebox.showerror("Erro", str(e))
-
-        tk.Button(btn_row3, text="Remover", command=remover_aluno,
-                  bg="#c62828", fg="white", font=("Segoe UI",9,"bold"),
-                  padx=12, pady=7, bd=0, cursor="hand2").pack(side="left", padx=(0,6))
-        tk.Button(btn_row3, text="Gerar QRs (lote)", command=gerar_lote,
-                  bg=T["ACCENT_SOFT"], fg="white", font=("Segoe UI",9,"bold"),
-                  padx=12, pady=7, bd=0, cursor="hand2").pack(side="left", padx=(0,6))
-        tk.Button(btn_row3, text="Abrir Pasta QRs", command=abrir_pasta,
-                  bg=T["BTN_VOLTAR"], fg="white", font=("Segoe UI",9,"bold"),
-                  padx=12, pady=7, bd=0, cursor="hand2").pack(side="left")
-
-        imp = tk.Frame(corpo, bg=T["OBS_BG"], width=280)
-        imp.pack(side="right", fill="y"); imp.pack_propagate(False)
-        _configurar_layout_portrait(corpo, imp, esq, lado="right")
-
-        tk.Label(imp, text="Importar Planilha", font=("Segoe UI",13,"bold"),
-                 bg=T["OBS_BG"], fg=T["ACCENT_VIBRANT"]).pack(pady=(18,2))
-        tk.Label(imp, text="XLSX ou CSV com os alunos",
-                 font=("Segoe UI",9), bg=T["OBS_BG"], fg=T["FRASE_FG"]).pack(pady=(2,0))
-        tk.Frame(imp, bg=T["BORDER_GRID"], height=1).pack(fill="x", padx=18, pady=(10,12))
-
-        frame_inst = tk.Frame(imp, bg=T["ENTRY_BG"],
-                              highlightbackground=T["BORDER_GRID"], highlightthickness=1)
-        frame_inst.pack(fill="x", padx=18, pady=(0,10))
-        tk.Label(frame_inst, text="Colunas esperadas:",
-                 font=("Segoe UI",8,"bold"), bg=T["ENTRY_BG"],
-                 fg=T["ACCENT_VIBRANT"]).pack(anchor="w", padx=10, pady=(6,2))
-        for col_txt in ["matricula  (obrigatorio)",
-                    "nome       (obrigatorio)",
-                    "serie      (ex: 1 Ano, 2 Ano)",
-                    "curso      (ex: Des. Sistemas)"]:
-            tk.Label(frame_inst, text=f"  * {col_txt}",
-                     font=("Segoe UI",8), bg=T["ENTRY_BG"],
-                     fg=T["FG_TEXT"], justify="left").pack(anchor="w", padx=10)
-        tk.Label(frame_inst,
-                 text="\nEstrutura gerada:\nqrcodes_marwin/\n"
-                      "  1 Ano/\n"
-                      "    Desenvolvimento de Sistemas/\n"
-                      "  2 Ano/\n"
-                      "    Redes de Computadores/\n"
-                      "  3 Ano/\n"
-                      "    Informatica/",
-                 font=("Segoe UI",8,"italic"), bg=T["ENTRY_BG"],
-                 fg=T["FRASE_FG"], justify="left").pack(anchor="w", padx=10, pady=(4,8))
-
-        tk.Label(imp, text="Mapear colunas (opcional):",
-                 font=("Segoe UI",8,"bold"), bg=T["OBS_BG"],
-                 fg=T["ACCENT_VIBRANT"]).pack(anchor="w", padx=18)
-        tk.Label(imp, text="Deixe em branco p/ deteccao automatica.",
-                 font=("Segoe UI",8,"italic"), bg=T["OBS_BG"],
-                 fg=T["FRASE_FG"]).pack(anchor="w", padx=18, pady=(0,6))
-
+                lbl_mid_status.configure(text=f"⚠ {e}", text_color="#C62828")
+                page.after(4000, lambda: lbl_mid_status.configure(text=""))
+ 
+        ctk.CTkButton(btn_row_mid, text="🗑  Remover", fg_color="#C62828",
+                       hover_color="#8E1010", font=("Segoe UI", 11, "bold"),
+                       height=36, width=110, command=remover_aluno).pack(side="left", padx=(0, 8))
+        ctk.CTkButton(btn_row_mid, text="🔳  Gerar QRs (lote)", fg_color=VERDE_VIBRANTE,
+                       hover_color=VERDE_ESCURO, font=("Segoe UI", 11, "bold"),
+                       height=36, width=160, command=gerar_lote).pack(side="left", padx=(0, 8))
+        ctk.CTkButton(btn_row_mid, text="📁  Abrir Pasta QRs", fg_color="#1565C0",
+                       hover_color="#0D47A1", font=("Segoe UI", 11, "bold"),
+                       height=36, width=160, command=abrir_pasta).pack(side="left", padx=(0, 12))
+        lbl_mid_status.pack(side="left")
+ 
+        # ── Carregamento da lista ────────────────────────────────────────────
+        def _selecionar(al):
+            _estado["selecionado"] = al
+            for mat, frame in _estado["linha_widgets"].items():
+                frame.configure(fg_color=(BRANCO if mat != al["matricula"] else "#E8F5E9"))
+ 
+        def carregar_lista(filtro=""):
+            for w in corpo_lista.winfo_children():
+                w.destroy()
+            _estado["linha_widgets"] = {}
+ 
+            lista = _ler_lista()
+            filtro_lower = filtro.lower()
+            exibidos = []
+            for al in lista:
+                serie = al.get("serie", "")
+                curso = al.get("curso", "")
+                if filtro_lower and filtro_lower not in al.get("nome", "").lower() \
+                        and filtro_lower not in al.get("matricula", "").lower() \
+                        and filtro_lower not in curso.lower() \
+                        and filtro_lower not in serie.lower():
+                    continue
+                exibidos.append(al)
+ 
+            lbl_cnt.configure(text=f"({len(exibidos)} de {len(lista)} aluno(s))")
+ 
+            if not exibidos:
+                ctk.CTkLabel(corpo_lista, text="Nenhum aluno encontrado.",
+                              font=("Segoe UI", 12), text_color=TEXTO_CINZA
+                              ).grid(row=0, column=0, pady=24)
+                return
+ 
+            for i, al in enumerate(exibidos):
+                serie = al.get("serie", "")
+                curso = al.get("curso", "")
+                tem_png = os.path.exists(_nome_arquivo(al))
+                ano = _extrair_ano_serie(serie)
+                ano_exib = f"{ano}º Ano" if ano else "-"
+ 
+                bg_normal = BRANCO if i % 2 == 0 else "#F8F9FA"
+                if not tem_png:
+                    bg_normal = "#FFF9C4"
+ 
+                linha = ctk.CTkFrame(corpo_lista, fg_color=bg_normal, corner_radius=4, cursor="hand2")
+                linha.grid(row=i, column=0, sticky="ew", pady=1)
+                _estado["linha_widgets"][al["matricula"]] = linha
+ 
+                icone_qr = "✔" if tem_png else "✘"
+                cor_icone = "#2E7D32" if tem_png else "#C62828"
+ 
+                valores = [(icone_qr, 50, cor_icone), (al.get("matricula", ""), 100, "#374151"),
+                           (al.get("nome", ""), 220, "#374151"), (ano_exib, 110, "#374151"),
+                           (curso or "-", 200, "#374151")]
+                n = len(valores)
+                widgets_linha = []
+                for j, (val, w, cor_t) in enumerate(valores):
+                    lbl = ctk.CTkLabel(linha, text=val, font=("Segoe UI", 11),
+                                        width=w, anchor="w", text_color=cor_t)
+                    lbl.pack(side="left", expand=(j == n-1), fill="x", padx=6, pady=6)
+                    widgets_linha.append(lbl)
+ 
+                def _bind_click(widget, a=al):
+                    widget.bind("<Button-1>", lambda e, _a=a: _selecionar(_a))
+ 
+                _bind_click(linha)
+                for w in widgets_linha:
+                    _bind_click(w)
+ 
+        ent_busca.bind("<KeyRelease>", lambda e: carregar_lista(ent_busca.get()))
+ 
+        # ══════════════════════════════════════════════════════════════════════
+        # COLUNA DIREITA — Importar planilha
+        # ══════════════════════════════════════════════════════════════════════
+        dir_col = ctk.CTkScrollableFrame(page, fg_color=BRANCO, corner_radius=12, width=300)
+        dir_col.grid(row=1, column=2, sticky="ns")
+ 
+        ctk.CTkLabel(dir_col, text="Importar Planilha", font=("Segoe UI", 15, "bold"),
+                      text_color=TEXTO_ESCURO).pack(pady=(18, 2))
+        ctk.CTkLabel(dir_col, text="XLSX ou CSV com os alunos",
+                      font=("Segoe UI", 10), text_color=TEXTO_CINZA).pack(pady=(0, 8))
+        ctk.CTkFrame(dir_col, fg_color="#E5E7EB", height=1).pack(fill="x", padx=18, pady=(0, 12))
+ 
+        frame_inst = ctk.CTkFrame(dir_col, fg_color="#F8F9FA", corner_radius=8)
+        frame_inst.pack(fill="x", padx=18, pady=(0, 10))
+        ctk.CTkLabel(frame_inst, text="Colunas esperadas:", font=("Segoe UI", 10, "bold"),
+                      text_color=VERDE_VIBRANTE).pack(anchor="w", padx=10, pady=(8, 2))
+        for col_txt in ["matrícula  (obrigatório)", "nome       (obrigatório)",
+                        "série      (ex: 1 Ano, 2 Ano)", "curso      (ex: Des. Sistemas)"]:
+            ctk.CTkLabel(frame_inst, text=f"• {col_txt}", font=("Segoe UI", 9),
+                          text_color=TEXTO_ESCURO, justify="left").pack(anchor="w", padx=10)
+        ctk.CTkLabel(frame_inst,
+                      text="\nEstrutura gerada:\nqrcodes_marwin/\n"
+                           "  1 Ano/\n    Desenvolvimento de Sistemas/\n"
+                           "  2 Ano/\n    ...\n  3 Ano/\n    ...",
+                      font=("Courier", 8), text_color=TEXTO_CINZA, justify="left"
+                      ).pack(anchor="w", padx=10, pady=(4, 8))
+ 
+        ctk.CTkLabel(dir_col, text="Mapear colunas (opcional)", font=("Segoe UI", 10, "bold"),
+                      text_color=VERDE_VIBRANTE).pack(anchor="w", padx=18, pady=(4, 0))
+        ctk.CTkLabel(dir_col, text="Deixe em branco p/ detecção automática.",
+                      font=("Segoe UI", 9), text_color=TEXTO_CINZA).pack(anchor="w", padx=18, pady=(0, 6))
+ 
         map_vars = {}
-        for campo_mk, rotulo_mk in [("matricula","Col. Matricula"),
-                                    ("nome","Col. Nome"),
-                                    ("serie","Col. Serie"),
-                                    ("curso","Col. Curso")]:
-            fr = tk.Frame(imp, bg=T["OBS_BG"]); fr.pack(fill="x", padx=18, pady=(0,4))
-            tk.Label(fr, text=rotulo_mk, font=("Segoe UI",8),
-                     bg=T["OBS_BG"], fg=T["FG_TEXT"], width=12, anchor="w").pack(side="left")
-            v = tk.StringVar()
-            tk.Entry(fr, textvariable=v, font=("Segoe UI",9),
-                     bg=T["BG_CARD"], fg=T["FG_TEXT"], relief="solid", bd=1,
-                     width=14).pack(side="left", ipady=3)
-            map_vars[campo_mk] = v
-
-        tk.Frame(imp, bg=T["BORDER_GRID"], height=1).pack(fill="x", padx=18, pady=(10,10))
-
-        gerar_qr_import_var = tk.BooleanVar(value=True)
-        tk.Checkbutton(imp, text="Gerar QR Codes ao importar",
-                       variable=gerar_qr_import_var,
-                       font=("Segoe UI",9,"bold"), bg=T["OBS_BG"],
-                       fg=T["ACCENT_VIBRANT"], activebackground=T["OBS_BG"],
-                       selectcolor=T["ENTRY_BG"], cursor="hand2").pack(anchor="w", padx=18)
-
-        sobreescrever_var = tk.BooleanVar(value=False)
-        tk.Checkbutton(imp, text="Atualizar duplicatas",
-                       variable=sobreescrever_var,
-                       font=("Segoe UI",9), bg=T["OBS_BG"],
-                       fg=T["FG_TEXT"], activebackground=T["OBS_BG"],
-                       selectcolor=T["ENTRY_BG"], cursor="hand2").pack(anchor="w", padx=18)
-
-        lbl_import_status = tk.Label(imp, text="", font=("Segoe UI",9,"bold"),
-                                     bg=T["OBS_BG"], fg=T["ACCENT_VIBRANT"],
-                                     wraplength=240, justify="center")
-        lbl_import_status.pack(pady=8, padx=18)
-
-        prog_frame = tk.Frame(imp, bg=T["OBS_BG"]); prog_frame.pack(fill="x", padx=18, pady=(0,10))
-        prog_bar = ttk.Progressbar(prog_frame, orient="horizontal",
-                                   mode="determinate", length=220)
-        prog_bar.pack(fill="x")
-
+        for campo_mk, rotulo_mk in [("matricula", "Col. Matrícula"), ("nome", "Col. Nome"),
+                                     ("serie", "Col. Série"), ("curso", "Col. Curso")]:
+            fr = ctk.CTkFrame(dir_col, fg_color="transparent")
+            fr.pack(fill="x", padx=18, pady=(0, 4))
+            ctk.CTkLabel(fr, text=rotulo_mk, font=("Segoe UI", 9),
+                          text_color=TEXTO_ESCURO, width=110, anchor="w").pack(side="left")
+            ent = ctk.CTkEntry(fr, height=28, font=("Segoe UI", 9))
+            ent.pack(side="left", fill="x", expand=True)
+            map_vars[campo_mk] = ent
+ 
+        ctk.CTkFrame(dir_col, fg_color="#E5E7EB", height=1).pack(fill="x", padx=18, pady=(10, 10))
+ 
+        gerar_qr_import_var = ctk.BooleanVar(value=True)
+        ctk.CTkCheckBox(dir_col, text="Gerar QR Codes ao importar",
+                         variable=gerar_qr_import_var, font=("Segoe UI", 10, "bold"),
+                         text_color=VERDE_VIBRANTE, fg_color=VERDE_VIBRANTE,
+                         hover_color=VERDE_ESCURO).pack(anchor="w", padx=18, pady=(0, 4))
+ 
+        sobreescrever_var = ctk.BooleanVar(value=False)
+        ctk.CTkCheckBox(dir_col, text="Atualizar duplicatas",
+                         variable=sobreescrever_var, font=("Segoe UI", 10),
+                         text_color=TEXTO_ESCURO, fg_color=VERDE_VIBRANTE,
+                         hover_color=VERDE_ESCURO).pack(anchor="w", padx=18, pady=(0, 10))
+ 
+        lbl_import_status = ctk.CTkLabel(dir_col, text="", font=("Segoe UI", 10, "bold"),
+                                          text_color=VERDE_VIBRANTE, wraplength=250, justify="center")
+        lbl_import_status.pack(pady=4, padx=18)
+ 
+        prog_bar = ctk.CTkProgressBar(dir_col, height=10)
+        prog_bar.set(0)
+        prog_bar.pack(fill="x", padx=18, pady=(0, 10))
+ 
         def _normalizar_cabecalho(cabecalho):
             mapa_auto = {}
             sinonimos = {
-                "matricula": ["matricula","matricula","mat","mat.","codigo","id","registro"],
-                "nome":      ["nome","aluno","estudante","discente","name","nomecompleto"],
-                "serie":     ["serie","serie","turma","ano","class","classe","periodo","ano/serie"],
-                "curso":     ["curso","habilitacao","area","modalidade","formacao"],
+                "matricula": ["matricula", "mat", "mat.", "codigo", "id", "registro"],
+                "nome":      ["nome", "aluno", "estudante", "discente", "name", "nomecompleto"],
+                "serie":     ["serie", "turma", "ano", "class", "classe", "periodo", "ano/serie"],
+                "curso":     ["curso", "habilitacao", "area", "modalidade", "formacao"],
             }
             cab_lower = [str(c).strip().lower() for c in cabecalho]
             for campo, sinonimos_lista in sinonimos.items():
                 manual = map_vars[campo].get().strip()
                 if manual and manual in cabecalho:
-                    mapa_auto[campo] = cabecalho.index(manual); continue
+                    mapa_auto[campo] = cabecalho.index(manual)
+                    continue
                 for s in sinonimos_lista:
                     for idx_c, c in enumerate(cab_lower):
                         if s in c:
-                            mapa_auto[campo] = idx_c; break
-                    if campo in mapa_auto: break
+                            mapa_auto[campo] = idx_c
+                            break
+                    if campo in mapa_auto:
+                        break
             return mapa_auto
-
+ 
         def importar_planilha():
             from tkinter import filedialog
             caminho_pl = filedialog.askopenfilename(
                 title="Selecionar planilha de alunos",
-                filetypes=[("Planilhas","*.xlsx *.xls *.csv *.tsv"),
-                           ("Excel","*.xlsx *.xls"),
-                           ("CSV / TSV","*.csv *.tsv"),
-                           ("Todos","*.*")])
+                filetypes=[("Planilhas", "*.xlsx *.xls *.csv *.tsv"),
+                           ("Excel", "*.xlsx *.xls"),
+                           ("CSV / TSV", "*.csv *.tsv"),
+                           ("Todos", "*.*")])
             if not caminho_pl:
                 return
-
-            lbl_import_status.config(text="Lendo arquivo...", fg=T["FRASE_FG"])
-            aba_qr.update()
-
+ 
+            lbl_import_status.configure(text="Lendo arquivo...", text_color=TEXTO_CINZA)
+            page.update()
+ 
             ext = os.path.splitext(caminho_pl)[1].lower()
             linhas_raw = []
-
+ 
             try:
                 if ext in (".xlsx", ".xls"):
                     try:
                         import openpyxl
                     except ImportError:
-                        lbl_import_status.config(text="Instalando openpyxl...", fg=T["FRASE_FG"])
-                        aba_qr.update()
-                        subprocess.check_call([sys.executable,"-m","pip","install","openpyxl","--quiet"])
+                        lbl_import_status.configure(text="Instalando openpyxl...", text_color=TEXTO_CINZA)
+                        page.update()
+                        subprocess.check_call([sys.executable, "-m", "pip", "install", "openpyxl", "--quiet"])
                         import openpyxl
                     wb = openpyxl.load_workbook(caminho_pl, read_only=True, data_only=True)
                     ws = wb.active
                     for row in ws.iter_rows(values_only=True):
                         linhas_raw.append([str(c).strip() if c is not None else "" for c in row])
                     wb.close()
-
                 elif ext in (".csv", ".tsv"):
                     sep = "\t" if ext == ".tsv" else None
-                    for enc in ("utf-8-sig","utf-8","latin-1","cp1252"):
+                    for enc in ("utf-8-sig", "utf-8", "latin-1", "cp1252"):
                         try:
-                            with open(caminho_pl,"r",encoding=enc,newline="") as f:
+                            with open(caminho_pl, "r", encoding=enc, newline="") as f:
                                 sample = f.read(4096); f.seek(0)
                                 if sep is None:
-                                    try:    sep = csv.Sniffer().sniff(sample).delimiter
+                                    try: sep = csv.Sniffer().sniff(sample).delimiter
                                     except: sep = ","
                                 reader_pl = csv.reader(f, delimiter=sep)
                                 linhas_raw = [[c.strip() for c in row] for row in reader_pl]
@@ -3685,53 +4675,56 @@ def abrir_painel_admin(event=None):
                         except (UnicodeDecodeError, Exception):
                             continue
                 else:
-                    messagebox.showerror("Formato nao suportado","Use .xlsx, .xls, .csv ou .tsv"); return
-
+                    lbl_import_status.configure(text="⚠ Use .xlsx, .xls, .csv ou .tsv", text_color="#C62828")
+                    return
             except Exception as e:
-                messagebox.showerror("Erro ao ler arquivo", str(e)); return
-
+                lbl_import_status.configure(text=f"⚠ Erro ao ler arquivo: {e}", text_color="#C62828")
+                return
+ 
             if len(linhas_raw) < 2:
-                messagebox.showwarning("Arquivo vazio","O arquivo nao tem dados suficientes."); return
-
+                lbl_import_status.configure(text="⚠ Arquivo sem dados suficientes.", text_color="#C62828")
+                return
+ 
             cabecalho = linhas_raw[0]
             mapa = _normalizar_cabecalho(cabecalho)
-
+ 
             if "matricula" not in mapa or "nome" not in mapa:
-                messagebox.showerror("Colunas nao encontradas",
-                    "Nao foi possivel identificar as colunas de Matricula e Nome.\n"
-                    "Use os campos de mapeamento manual ou renomeie as colunas\n"
-                    "para 'matricula' e 'nome'."); return
-
+                lbl_import_status.configure(
+                    text="⚠ Não foi possível identificar colunas de Matrícula e Nome.\n"
+                         "Use o mapeamento manual.",
+                    text_color="#C62828")
+                return
+ 
             lista_atual = _ler_lista()
             mats_existentes = {a["matricula"]: i for i, a in enumerate(lista_atual)}
-
+ 
             novos = 0; atualizados = 0; ignorados = 0
             dados_importados = []
-
+ 
             linhas_dados = [l for l in linhas_raw[1:] if any(c for c in l)]
-            prog_bar["maximum"] = max(len(linhas_dados), 1)
-            prog_bar["value"]   = 0
-
+            total_linhas = max(len(linhas_dados), 1)
+ 
             for idx_linha, linha in enumerate(linhas_dados):
-                prog_bar["value"] = idx_linha + 1
-                aba_qr.update_idletasks()
-
+                prog_bar.set((idx_linha + 1) / total_linhas)
+                page.update_idletasks()
+ 
                 def _cel(campo, _linha=linha):
                     idx_c = mapa.get(campo)
-                    if idx_c is None or idx_c >= len(_linha): return ""
+                    if idx_c is None or idx_c >= len(_linha):
+                        return ""
                     return str(_linha[idx_c]).strip()
-
+ 
                 matricula = _cel("matricula")
                 nome      = _cel("nome")
                 serie     = _cel("serie")
                 curso     = _cel("curso")
-
+ 
                 if not matricula or not nome:
-                    ignorados += 1; continue
-
-                al = {"matricula": matricula, "nome": nome,
-                      "serie": serie, "curso": curso}
-
+                    ignorados += 1
+                    continue
+ 
+                al = {"matricula": matricula, "nome": nome, "serie": serie, "curso": curso}
+ 
                 if matricula in mats_existentes:
                     if sobreescrever_var.get():
                         lista_atual[mats_existentes[matricula]] = al
@@ -3744,20 +4737,20 @@ def abrir_painel_admin(event=None):
                     mats_existentes[matricula] = len(lista_atual) - 1
                     novos += 1
                     dados_importados.append(al)
-
+ 
             _salvar_lista(lista_atual)
-
+ 
+            msg_qr = ""
             if gerar_qr_import_var.get() and dados_importados:
-                lbl_import_status.config(
-                    text=f"Gerando {len(dados_importados)} QR Code(s)...",
-                    fg=T["FRASE_FG"])
-                prog_bar["maximum"] = len(dados_importados)
-                prog_bar["value"]   = 0
+                lbl_import_status.configure(text=f"Gerando {len(dados_importados)} QR Code(s)...",
+                                             text_color=TEXTO_CINZA)
+                prog_bar.set(0)
                 erros_qr = 0
                 pastas_criadas = set()
+                total_al = max(len(dados_importados), 1)
                 for idx_al, al in enumerate(dados_importados):
-                    prog_bar["value"] = idx_al + 1
-                    aba_qr.update_idletasks()
+                    prog_bar.set((idx_al + 1) / total_al)
+                    page.update_idletasks()
                     try:
                         _gerar_png(al)
                         pastas_criadas.add(_pasta_turma(al))
@@ -3765,894 +4758,216 @@ def abrir_painel_admin(event=None):
                         erros_qr += 1
                 msg_qr = (f"\n{len(dados_importados)-erros_qr} QR Code(s) gerados "
                           f"em {len(pastas_criadas)} pasta(s) dentro de '{QR_DIR}/'.")
-                if erros_qr: msg_qr += f" ({erros_qr} erros)"
-            else:
-                msg_qr = ""
-
-            prog_bar["value"] = 0
-            carregar_lista()
-
-            resumo = (f"Importacao concluida!\n"
-                      f"Novos: {novos}  |  Atualizados: {atualizados}"
-                      f"  |  Ignorados: {ignorados}{msg_qr}")
-            lbl_import_status.config(text=resumo, fg=T["ACCENT_VIBRANT"])
-            messagebox.showinfo("Importacao concluida", resumo)
-
-        tk.Button(imp, text="Selecionar Arquivo e Importar",
-                  command=importar_planilha,
-                  bg=T["ACCENT_VIBRANT"], fg="white", font=("Segoe UI",11,"bold"),
-                  pady=12, bd=0, cursor="hand2",
-                  wraplength=220).pack(fill="x", padx=18, pady=(0,6))
-
-        tk.Button(imp, text="Abrir Pasta dos QR Codes",
-                  command=abrir_pasta,
-                  bg=T["BTN_VOLTAR"], fg="white", font=("Segoe UI",9,"bold"),
-                  pady=8, bd=0, cursor="hand2").pack(fill="x", padx=18)
-
-        def carregar_lista(filtro=""):
-            for i in tlista.get_children(): tlista.delete(i)
-            lista = _ler_lista()
-            filtro_lower = filtro.lower()
-            exibidos = 0
-            for al in lista:
-                serie = al.get("serie", "")
-                curso = al.get("curso", "")
-                if filtro_lower and filtro_lower not in al["nome"].lower() \
-                        and filtro_lower not in al["matricula"].lower() \
-                        and filtro_lower not in curso.lower() \
-                        and filtro_lower not in serie.lower():
-                    continue
-                tem_png = os.path.exists(_nome_arquivo(al))
-                icone_qr = "OK" if tem_png else "X"
-                tag = ("even" if exibidos%2==0 else "odd") if tem_png else "semqr"
-                ano = _extrair_ano_serie(serie)
-                ano_exib = f"{ano}º Ano" if ano else "-"
-                tlista.insert("","end",
-                    values=(icone_qr,
-                            al.get("matricula",""),
-                            al.get("nome",""),
-                            serie,
-                            ano_exib,
-                            curso),
-                    tags=(tag,))
-                exibidos += 1
-            total = len(lista)
-            lbl_cnt2.config(text=f"({exibidos} de {total} aluno(s))")
-
-        busca_var.trace_add("write", lambda *_: carregar_lista(busca_var.get()))
-
-        def preencher_campos_ao_clicar(event):
-            sel = tlista.selection()
-            if not sel: return
-            val = tlista.item(sel[0],"values")
-            mapa_campos = [("matricula",1),("nome",2),("serie",3),("curso",5)]
-            for key, vi in mapa_campos:
-                campos[key].delete(0,"end")
-                campos[key].insert(0, val[vi] if vi < len(val) else "")
-            _atualizar_dica()
-            al_dict = {k: campos[k].get() for k in ["matricula","nome","serie","curso"]}
-            _preview_qr(al_dict)
-
-        tlista.bind("<<TreeviewSelect>>", preencher_campos_ao_clicar)
+                if erros_qr:
+                    msg_qr += f" ({erros_qr} erros)"
+ 
+            prog_bar.set(0)
+            carregar_lista(ent_busca.get())
+ 
+            resumo = (f"✔ Importação concluída!\n"
+                      f"Novos: {novos}  |  Atualizados: {atualizados}  |  "
+                      f"Ignorados: {ignorados}{msg_qr}")
+            lbl_import_status.configure(text=resumo, text_color=VERDE_VIBRANTE)
+ 
+        ctk.CTkButton(dir_col, text="📂  Selecionar Arquivo e Importar", fg_color=VERDE_VIBRANTE,
+                       hover_color=VERDE_ESCURO, font=("Segoe UI", 11, "bold"),
+                       height=42, command=importar_planilha).pack(fill="x", padx=18, pady=(0, 6))
+        ctk.CTkButton(dir_col, text="📁  Abrir Pasta dos QR Codes", fg_color="#1565C0",
+                       hover_color="#0D47A1", font=("Segoe UI", 10, "bold"),
+                       height=34, command=abrir_pasta).pack(fill="x", padx=18, pady=(0, 18))
+ 
         carregar_lista()
+        return page
 
-    # ── Eventos de troca de aba ───────────────────────────────────────────────
-    def on_tab(event):
-        idx = nb.index("current")
-        if   idx == 1: gerar_relatorio()
-        elif idx == 2: setup_cardapio()
-        elif idx == 3: setup_eventos()
-        elif idx == 4: setup_refeitorio()
-        elif idx == 5: setup_frequencia()
-        elif idx == 6: setup_historico()
-        elif idx == 7: setup_qrcodes()
-        elif idx == 8: setup_logs()
+    # ════════════════════════════════════════════════════════════════════
+    # PÁGINA: LOGS DO SISTEMA
+    # ════════════════════════════════════════════════════════════════════
+    def criar_pagina_logs():
+        import re as _re
 
-    nb.bind("<<NotebookTabChanged>>", on_tab)
-    setup_cardapio(); setup_eventos()
+        page = ctk.CTkFrame(container, fg_color=CINZA_BG)
+        page.grid_columnconfigure(0, weight=1)
+        page.grid_rowconfigure(3, weight=1)
 
-    # ── ABA FREQUÊNCIA ────────────────────────────────────────────────────────
-    def setup_frequencia():
-        for w in aba_freq.winfo_children(): w.destroy()
-
-        SIGLAS = {
-            "1DS":  {"serie": "1 Ano", "curso": "Desenvolvimento de Sistemas"},
-            "1HOS": {"serie": "1 Ano", "curso": "Hospedagem"},
-            "1ENF": {"serie": "1 Ano", "curso": "Enfermagem"},
-            "1MOD": {"serie": "1 Ano", "curso": "Modelagem do Vestuario"},
-            "2DS":  {"serie": "2 Ano", "curso": "Desenvolvimento de Sistemas"},
-            "2HOS": {"serie": "2 Ano", "curso": "Hospedagem"},
-            "2ENF": {"serie": "2 Ano", "curso": "Enfermagem"},
-            "2MOD": {"serie": "2 Ano", "curso": "Modelagem do Vestuario"},
-            "3DS":  {"serie": "3 Ano", "curso": "Desenvolvimento de Sistemas"},
-            "3HOS": {"serie": "3 Ano", "curso": "Hospedagem"},
-            "3ENF": {"serie": "3 Ano", "curso": "Enfermagem"},
-            "3MOD": {"serie": "3 Ano", "curso": "Modelagem do Vestuario"},
+        CORES_NIVEL = {
+            "DEBUG":   "#9E9E9E",
+            "INFO":    "#2196F3",
+            "WARNING": "#FB8C00",
+            "ERROR":   "#F44336",
+            "CRITICAL": "#B71C1C",
         }
-        SIGLAS_LABEL = {
-            "1DS": "1º DS",  "1HOS": "1º HOS", "1ENF": "1º ENF", "1MOD": "1º MOD",
-            "2DS": "2º DS",  "2HOS": "2º HOS", "2ENF": "2º ENF", "2MOD": "2º MOD",
-            "3DS": "3º DS",  "3HOS": "3º HOS", "3ENF": "3º ENF", "3MOD": "3º MOD",
-        }
-        CORES_ANO = {"1": "#1565c0", "2": "#6a1b9a", "3": "#c62828"}
 
         # ── Cabeçalho ─────────────────────────────────────────────────────────
-        hd = tk.Frame(aba_freq, bg=T["BG_CARD"]); hd.pack(fill="x", padx=20, pady=(15, 5))
-        tk.Label(hd, text="Controle de Frequência - Hoje", font=("Segoe UI", 16, "bold"),
-                 bg=T["BG_CARD"], fg=T["ACCENT_VIBRANT"]).pack(side="left")
-        tk.Label(hd, text=f"  ({_hoje()})", font=("Segoe UI", 11),
-                 bg=T["BG_CARD"], fg=T["FRASE_FG"]).pack(side="left")
-        tk.Frame(aba_freq, bg=T["BORDER_GRID"], height=2).pack(fill="x", padx=20, pady=(5, 0))
+        cab = ctk.CTkFrame(page, fg_color="transparent")
+        cab.grid(row=0, column=0, sticky="ew", pady=(4, 12))
+        ctk.CTkLabel(cab, text="Logs do Sistema 📄",
+                      font=("Segoe UI", 22, "bold"), text_color=TEXTO_ESCURO).pack(anchor="w")
+        ctk.CTkLabel(cab, text="Acompanhe os eventos registrados pelo servidor.",
+                      font=("Segoe UI", 12), text_color=TEXTO_CINZA).pack(anchor="w")
 
-        # ── Linha de filtros por texto / combo ────────────────────────────────
-        container_filtros = tk.Frame(aba_freq, bg=T["OBS_BG"])
-        container_filtros.pack(fill="x", padx=20, pady=(6, 0))
+        # ── Card de filtros ───────────────────────────────────────────────────
+        filtro_card = ctk.CTkFrame(page, fg_color=BRANCO, corner_radius=12)
+        filtro_card.grid(row=1, column=0, sticky="ew", pady=(0, 12))
 
-        filtro_frame = tk.Frame(container_filtros, bg=T["OBS_BG"])
-        filtro_frame.pack(fill="x", padx=10, pady=(0, 0))
+        linha_f = ctk.CTkFrame(filtro_card, fg_color="transparent")
+        linha_f.pack(fill="x", padx=14, pady=14)
 
-        tk.Label(filtro_frame, text="Filtrar por:", font=("Segoe UI", 10, "bold"),
-                 bg=T["OBS_BG"], fg=T["ACCENT_VIBRANT"]).pack(side="left", padx=(10, 8), pady=8)
+        ctk.CTkLabel(linha_f, text="Nível:", font=("Segoe UI", 11, "bold"),
+                      text_color=TEXTO_ESCURO).pack(side="left", padx=(0, 6))
+        cb_nivel = ctk.CTkOptionMenu(linha_f,
+                                      values=["Todos", "INFO", "WARNING", "ERROR", "DEBUG", "CRITICAL"],
+                                      width=120, fg_color=VERDE_VIBRANTE,
+                                      button_color=VERDE_ESCURO, button_hover_color=VERDE_ESCURO)
+        cb_nivel.set("Todos")
+        cb_nivel.pack(side="left", padx=(0, 14))
 
-        fv_serie_f = tk.StringVar()
-        fv_curso_f  = tk.StringVar()
-        fv_nome_f   = tk.StringVar()
+        ctk.CTkLabel(linha_f, text="Buscar:", font=("Segoe UI", 11, "bold"),
+                      text_color=TEXTO_ESCURO).pack(side="left", padx=(0, 6))
+        ent_busca = ctk.CTkEntry(linha_f, width=260, height=32,
+                                  placeholder_text="Filtrar por texto na mensagem...")
+        ent_busca.pack(side="left", padx=(0, 14))
 
-        tk.Label(filtro_frame, text="Série:", font=("Segoe UI", 9),
-                 bg=T["OBS_BG"], fg=T["FG_TEXT"]).pack(side="left")
-        cb_serie_f = ttk.Combobox(filtro_frame, textvariable=fv_serie_f, state="readonly",
-                                values=["(Todas)", "1 Ano", "2 Ano", "3 Ano"],
-                                width=9, font=("Segoe UI", 10))
-        cb_serie_f.set("(Todas)")
-        cb_serie_f.pack(side="left", padx=(4, 14), pady=6)
+        ctk.CTkButton(linha_f, text="🔍  Buscar", fg_color=VERDE_VIBRANTE,
+                       hover_color=VERDE_ESCURO, font=("Segoe UI", 11, "bold"),
+                       height=32, width=100,
+                       command=lambda: atualizar_logs()).pack(side="left", padx=(0, 8))
+        ctk.CTkButton(linha_f, text="↻  Atualizar", fg_color="#1565C0",
+                       hover_color="#0D47A1", font=("Segoe UI", 11, "bold"),
+                       height=32, width=110,
+                       command=lambda: atualizar_logs()).pack(side="left", padx=(0, 8))
+        ctk.CTkButton(linha_f, text="🗑  Limpar logs", fg_color="#C62828",
+                       hover_color="#8E1F1F", font=("Segoe UI", 11, "bold"),
+                       height=32, width=120,
+                       command=lambda: limpar_logs()).pack(side="left")
 
-        tk.Label(filtro_frame, text="Curso:", font=("Segoe UI", 9),
-                 bg=T["OBS_BG"], fg=T["FG_TEXT"]).pack(side="left")
-        cursos_opcoes = [
-            "(Todos)",
-            "Desenvolvimento de Sistemas",
-            "Hospedagem",
-            "Enfermagem",
-            "Modelagem do Vestuario",
-        ]
-        cb_curso_f = ttk.Combobox(filtro_frame, textvariable=fv_curso_f, state="readonly",
-                                values=cursos_opcoes, width=26, font=("Segoe UI", 10))
-        cb_curso_f.set("(Todos)")
-        cb_curso_f.pack(side="left", padx=(4, 14), pady=6)
+        # ── Cards de resumo ───────────────────────────────────────────────────
+        resumo_row = ctk.CTkFrame(page, fg_color="transparent")
+        resumo_row.grid(row=2, column=0, sticky="ew", pady=(0, 12))
+        resumo_row.grid_columnconfigure((0, 1, 2, 3), weight=1)
 
-        tk.Label(filtro_frame, text="Nome:", font=("Segoe UI", 9),
-                 bg=T["OBS_BG"], fg=T["FG_TEXT"]).pack(side="left")
-        entry_nome_f = tk.Entry(filtro_frame, textvariable=fv_nome_f, font=("Segoe UI", 10),
-                              bg=T["ENTRY_BG"], fg=T["FG_TEXT"], relief="solid", bd=1,
-                              insertbackground=T["ACCENT_VIBRANT"], width=20)
-        entry_nome_f.pack(side="left", ipady=4, padx=(4, 14), pady=6)
+        lbl_total, _ = card_resumo(resumo_row, 0, 0, "📄", AZUL_CLARO, "#1565C0",
+                                    "Total exibido", "0", "linhas")
+        lbl_info, _ = card_resumo(resumo_row, 0, 1, "ℹ️", VERDE_CLARO, "#2196F3",
+                                   "INFO", "0", "")
+        lbl_warn, _ = card_resumo(resumo_row, 0, 2, "⚠️", LARANJA_CLARO, "#FB8C00",
+                                   "WARNING", "0", "")
+        lbl_err, _ = card_resumo(resumo_row, 0, 3, "🚨", VERMELHO_CLARO, "#F44336",
+                                  "ERROR / CRITICAL", "0", "")
 
-        btn_limpar_f = tk.Button(filtro_frame, text="✕ Limpar", font=("Segoe UI", 9, "bold"),
-                               bg=T["OBS_BG"], fg=T["ACCENT_VIBRANT"], bd=0,
-                               cursor="hand2", padx=8, pady=4)
-        btn_limpar_f.pack(side="left", padx=(0, 10), pady=6)
+        # ── Tabela de logs ─────────────────────────────────────────────────────
+        tabela_card = ctk.CTkFrame(page, fg_color=BRANCO, corner_radius=12)
+        tabela_card.grid(row=3, column=0, sticky="nsew", pady=(0, 4))
+        tabela_card.grid_rowconfigure(2, weight=1)
+        tabela_card.grid_columnconfigure(0, weight=1)
 
-        # ── Botões de atalho por sala ──────────────────────────────────────────
-        sala_frame_f = tk.Frame(aba_freq, bg=T["BG_CARD"])
-        sala_frame_f.pack(fill="x", padx=20, pady=(6, 0))
-        tk.Label(sala_frame_f, text="Sala rápida:", font=("Segoe UI", 9, "bold"),
-                 bg=T["BG_CARD"], fg=T["FRASE_FG"]).pack(side="left", padx=(4, 8))
+        topo_tab = ctk.CTkFrame(tabela_card, fg_color="transparent")
+        topo_tab.grid(row=0, column=0, sticky="ew", padx=14, pady=(14, 6))
+        ctk.CTkLabel(topo_tab, text="Eventos recentes (mais novos primeiro)",
+                      font=("Segoe UI", 13, "bold"), text_color=TEXTO_ESCURO).pack(side="left")
 
-        btn_sala_refs_f = {}
+        header_tab = ctk.CTkFrame(tabela_card, fg_color=VERDE_ESCURO, corner_radius=6)
+        header_tab.grid(row=1, column=0, sticky="ew", padx=14)
+        COLS = [("DATA/HORA", 150), ("NÍVEL", 100), ("MENSAGEM", 0)]
+        for i, (col, w) in enumerate(COLS):
+            ctk.CTkLabel(header_tab, text=col, font=("Segoe UI", 10, "bold"),
+                          text_color="white", width=w, anchor="w"
+                          ).pack(side="left", expand=(i == len(COLS) - 1), fill="x", padx=8, pady=8)
 
-        def _filtrar_por_sigla_f(sigla):
-            info = SIGLAS[sigla]
-            fv_serie_f.set(info["serie"])
-            fv_curso_f.set(info["curso"])
-            fv_nome_f.set("")
-            for s, b in btn_sala_refs_f.items():
-                b.configure(relief="flat", bg=CORES_ANO[s[0]], fg="white")
-            btn_sala_refs_f[sigla].configure(relief="solid", bg="white",
-                                           fg=CORES_ANO[sigla[0]])
-            atualizar_freq()
+        corpo_tab = ctk.CTkScrollableFrame(tabela_card, fg_color="transparent")
+        corpo_tab.grid(row=2, column=0, sticky="nsew", padx=14, pady=(4, 14))
+        corpo_tab.grid_columnconfigure(0, weight=1)
 
-        for sigla, label in SIGLAS_LABEL.items():
-            ano = sigla[0]
-            cor = CORES_ANO[ano]
-            b = tk.Button(sala_frame_f, text=label, font=("Segoe UI", 8, "bold"),
-                          bg=cor, fg="white", bd=0, padx=9, pady=4,
-                          cursor="hand2",
-                          command=lambda s=sigla: _filtrar_por_sigla_f(s))
-            b.pack(side="left", padx=2, pady=4)
-            btn_sala_refs_f[sigla] = b
+        lbl_status = ctk.CTkLabel(page, text="", font=("Segoe UI", 10), text_color=TEXTO_CINZA)
+        lbl_status.grid(row=4, column=0, sticky="w", pady=(8, 16))
 
-        # ── Barra de botões e contadores ──────────────────────────────────────
-        btn_row_f = tk.Frame(aba_freq, bg=T["BG_CARD"])
-        btn_row_f.pack(fill="x", padx=20, pady=(8, 4))
+        PADRAO_LOG = _re.compile(r"^(\d{2}/\d{2}/\d{4} \d{2}:\d{2}:\d{2}) - (\w+) - (.*)$")
 
-        lbl_total_freq = tk.Label(btn_row_f, text="Total: 0", font=("Segoe UI", 12, "bold"),
-                                 bg=T["ENTRY_BG"], fg=T["ACCENT_VIBRANT"], padx=14, pady=6)
-        lbl_total_freq.pack(side="left", padx=(0, 10))
-
-        def exportar_csv_freq():
+        def _ler_linhas_log(max_linhas=500):
+            if not os.path.exists(LOG_FILE):
+                return []
             try:
-                nome_arq = f"frequencia_{_hoje().replace('/', '_')}.csv"
-                _escrever_csv(
-                    nome_arq,
-                    ["Data", "HoraEntrada", "Matricula", "Nome", "Serie", "Curso", "Aula"],
-                    _ler_frequencia_todos_db(),
-                )
-                messagebox.showinfo("Exportado", f"Arquivo salvo como:\n{nome_arq}")
-            except Exception as e:
-                messagebox.showerror("Erro", f"Falha ao exportar:\n{e}")
-
-        def apagar_hoje_freq():
-            if messagebox.askyesno("Confirmar", f"Apagar todos os registros de hoje ({_hoje()})?"):
-                try:
-                    _apagar_frequencia_data_db(_hoje())
-                    messagebox.showinfo("Sucesso", "Registros de hoje apagados do banco.")
-                except Exception as e:
-                    messagebox.showerror("Erro", f"Falha ao apagar registros:\n{e}")
-                atualizar_freq()
-
-        def abrir_ausentes_freq():
-            win_aus = tk.Toplevel(jd)
-            win_aus.title("Alunos Ausentes Hoje")
-            win_aus.state("zoomed")
-            win_aus.configure(bg=T["BG_MAIN"])
-            criar_barra_topo(win_aus, "👥  Alunos Ausentes", cmd_voltar=win_aus.destroy)
-
-            lista_todos = []
-            if os.path.exists(LISTA_ALUNOS_FILE):
-                with open(LISTA_ALUNOS_FILE, "r", encoding="utf-8") as f:
-                    lista_todos = json.load(f)
-
-            registros_hoje = _registros_freq_hoje()
-            presentes = set(r[2] for r in registros_hoje if len(r) > 2)
-            ausentes = [al for al in lista_todos if al.get("matricula", "") not in presentes]
-
-            filt_frame = tk.Frame(win_aus, bg=T["OBS_BG"])
-            filt_frame.pack(fill="x", padx=20, pady=(10, 0))
-
-            fv_serie_aus = tk.StringVar(value="(Todas)")
-            fv_curso_aus = tk.StringVar(value="(Todos)")
-
-            tk.Label(filt_frame, text="Filtrar:", font=("Segoe UI", 10, "bold"),
-                    bg=T["OBS_BG"], fg=T["ACCENT_VIBRANT"]).pack(side="left", padx=(10, 8), pady=8)
-            tk.Label(filt_frame, text="Série:", font=("Segoe UI", 9),
-                    bg=T["OBS_BG"], fg=T["FG_TEXT"]).pack(side="left")
-            cb_serie_aus = ttk.Combobox(filt_frame, textvariable=fv_serie_aus, state="readonly",
-                        values=["(Todas)", "1 Ano", "2 Ano", "3 Ano"],
-                        width=9, font=("Segoe UI", 10))
-            cb_serie_aus.pack(side="left", padx=(4, 14), pady=6)
-
-            tk.Label(filt_frame, text="Curso:", font=("Segoe UI", 9),
-                    bg=T["OBS_BG"], fg=T["FG_TEXT"]).pack(side="left")
-            cb_curso_aus = ttk.Combobox(filt_frame, textvariable=fv_curso_aus, state="readonly",
-                        values=["(Todos)", "Desenvolvimento de Sistemas", "Hospedagem",
-                                "Enfermagem", "Modelagem do Vestuario"],
-                        width=26, font=("Segoe UI", 10))
-            cb_curso_aus.pack(side="left", padx=(4, 14), pady=6)
-
-            ft_aus = tk.Frame(win_aus, bg=T["BORDER_GRID"], padx=1, pady=1)
-            ft_aus.pack(expand=True, fill="both", padx=20, pady=(10, 15))
-
-            taus = ttk.Treeview(ft_aus, columns=("Nome", "Série", "Curso"), show="headings")
-            taus.heading("Nome", text="NOME")
-            taus.column("Nome", width=300, anchor="w")
-            taus.heading("Série", text="SÉRIE")
-            taus.column("Série", width=100, anchor="center")
-            taus.heading("Curso", text="CURSO")
-            taus.column("Curso", width=250, anchor="w")
-
-            sb_aus = ttk.Scrollbar(ft_aus, orient="vertical", command=taus.yview)
-            taus.configure(yscrollcommand=sb_aus.set)
-            taus.pack(side="left", expand=True, fill="both")
-            sb_aus.pack(side="right", fill="y")
-
-            taus.tag_configure("even", background=T["ENTRY_BG"])
-            taus.tag_configure("odd", background=T["BG_CARD"])
-
-            def atualizar_ausentes():
-                for i in taus.get_children(): taus.delete(i)
-                f_serie = fv_serie_aus.get()
-                f_curso = fv_curso_aus.get()
-                exibidos = []
-                for al in ausentes:
-                    if f_serie not in ("(Todas)", "") and not _serie_bate_f(al.get("serie", ""), f_serie):
-                        continue
-                    if f_curso not in ("(Todos)", "") and not _curso_bate_f(al.get("curso", ""), f_curso):
-                        continue
-                    exibidos.append(al)
-                for idx, al in enumerate(sorted(exibidos, key=lambda a: a.get("nome", ""))):
-                    tag = "even" if idx % 2 == 0 else "odd"
-                    taus.insert("", "end",
-                                values=(al.get("nome", ""), al.get("serie", ""), al.get("curso", "")),
-                                tags=(tag,))
-                lbl_aus_cnt.config(text=f"{len(exibidos)} ausente(s) de {len(lista_todos)} cadastrado(s)")
-
-            btn_aus_frame = tk.Frame(win_aus, bg=T["BG_CARD"])
-            btn_aus_frame.pack(fill="x", padx=20, pady=(0, 10))
-            tk.Button(btn_aus_frame, text="⬇  Exportar CSV", command=lambda: exportar_ausentes(),
-                     bg=T["BTN_CARDAPIO"], fg="white", font=("Segoe UI", 10, "bold"),
-                     padx=14, pady=6, bd=0, cursor="hand2").pack(side="left", padx=(0, 8))
-            lbl_aus_cnt = tk.Label(btn_aus_frame, text="0 ausente(s)", font=("Segoe UI", 10),
-                                   bg=T["BG_CARD"], fg=T["FRASE_FG"])
-            lbl_aus_cnt.pack(side="left")
-
-            def exportar_ausentes():
-                try:
-                    nome_arq = f"ausentes_frequencia_{_hoje().replace('/', '_')}.csv"
-                    with open(nome_arq, "w", newline="", encoding="utf-8") as f:
-                        w = csv.writer(f)
-                        w.writerow(["Nome", "Série", "Curso"])
-                        for item in taus.get_children():
-                            vals = taus.item(item)["values"]
-                            w.writerow(vals)
-                    messagebox.showinfo("Sucesso", f"CSV exportado:\n{nome_arq}")
-                except Exception as e:
-                    messagebox.showerror("Erro", f"Falha ao exportar:\n{e}")
-
-            fv_serie_aus.trace_add("write", lambda *_: atualizar_ausentes())
-            fv_curso_aus.trace_add("write", lambda *_: atualizar_ausentes())
-            atualizar_ausentes()
-
-        tk.Button(btn_row_f, text="👁  Ver Ausentes", command=abrir_ausentes_freq,
-                  bg=T["ACCENT_VIBRANT"], fg="white", font=("Segoe UI", 10, "bold"),
-                  padx=14, pady=6, bd=0, cursor="hand2").pack(side="left", padx=(0, 8))
-        tk.Button(btn_row_f, text="↻  Atualizar", command=lambda: atualizar_freq(),
-                  bg=T["ACCENT_SOFT"], fg="white", font=("Segoe UI", 10, "bold"),
-                  padx=14, pady=6, bd=0, cursor="hand2").pack(side="left", padx=(0, 8))
-        tk.Button(btn_row_f, text="⬇  Exportar CSV", command=exportar_csv_freq,
-                  bg=T["BTN_CARDAPIO"], fg="white", font=("Segoe UI", 10, "bold"),
-                  padx=14, pady=6, bd=0, cursor="hand2").pack(side="left", padx=(0, 8))
-        tk.Button(btn_row_f, text="🗑  Apagar hoje", command=apagar_hoje_freq,
-                  bg="#c62828", fg="white", font=("Segoe UI", 10, "bold"),
-                  padx=14, pady=6, bd=0, cursor="hand2").pack(side="right")
-
-        # ── Tabela: NOME | SÉRIE | CURSO | HORA ENTRADA | AULA ────────────────
-        ft_f = tk.Frame(aba_freq, bg=T["BORDER_GRID"], padx=1, pady=1)
-        ft_f.pack(expand=True, fill="both", padx=20, pady=(4, 20))
-
-        tfreq = ttk.Treeview(ft_f, columns=("N", "S", "C", "HE", "A"), show="headings")
-        tfreq.heading("N",  text="ALUNO");  tfreq.column("N",  width=320, anchor="w")
-        tfreq.heading("S",  text="SÉRIE");  tfreq.column("S",  width=90,  anchor="center")
-        tfreq.heading("C",  text="CURSO");  tfreq.column("C",  width=220, anchor="w")
-        tfreq.heading("HE", text="HORA ENTRADA"); tfreq.column("HE", width=130, anchor="center")
-        tfreq.heading("A",  text="AULA");   tfreq.column("A",  width=120, anchor="center")
-
-        sb_freq = ttk.Scrollbar(ft_f, orient="vertical", command=tfreq.yview)
-        tfreq.configure(yscrollcommand=sb_freq.set)
-        tfreq.pack(side="left", expand=True, fill="both")
-        sb_freq.pack(side="right", fill="y")
-
-        tfreq.tag_configure("presente",
-                           foreground="#1b5e20", background="#e8f5e9",
-                           font=("Segoe UI", 11, "bold"))
-
-        import unicodedata as _ud
-
-        def _norm(texto):
-            return _ud.normalize("NFD", str(texto).lower()).encode("ascii", "ignore").decode("ascii")
-
-        _GRUPOS_SERIE = {
-            "1": ["1º", "1o", "1 ano", "primeiro ano", "primeiro", "1"],
-            "2": ["2º", "2o", "2 ano", "segundo ano",  "segundo",  "2"],
-            "3": ["3º", "3o", "3 ano", "terceiro ano", "terceiro", "3"],
-        }
-
-        _GRUPOS_CURSO = {
-            "ds":   ["ds", "desenvolvimento de sistemas", "dev. sistemas", "dev sistemas", "desenv. sistemas"],
-            "enf":  ["enf", "enfermagem"],
-            "hosp": ["hosp", "hospedagem"],
-            "mod":  ["mod", "modelagem do vestuario", "modelagem", "vestuario"],
-        }
-
-        def _grupo_serie_f(texto):
-            t = _norm(texto).strip()
-            for chave, variantes in _GRUPOS_SERIE.items():
-                for v in variantes:
-                    if t == v or t.startswith(v) or v.startswith(t):
-                        return chave
-            return None
-
-        def _grupo_curso_f(texto):
-            t = _norm(texto).strip()
-            for chave, variantes in _GRUPOS_CURSO.items():
-                for v in variantes:
-                    if t == v or t in v or v in t:
-                        return chave
-            return None
-
-        def _serie_bate_f(serie_aluno, filtro_serie):
-            if filtro_serie in ("(Todas)", ""):
-                return True
-            g_aluno  = _grupo_serie_f(serie_aluno)
-            g_filtro = _grupo_serie_f(filtro_serie)
-            if g_aluno is None or g_filtro is None:
-                return _norm(filtro_serie) in _norm(serie_aluno)
-            return g_aluno == g_filtro
-
-        def _curso_bate_f(curso_aluno, filtro_curso):
-            if filtro_curso in ("(Todos)", ""):
-                return True
-            g_aluno  = _grupo_curso_f(curso_aluno)
-            g_filtro = _grupo_curso_f(filtro_curso)
-            if g_aluno is None or g_filtro is None:
-                return _norm(filtro_curso) in _norm(curso_aluno)
-            return g_aluno == g_filtro
-
-        def _canonizar_serie_f(serie):
-            grupo = _grupo_serie_f(serie)
-            if grupo == "1":
-                return "1 Ano"
-            if grupo == "2":
-                return "2 Ano"
-            if grupo == "3":
-                return "3 Ano"
-            return serie.strip() if serie else "Sem Serie"
-
-        def _canonizar_curso_f(curso):
-            grupo = _grupo_curso_f(curso)
-            if grupo == "ds":
-                return "Desenvolvimento de Sistemas"
-            if grupo == "enf":
-                return "Enfermagem"
-            if grupo == "hosp":
-                return "Hospedagem"
-            if grupo == "mod":
-                return "Modelagem do Vestuario"
-            return curso.strip() if curso else "Sem Curso"
-
-        def atualizar_freq():
-            for i in tfreq.get_children(): tfreq.delete(i)
-            registros = _registros_freq_hoje()
-
-            alunos_unicos = {}
-            for r in registros:
-                mat   = r[2]
-                nome  = r[3]
-                serie = r[4] if len(r) > 4 else ""
-                curso = r[5] if len(r) > 5 else ""
-                hora  = r[1] if len(r) > 1 else ""
-                aula  = r[6] if len(r) > 6 else _aula_por_hora(hora)
-                if mat not in alunos_unicos:
-                    alunos_unicos[mat] = {"nome": nome, "serie": serie,
-                                          "curso": curso, "hora": hora, "aula": aula}
-                else:
-                    if hora and alunos_unicos[mat].get("hora", "") and hora < alunos_unicos[mat]["hora"]:
-                        alunos_unicos[mat]["hora"] = hora
-                        alunos_unicos[mat]["aula"] = aula
-
-            f_serie = fv_serie_f.get()
-            f_curso  = fv_curso_f.get()
-            f_nome   = fv_nome_f.get().strip().lower()
-
-            exibidos = []
-            for info in alunos_unicos.values():
-                if not _serie_bate_f(info["serie"], f_serie): continue
-                if not _curso_bate_f(info["curso"], f_curso): continue
-                if f_nome and f_nome not in info["nome"].lower(): continue
-                exibidos.append(info)
-
-            cnt_total = len(exibidos)
-            lbl_total_freq.config(text=f"Total: {cnt_total}")
-
-            for info in sorted(exibidos, key=lambda a: a["nome"].lower()):
-                serie_exib = info["serie"] if info["serie"] else "-"
-                curso_exib = info["curso"] if info["curso"] else "-"
-                hora_exib = info.get("hora", "")
-                aula = info.get("aula", "Fora do horário")
-                tfreq.insert("", "end",
-                            values=(info["nome"], serie_exib, curso_exib, hora_exib, aula),
-                            tags=("presente",))
-
-        def limpar_filtros_f():
-            fv_serie_f.set("(Todas)")
-            fv_curso_f.set("(Todos)")
-            fv_nome_f.set("")
-            for sigla, b in btn_sala_refs_f.items():
-                b.configure(relief="flat", bg=CORES_ANO[sigla[0]], fg="white")
-            atualizar_freq()
-
-        btn_limpar_f.configure(command=limpar_filtros_f)
-
-        cb_serie_f.bind("<<ComboboxSelected>>", lambda e: atualizar_freq())
-        cb_curso_f.bind("<<ComboboxSelected>>", lambda e: atualizar_freq())
-        fv_nome_f.trace_add("write", lambda *_: atualizar_freq())
-        
-        atualizar_freq()
-
-    # ── ABA HISTÓRICO ─────────────────────────────────────────────────────────
-    def setup_historico():
-        for w in aba_hist.winfo_children(): w.destroy()
-        
-        # Cabeçalho com seletor Refeitório / Frequência
-        hd = tk.Frame(aba_hist, bg=T["BG_CARD"]); hd.pack(fill="x", padx=20, pady=(15, 5))
-        hd_txt_frame = tk.Frame(hd, bg=T["BG_CARD"]); hd_txt_frame.pack(side="left")
-        tk.Label(hd_txt_frame, text="Histórico de ", font=("Segoe UI", 16, "bold"),
-                 bg=T["BG_CARD"], fg=T["ACCENT_VIBRANT"]).pack(side="left")
-        
-        hist_tipo_var = tk.StringVar(value="refeitorio")
-        
-        def _atualizar_titulo(*args):
-            tipo = hist_tipo_var.get()
-            titulo_texto = "Refeições" if tipo == "refeitorio" else "Frequência"
-            lbl_titulo.config(text=titulo_texto)
-            _buscar_historico()
-        
-        lbl_titulo = tk.Label(hd_txt_frame, text="Refeições", font=("Segoe UI", 16, "bold"),
-                             bg=T["BG_CARD"], fg=T["ACCENT_VIBRANT"])
-        lbl_titulo.pack(side="left")
-        
-        hd_radio_frame = tk.Frame(hd, bg=T["BG_CARD"]); hd_radio_frame.pack(side="right")
-        tk.Radiobutton(hd_radio_frame, text="●  Refeitório", variable=hist_tipo_var, value="refeitorio",
-                      bg=T["BG_CARD"], fg=T["FG_TEXT"], selectcolor=T["ACCENT_SOFT"],
-                      activebackground=T["BG_CARD"], font=("Segoe UI", 9),
-                      command=lambda: _atualizar_titulo()).pack(side="left", padx=(10, 8))
-        tk.Radiobutton(hd_radio_frame, text="●  Frequência", variable=hist_tipo_var, value="frequencia",
-                      bg=T["BG_CARD"], fg=T["FG_TEXT"], selectcolor=T["ACCENT_SOFT"],
-                      activebackground=T["BG_CARD"], font=("Segoe UI", 9),
-                      command=lambda: _atualizar_titulo()).pack(side="left", padx=(0, 10))
-        
-        # Filtros
-        filtro_frame = tk.Frame(aba_hist, bg=T["OBS_BG"])
-        filtro_frame.pack(fill="x", padx=20, pady=(5, 10))
-        
-        tk.Label(filtro_frame, text="Período:", font=("Segoe UI", 9, "bold"),
-                 bg=T["OBS_BG"], fg=T["FG_TEXT"]).pack(side="left", padx=(10, 6))
-        
-        periodo_var = tk.StringVar(value="hoje")
-        for opt, val in [("Hoje", "hoje"), ("Esta semana", "semana"), ("Este mês", "mes"), ("Personalizado", "custom")]:
-            tk.Radiobutton(filtro_frame, text=opt, variable=periodo_var, value=val,
-                          bg=T["OBS_BG"], fg=T["FG_TEXT"], selectcolor=T["ACCENT_SOFT"],
-                          activebackground=T["OBS_BG"], font=("Segoe UI", 9)).pack(side="left", padx=4)
-        
-        # Campos de data personalizada
-        custom_frame = tk.Frame(filtro_frame, bg=T["OBS_BG"])
-        custom_frame.pack(side="left", padx=(10, 0))
-        
-        data_inicio_var = tk.StringVar(value="01/01/2026")
-        data_fim_var = tk.StringVar(value=datetime.date.today().strftime("%d/%m/%Y"))
-        
-        tk.Label(custom_frame, text="De:", font=("Segoe UI", 9),
-                bg=T["OBS_BG"], fg=T["FG_TEXT"]).pack(side="left", padx=(4, 2))
-        tk.Entry(custom_frame, textvariable=data_inicio_var, font=("Segoe UI", 9),
-                bg=T["BG_CARD"], fg=T["FG_TEXT"], relief="solid", bd=1, width=12).pack(side="left", ipady=2, padx=(0, 8))
-        
-        tk.Label(custom_frame, text="Até:", font=("Segoe UI", 9),
-                bg=T["OBS_BG"], fg=T["FG_TEXT"]).pack(side="left", padx=(4, 2))
-        tk.Entry(custom_frame, textvariable=data_fim_var, font=("Segoe UI", 9),
-                bg=T["BG_CARD"], fg=T["FG_TEXT"], relief="solid", bd=1, width=12).pack(side="left", ipady=2)
-        
-        # Filtro série/curso
-        serie_var = tk.StringVar()
-        curso_var = tk.StringVar()
-        
-        tk.Label(filtro_frame, text="  |  Série:", font=("Segoe UI", 9, "bold"),
-                bg=T["OBS_BG"], fg=T["FG_TEXT"]).pack(side="left", padx=(10, 4))
-        ttk.Combobox(filtro_frame, textvariable=serie_var, state="readonly",
-                    values=["(Todas)", "1 Ano", "2 Ano", "3 Ano"],
-                    width=10, font=("Segoe UI", 9)).pack(side="left", padx=(0, 8))
-        
-        tk.Label(filtro_frame, text="Curso:", font=("Segoe UI", 9),
-                bg=T["OBS_BG"], fg=T["FG_TEXT"]).pack(side="left", padx=(0, 4))
-        ttk.Combobox(filtro_frame, textvariable=curso_var, state="readonly",
-                    values=["(Todos)", "Desenvolvimento de Sistemas", "Hospedagem", 
-                           "Enfermagem", "Modelagem do Vestuario"],
-                    width=20, font=("Segoe UI", 9)).pack(side="left", padx=(0, 10))
-        
-        def _buscar_historico():
-            for i in th.get_children(): th.delete(i)
-            
-            # Determinar intervalo de datas
-            hoje = datetime.date.today()
-            if periodo_var.get() == "hoje":
-                d_inicio = d_fim = hoje
-            elif periodo_var.get() == "semana":
-                d_inicio = hoje - datetime.timedelta(days=hoje.weekday())
-                d_fim = hoje
-            elif periodo_var.get() == "mes":
-                d_inicio = hoje.replace(day=1)
-                d_fim = hoje
-            else:
-                try:
-                    d_inicio = datetime.datetime.strptime(data_inicio_var.get(), "%d/%m/%Y").date()
-                    d_fim = datetime.datetime.strptime(data_fim_var.get(), "%d/%m/%Y").date()
-                except Exception:
-                    messagebox.showerror("Erro", "Data inválida. Use DD/MM/YYYY")
-                    return
-            
-            eh_frequencia = hist_tipo_var.get() == "frequencia"
-
-            dados_por_data = {}
-            try:
-                linhas_hist = _ler_frequencia_todos_db() if eh_frequencia else _ler_refeitorio_todos_db()
-            except Exception as e:
-                messagebox.showerror("Erro", f"Falha ao carregar histórico do banco:\n{e}")
-                return
-            for row in linhas_hist:
-                if len(row) >= 7:
-                    try:
-                        data_obj = datetime.datetime.strptime(row[0], "%d/%m/%Y").date()
-                        if d_inicio <= data_obj <= d_fim:
-                            serie = row[4] if len(row) > 4 else ""
-                            curso = row[5] if len(row) > 5 else ""
-
-                            if serie_var.get() != "(Todas)" and serie_var.get() not in serie:
-                                continue
-                            if curso_var.get() != "(Todos)" and curso_var.get() not in curso:
-                                continue
-
-                            if data_obj not in dados_por_data:
-                                dados_por_data[data_obj] = {"total": 0, "presentes": 0, "ausentes": 0, "almocou": 0, "nao_almocou": 0}
-
-                            if eh_frequencia:
-                                dados_por_data[data_obj]["presentes"] += 1
-                                dados_por_data[data_obj]["total"] += 1
-                            else:
-                                refeicao = row[6] if len(row) > 6 else ""
-                                if refeicao.lower() == "almoco":
-                                    dados_por_data[data_obj]["almocou"] += 1
-                                else:
-                                    dados_por_data[data_obj]["nao_almocou"] += 1
-                                dados_por_data[data_obj]["total"] += 1
-                    except Exception:
-                        pass
-            
-            # Preencher tabela conforme tipo
-            if eh_frequencia:
-                th.heading("Total", text="TOTAL ALUNOS")
-                th.heading("Almoços", text="PRESENTES")
-                th.heading("Não Almoços", text="AUSENTES")
-                th.heading("% Adesão", text="% PRESENÇA")
-                
-                total_geral = 0
-                presentes_geral = 0
-                for data_obj in sorted(dados_por_data.keys(), reverse=True):
-                    dados = dados_por_data[data_obj]
-                    data_str = data_obj.strftime("%d/%m/%Y")
-                    total = dados["total"]
-                    presentes = dados["presentes"]
-                    ausentes = total - presentes
-                    pct = (presentes / total * 100) if total > 0 else 0
-                    
-                    th.insert("", "end", values=(data_str, total, presentes, ausentes, f"{pct:.1f}%"),
-                             tags=("presente" if pct >= 70 else ("warning" if pct >= 40 else "ausente"),))
-                    total_geral += total
-                    presentes_geral += presentes
-                
-                pct_geral = (presentes_geral / total_geral * 100) if total_geral > 0 else 0
-                lbl_hist_cnt.config(text=f"Presença geral: {pct_geral:.1f}% ({presentes_geral}/{total_geral})")
-            else:
-                th.heading("Total", text="TOTAL REGISTROS")
-                th.heading("Almoços", text="TOTAL ALMOÇOS")
-                th.heading("Não Almoços", text="TOTAL NÃO ALMOÇOS")
-                th.heading("% Adesão", text="% ADESÃO")
-                
-                total_geral = 0
-                almocou_geral = 0
-                for data_obj in sorted(dados_por_data.keys(), reverse=True):
-                    dados = dados_por_data[data_obj]
-                    data_str = data_obj.strftime("%d/%m/%Y")
-                    total = dados["total"]
-                    almocou = dados["almocou"]
-                    nao_almocou = dados["nao_almocou"]
-                    pct = (almocou / total * 100) if total > 0 else 0
-                    
-                    th.insert("", "end", values=(data_str, total, almocou, nao_almocou, f"{pct:.1f}%"))
-                    total_geral += total
-                    almocou_geral += almocou
-                
-                pct_geral = (almocou_geral / total_geral * 100) if total_geral > 0 else 0
-                lbl_hist_cnt.config(text=f"Adesão geral: {pct_geral:.1f}% ({almocou_geral}/{total_geral})")
-            
-            # Desenhar gráfico
-            desenhar_grafico_historico(dados_por_data)
-        
-        # Tabela
-        f_hist = tk.Frame(aba_hist, bg=T["BORDER_GRID"], padx=1, pady=1)
-        f_hist.pack(expand=True, fill="both", padx=20, pady=(5, 15))
-        
-        th = ttk.Treeview(f_hist, columns=("Data", "Total", "Almoços", "Não Almoços", "% Adesão"), show="headings")
-        th.heading("Data", text="DATA")
-        th.column("Data", width=100, anchor="center")
-        th.heading("Total", text="TOTAL REGISTROS")
-        th.column("Total", width=120, anchor="center")
-        th.heading("Almoços", text="TOTAL ALMOÇOS")
-        th.column("Almoços", width=120, anchor="center")
-        th.heading("Não Almoços", text="TOTAL NÃO ALMOÇOS")
-        th.column("Não Almoços", width=140, anchor="center")
-        th.heading("% Adesão", text="% ADESÃO")
-        th.column("% Adesão", width=100, anchor="center")
-        
-        th.pack(expand=True, fill="both")
-        th.tag_configure("even", background=T["ENTRY_BG"])
-        th.tag_configure("odd", background=T["BG_CARD"])
-        # Tags para frequência
-        th.tag_configure("presente", foreground="#1b5e20", background="#e8f5e9")
-        th.tag_configure("warning", foreground="#f57f17", background="#fff3cd")
-        th.tag_configure("ausente", foreground="#c62828", background="#ffebee")
-        
-        lbl_hist_cnt = tk.Label(aba_hist, text="Adesão geral: 0%", font=("Segoe UI", 10),
-                               bg=T["BG_CARD"], fg=T["FRASE_FG"])
-        lbl_hist_cnt.pack(anchor="e", padx=25, pady=(2, 10))
-        
-        # Gráfico
-        canvas_grafico = tk.Canvas(aba_hist, bg=T["BG_CARD"], highlightthickness=0, height=200)
-        canvas_grafico.pack(fill="x", padx=20, pady=(0, 10))
-        
-        def desenhar_grafico_historico(dados):
-            canvas_grafico.delete("all")
-            if not dados:
-                canvas_grafico.create_text(400, 100, text="Nenhum dado para o período selecionado",
-                                          font=("Segoe UI", 12), fill=T["FRASE_FG"])
-                return
-            
-            datas_ordenadas = sorted(dados.keys(), reverse=True)[:30]
-            
-            if hist_tipo_var.get() == "frequencia":
-                # Para frequência: mostrar presentes
-                max_valor = max((dados[d]["presentes"] for d in datas_ordenadas), default=1)
-            else:
-                # Para refeitório: mostrar almoços
-                max_valor = max((dados[d]["almocou"] for d in datas_ordenadas), default=1)
-            
-            if max_valor == 0: max_valor = 1
-            
-            w = canvas_grafico.winfo_width()
-            if w <= 1: w = 800
-            h = canvas_grafico.winfo_height()
-            if h <= 1: h = 200
-            
-            margin = 40
-            grafico_w = w - 2 * margin
-            grafico_h = h - 40
-            
-            x_unit = grafico_w / max(len(datas_ordenadas), 1)
-            y_unit = grafico_h / max_valor
-            
-            for idx, data_obj in enumerate(reversed(datas_ordenadas)):
-                if hist_tipo_var.get() == "frequencia":
-                    valor = dados[data_obj]["presentes"]
-                    total = dados[data_obj]["total"]
-                    pct = (valor / total * 100) if total > 0 else 0
-                else:
-                    valor = dados[data_obj]["almocou"]
-                    total = dados[data_obj]["total"]
-                    pct = (valor / total * 100) if total > 0 else 0
-                
-                x_start = margin + idx * x_unit
-                x_end = x_start + x_unit * 0.8
-                y_end = h - 30
-                y_start = y_end - (valor * y_unit)
-                
-                cor = "#4caf50" if pct >= 70 else ("#fdd835" if pct >= 40 else "#f44336")
-                canvas_grafico.create_rectangle(x_start, y_start, x_end, y_end, fill=cor, outline="white", width=2)
-                
-                data_label = data_obj.strftime("%d/%m")
-                canvas_grafico.create_text(x_start + (x_end - x_start) / 2, h - 10,
-                                         text=data_label, font=("Segoe UI", 8), fill=T["FG_TEXT"])
-        
-        def exportar_pdf_historico():
-            if not th.get_children():
-                messagebox.showwarning("Aviso", "Nenhum dado de histórico para exportar.")
-                return
-            try:
-                from fpdf import FPDF
-                pdf = FPDF()
-                pdf.add_page()
-                pdf.set_font("Arial", "B", 16)
-                pdf.cell(0, 10, "HISTORICO DE REFEICOES - EEEP MARWIN", ln=True, align="C")
-                pdf.set_font("Arial", "", 12)
-                pdf.cell(0, 8, f"Data: {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}", ln=True)
-                pdf.ln(6)
-                
-                # Ler dados da tabela
-                pdf.set_font("Arial", "B", 11)
-                pdf.cell(40, 8, "Data", border=1)
-                pdf.cell(40, 8, "Total", border=1)
-                pdf.cell(50, 8, "Almocos", border=1)
-                pdf.cell(50, 8, "Nao Almocos", border=1)
-                pdf.cell(0, 8, "% Adesao", border=1, ln=True)
-                
-                pdf.set_font("Arial", "", 10)
-                for item in th.get_children():
-                    vals = th.item(item)["values"]
-                    for val in vals[:-1]:
-                        pdf.cell(40, 7, str(val), border=1)
-                    pdf.cell(0, 7, str(vals[-1]), border=1, ln=True)
-                
-                nome_arq = f"historico_marwin_{datetime.datetime.now().strftime('%d_%m_%Y')}.pdf"
-                pdf.output(nome_arq)
-                messagebox.showinfo("Sucesso", f"PDF gerado:\n{nome_arq}")
-            except Exception as e:
-                messagebox.showerror("Erro", f"Falha ao gerar PDF:\n{e}")
-        
-        def exportar_csv_historico():
-            try:
-                nome_arq = f"historico_marwin_{datetime.datetime.now().strftime('%d_%m_%Y')}.csv"
-                with open(nome_arq, "w", newline="", encoding="utf-8") as f:
-                    w = csv.writer(f)
-                    w.writerow(["Data", "Total", "Almocos", "Nao Almocos", "% Adesao"])
-                    for item in th.get_children():
-                        vals = th.item(item)["values"]
-                        w.writerow(vals)
-                messagebox.showinfo("Sucesso", f"CSV gerado:\n{nome_arq}")
-            except Exception as e:
-                messagebox.showerror("Erro", f"Falha ao gerar CSV:\n{e}")
-        
-        # Botões
-        btn_frame = tk.Frame(aba_hist, bg=T["BG_CARD"])
-        btn_frame.pack(fill="x", padx=20, pady=(0, 15))
-        
-        tk.Button(btn_frame, text="Buscar", command=_buscar_historico,
-                 bg=T["ACCENT_SOFT"], fg="white", font=("Segoe UI", 10, "bold"),
-                 padx=14, pady=6, bd=0, cursor="hand2").pack(side="left", padx=(0, 8))
-        tk.Button(btn_frame, text="Exportar PDF", command=exportar_pdf_historico,
-                 bg=T["BTN_CARDAPIO"], fg="white", font=("Segoe UI", 10, "bold"),
-                 padx=14, pady=6, bd=0, cursor="hand2").pack(side="left", padx=(0, 8))
-        tk.Button(btn_frame, text="Exportar CSV", command=exportar_csv_historico,
-                 bg=T["ACCENT_VIBRANT"], fg="white", font=("Segoe UI", 10, "bold"),
-                 padx=14, pady=6, bd=0, cursor="hand2").pack(side="left")
-        
-        # Listeners para filtros
-        periodo_var.trace_add("write", lambda *_: _buscar_historico())
-        serie_var.trace_add("write", lambda *_: _buscar_historico())
-        curso_var.trace_add("write", lambda *_: _buscar_historico())
-        
-        _buscar_historico()
-    
-    # ── ABA LOGS ──────────────────────────────────────────────────────────────
-    def setup_logs():
-        for w in aba_logs.winfo_children(): w.destroy()
-        
-        # Cabeçalho
-        hd = tk.Frame(aba_logs, bg=T["BG_CARD"]); hd.pack(fill="x", padx=20, pady=(15, 10))
-        tk.Label(hd, text="Logs do Sistema", font=("Segoe UI", 16, "bold"),
-                 bg=T["BG_CARD"], fg=T["ACCENT_VIBRANT"]).pack(side="left")
-        
-        # Botões
-        btn_frame = tk.Frame(aba_logs, bg=T["BG_CARD"])
-        btn_frame.pack(fill="x", padx=20, pady=(0, 10))
-        
-        def atualizar_logs():
-            text_logs.config(state="normal")
-            text_logs.delete("1.0", "end")
-            
-            if os.path.exists(LOG_FILE):
                 with open(LOG_FILE, "r", encoding="utf-8") as f:
                     linhas = f.readlines()
-                    ultimas_linhas = linhas[-200:]
-                    text_logs.insert("end", "".join(ultimas_linhas))
-            else:
-                text_logs.insert("end", "Nenhum arquivo de log encontrado ainda.")
-            
-            text_logs.config(state="disabled")
-            text_logs.see("end")
-        
+            except Exception:
+                return []
+            return linhas[-max_linhas:]
+
         def limpar_logs():
-            if messagebox.askyesno("Confirmar", "Limpar todos os logs?"):
-                try:
-                    open(LOG_FILE, "w").close()
-                    atualizar_logs()
-                except Exception as e:
-                    messagebox.showerror("Erro", f"Falha ao limpar logs:\n{e}")
-        
-        tk.Button(btn_frame, text="↻  Atualizar", command=atualizar_logs,
-                 bg=T["ACCENT_SOFT"], fg="white", font=("Segoe UI", 10, "bold"),
-                 padx=14, pady=6, bd=0, cursor="hand2").pack(side="left", padx=(0, 8))
-        tk.Button(btn_frame, text="🗑  Limpar logs", command=limpar_logs,
-                 bg="#c62828", fg="white", font=("Segoe UI", 10, "bold"),
-                 padx=14, pady=6, bd=0, cursor="hand2").pack(side="left")
-        
-        # Text widget com scrollbar
-        f_logs = tk.Frame(aba_logs, bg=T["BORDER_GRID"], padx=1, pady=1)
-        f_logs.pack(expand=True, fill="both", padx=20, pady=(0, 15))
-        
-        text_logs = tk.Text(f_logs, bg=T["BG_CARD"], fg=T["FG_TEXT"],
-                           font=("Courier New", 9), relief="flat", state="disabled")
-        sb_logs = ttk.Scrollbar(f_logs, orient="vertical", command=text_logs.yview)
-        text_logs.configure(yscrollcommand=sb_logs.set)
-        text_logs.pack(side="left", expand=True, fill="both")
-        sb_logs.pack(side="right", fill="y")
-        
+            if not messagebox.askyesno("Confirmar", "Limpar todos os logs do sistema?\nEsta ação não pode ser desfeita."):
+                return
+            try:
+                open(LOG_FILE, "w", encoding="utf-8").close()
+                logger.info("Logs do sistema limpos via painel administrativo")
+                atualizar_logs()
+                messagebox.showinfo("Sucesso", "Logs limpos com sucesso.")
+            except Exception as e:
+                messagebox.showerror("Erro", f"Falha ao limpar logs:\n{e}")
+
+        def atualizar_logs():
+            for w in corpo_tab.winfo_children():
+                w.destroy()
+
+            nivel_f = cb_nivel.get()
+            busca_f = ent_busca.get().strip().lower()
+
+            linhas_raw = _ler_linhas_log(500)
+
+            registros = []
+            for linha in linhas_raw:
+                linha = linha.rstrip("\n")
+                if not linha:
+                    continue
+                m = PADRAO_LOG.match(linha)
+                if m:
+                    data_hora, nivel, msg = m.group(1), m.group(2), m.group(3)
+                else:
+                    data_hora, nivel, msg = "", "INFO", linha
+
+                if nivel_f != "Todos" and nivel.upper() != nivel_f:
+                    continue
+                if busca_f and busca_f not in linha.lower():
+                    continue
+
+                registros.append((data_hora, nivel.upper(), msg))
+
+            registros.reverse()  # mais recentes primeiro
+
+            cnt_info = sum(1 for r in registros if r[1] == "INFO")
+            cnt_warn = sum(1 for r in registros if r[1] == "WARNING")
+            cnt_err = sum(1 for r in registros if r[1] in ("ERROR", "CRITICAL"))
+
+            lbl_total.configure(text=str(len(registros)))
+            lbl_info.configure(text=str(cnt_info))
+            lbl_warn.configure(text=str(cnt_warn))
+            lbl_err.configure(text=str(cnt_err))
+
+            if not registros:
+                ctk.CTkLabel(corpo_tab, text="Nenhum log encontrado para o filtro selecionado.",
+                              font=("Segoe UI", 11), text_color=TEXTO_CINZA
+                              ).grid(row=0, column=0, sticky="w", pady=12, padx=4)
+            else:
+                for i, (data_hora, nivel, msg) in enumerate(registros):
+                    cor = CORES_NIVEL.get(nivel, TEXTO_ESCURO)
+                    linha_frame = ctk.CTkFrame(corpo_tab, fg_color=("#FAFAFA" if i % 2 else "transparent"))
+                    linha_frame.grid(row=i, column=0, sticky="ew")
+                    linha_frame.grid_columnconfigure(2, weight=1)
+
+                    ctk.CTkLabel(linha_frame, text=data_hora or "—", font=("Segoe UI", 11),
+                                  text_color="#374151", width=150, anchor="w"
+                                  ).grid(row=0, column=0, padx=8, pady=6, sticky="w")
+                    ctk.CTkLabel(linha_frame, text=nivel, font=("Segoe UI", 10, "bold"),
+                                  text_color=cor, width=100, anchor="w"
+                                  ).grid(row=0, column=1, padx=8, pady=6, sticky="w")
+                    ctk.CTkLabel(linha_frame, text=msg, font=("Segoe UI", 11),
+                                  text_color="#374151", anchor="w", justify="left",
+                                  wraplength=700
+                                  ).grid(row=0, column=2, padx=8, pady=6, sticky="ew")
+
+            agora_txt = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+            lbl_status.configure(text=f"Atualizado em {agora_txt}  ·  exibindo até 500 linhas mais recentes do arquivo de log.")
+
         atualizar_logs()
+        return page
 
 
 def aplicar_tema(parent):
@@ -4753,6 +5068,18 @@ def iniciar_tkinter(url_publica):
                          command=alternar_tema)
     btn_tema.pack(side="right", padx=4)
 
+    # ── Relógio em tempo real na barra de topo ───────────────────────────────
+    lbl_relogio = tk.Label(barra_topo, text="", font=("Segoe UI", 10, "bold"),
+                           bg=T["ACCENT_VIBRANT"], fg="#b2dfb4")
+    lbl_relogio.pack(side="right", padx=(0, 16))
+
+    def _atualizar_relogio():
+        agora = datetime.datetime.now()
+        lbl_relogio.config(text=agora.strftime("%d/%m/%Y  %H:%M:%S"))
+        janela.after(1000, _atualizar_relogio)
+
+    _atualizar_relogio()
+
     # Linha amarela accent
     tk.Frame(janela, bg=T["HIGHLIGHT_YELLOW"], height=4).pack(fill="x")
 
@@ -4785,14 +5112,83 @@ def iniciar_tkinter(url_publica):
     tk.Label(center_wrap, text="Painel do Servidor",
              font=("Segoe UI", 11), bg=T["BG_MAIN"], fg=T["FRASE_FG"]).pack()
 
-    tk.Frame(center_wrap, bg=T["BORDER_GRID"], height=1).pack(fill="x", pady=(18, 24))
+    tk.Frame(center_wrap, bg=T["BORDER_GRID"], height=1).pack(fill="x", pady=(18, 14))
+
+    # ── Cards de status em tempo real ────────────────────────────────────────
+    cards_frame = tk.Frame(center_wrap, bg=T["BG_MAIN"])
+    cards_frame.pack(fill="x", pady=(0, 14))
+
+    def _criar_card_status(parent, titulo, col):
+        card = tk.Frame(parent, bg=T["BG_CARD"],
+                        highlightbackground=T["BORDER_GRID"], highlightthickness=1)
+        card.grid(row=0, column=col, padx=6, pady=0, sticky="nsew")
+        lbl_titulo = tk.Label(card, text=titulo, font=("Segoe UI", 8),
+                              bg=T["BG_CARD"], fg=T["FRASE_FG"])
+        lbl_titulo.pack(pady=(8, 2), padx=14)
+        lbl_valor = tk.Label(card, text="—", font=("Segoe UI", 22, "bold"),
+                             bg=T["BG_CARD"], fg=T["ACCENT_VIBRANT"])
+        lbl_valor.pack(pady=(0, 2), padx=14)
+        lbl_sub = tk.Label(card, text="", font=("Segoe UI", 8),
+                           bg=T["BG_CARD"], fg=T["FRASE_FG"])
+        lbl_sub.pack(pady=(0, 8), padx=14)
+        return lbl_valor, lbl_sub
+
+    for c in range(3):
+        cards_frame.grid_columnconfigure(c, weight=1, uniform="sc")
+
+    lbl_val_ref,  lbl_sub_ref  = _criar_card_status(cards_frame, "Refeições hoje",   0)
+    lbl_val_freq, lbl_sub_freq = _criar_card_status(cards_frame, "Presenças hoje",   1)
+    lbl_val_db,   lbl_sub_db   = _criar_card_status(cards_frame, "Banco de dados",   2)
+
+    # Indicador de saúde: ponto colorido no card de banco
+    _dot_colors = {"ok": "#4caf50", "erro": "#f44336", "verificando": "#fdd835"}
+
+    def _atualizar_cards_status():
+        """Atualiza os cards de status a cada 15 segundos — roda em thread separada."""
+        def _tarefa():
+            # Refeitório hoje
+            try:
+                total_ref = len(_ler_refeitorio_hoje_db())
+                lbl_val_ref.config(text=str(total_ref))
+                lbl_sub_ref.config(text="registros no refeitório")
+            except Exception:
+                lbl_val_ref.config(text="—")
+                lbl_sub_ref.config(text="indisponível")
+
+            # Frequência hoje
+            try:
+                total_freq = len(_ler_frequencia_hoje_db())
+                lbl_val_freq.config(text=str(total_freq))
+                lbl_sub_freq.config(text="alunos registrados")
+            except Exception:
+                lbl_val_freq.config(text="—")
+                lbl_sub_freq.config(text="indisponível")
+
+            # Saúde do banco
+            try:
+                conn = get_pg_conn()
+                if conn:
+                    _release_pg_conn(conn)
+                    lbl_val_db.config(text="● Online", fg=_dot_colors["ok"])
+                    lbl_sub_db.config(text="PostgreSQL Neon")
+                else:
+                    lbl_val_db.config(text="● Offline", fg=_dot_colors["erro"])
+                    lbl_sub_db.config(text="sem conexão")
+            except Exception:
+                lbl_val_db.config(text="● Erro", fg=_dot_colors["erro"])
+                lbl_sub_db.config(text="falha na verificação")
+
+        threading.Thread(target=_tarefa, daemon=True).start()
+        janela.after(15000, _atualizar_cards_status)
+
+    _atualizar_cards_status()
 
     tk.Button(center_wrap, text="  ABRIR PAINEL ADMIN  ",
               font=("Segoe UI", 17, "bold"),
               bg=T["ACCENT_VIBRANT"], fg="white", bd=0,
               padx=50, pady=20, cursor="hand2",
               activebackground=T["ACCENT_SOFT"], activeforeground="white",
-              command=abrir_painel_admin).pack(fill="x")
+              command=abrir_painel_admin_ctk).pack(fill="x")
 
     tk.Label(center_wrap,
              text="💚 Servidor ativo — aguardando conexões dos clientes.",

@@ -261,3 +261,9 @@ if __name__ == "__main__":
     port = int(os.getenv("PORT", "8080"))
     logger.info(f"API MARWIN na porta {port}")
     app.run(host="0.0.0.0", port=port, debug=False)
+    
+@app.route("/rotas", methods=["GET"])
+def listar_rotas():
+    return jsonify(
+        sorted([str(r) for r in app.url_map.iter_rules()])
+    )
