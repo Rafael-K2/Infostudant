@@ -1,3 +1,14 @@
+import traceback
+import sys
+
+try:
+    # TODO: deixe o restante do seu código abaixo desta linha
+    pass
+
+except Exception:
+    with open("erro.txt", "w", encoding="utf-8") as f:
+        traceback.print_exc(file=f)
+    input("Ocorreu um erro. Veja o arquivo erro.txt e pressione Enter.")
 """
 SERVIDOR MARWIN - ServidorV15.py
 ======================================
@@ -129,6 +140,7 @@ def _cloud_api_url():
     return _ler_cloud_config().get("api_url", "").strip().rstrip("/")
 
 def _sync_nuvem(rota, metodo, dados=None):
+    
     cfg = _ler_cloud_config()
     base = cfg.get("api_url", "").strip().rstrip("/")
     if not base:
@@ -151,6 +163,7 @@ def _sync_nuvem(rota, metodo, dados=None):
             ok = 200 <= resp.status < 300
             if not ok:
                 logger.warning(f"Sync nuvem ({rota}): HTTP {resp.status}")
+                
             return ok
     except urllib.error.HTTPError as e:
         corpo = ""
@@ -162,6 +175,7 @@ def _sync_nuvem(rota, metodo, dados=None):
         return False
     except Exception as e:
         logger.warning(f"Sync nuvem falhou ({rota}): {e}")
+        
         return False
 
 def _sincronizar_tudo_nuvem():
@@ -174,6 +188,7 @@ def _sincronizar_tudo_nuvem():
         ok = False
     if ok and _cloud_api_url():
         logger.info("Configurações sincronizadas com a API na nuvem")
+        
     return ok
 
 # ── Credenciais do banco — use variável de ambiente para evitar exposição ──────
@@ -5144,39 +5159,49 @@ def iniciar_tkinter(url_publica):
     _dot_colors = {"ok": "#4caf50", "erro": "#f44336", "verificando": "#fdd835"}
 
     def _atualizar_cards_status():
-        """Atualiza os cards de status a cada 15 segundos — roda em thread separada."""
+        """Atualiza os cards de status a cada 15 segundos.
+
+        A consulta ao banco roda em thread separada (evita travar a UI com
+        a latência de rede do Neon), mas TODA atualização de widgets é feita
+        de volta na thread principal via janela.after — Tkinter não é
+        thread-safe e chamar .config() direto de outra thread pode travar
+        ou corromper o loop de eventos da aplicação inteira.
+        """
         def _tarefa():
             # Refeitório hoje
             try:
                 total_ref = len(_ler_refeitorio_hoje_db())
-                lbl_val_ref.config(text=str(total_ref))
-                lbl_sub_ref.config(text="registros no refeitório")
+                ref_result = (str(total_ref), "registros no refeitório")
             except Exception:
-                lbl_val_ref.config(text="—")
-                lbl_sub_ref.config(text="indisponível")
+                ref_result = ("—", "indisponível")
 
             # Frequência hoje
             try:
                 total_freq = len(_ler_frequencia_hoje_db())
-                lbl_val_freq.config(text=str(total_freq))
-                lbl_sub_freq.config(text="alunos registrados")
+                freq_result = (str(total_freq), "alunos registrados")
             except Exception:
-                lbl_val_freq.config(text="—")
-                lbl_sub_freq.config(text="indisponível")
+                freq_result = ("—", "indisponível")
 
             # Saúde do banco
             try:
                 conn = get_pg_conn()
                 if conn:
                     _release_pg_conn(conn)
-                    lbl_val_db.config(text="● Online", fg=_dot_colors["ok"])
-                    lbl_sub_db.config(text="PostgreSQL Neon")
+                    db_result = ("● Online", _dot_colors["ok"], "PostgreSQL Neon")
                 else:
-                    lbl_val_db.config(text="● Offline", fg=_dot_colors["erro"])
-                    lbl_sub_db.config(text="sem conexão")
+                    db_result = ("● Offline", _dot_colors["erro"], "sem conexão")
             except Exception:
-                lbl_val_db.config(text="● Erro", fg=_dot_colors["erro"])
-                lbl_sub_db.config(text="falha na verificação")
+                db_result = ("● Erro", _dot_colors["erro"], "falha na verificação")
+
+            def _aplicar():
+                lbl_val_ref.config(text=ref_result[0])
+                lbl_sub_ref.config(text=ref_result[1])
+                lbl_val_freq.config(text=freq_result[0])
+                lbl_sub_freq.config(text=freq_result[1])
+                lbl_val_db.config(text=db_result[0], fg=db_result[1])
+                lbl_sub_db.config(text=db_result[2])
+
+            janela.after(0, _aplicar)
 
         threading.Thread(target=_tarefa, daemon=True).start()
         janela.after(15000, _atualizar_cards_status)
@@ -5210,7 +5235,7 @@ if __name__ == "__main__":
         threading.Thread(target=_sincronizar_tudo_nuvem, daemon=True).start()
 
     threading.Thread(
-        target=lambda: app.run(host="0.0.0.0", port=5000, use_reloader=False, debug=False),
+        target=lambda: app.run(host="0.0.0.0", port=5000, use_reloader=False, debug=False, threaded=True),
         daemon=True
     ).start()
     time.sleep(1)
