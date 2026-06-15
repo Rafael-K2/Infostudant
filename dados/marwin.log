@@ -17,3 +17,51 @@
 14/06/2026 11:02:19 - WARNING - Sync nuvem falhou (/admin/cardapio): The read operation timed out
 14/06/2026 11:02:32 - INFO - Painel admin (CTk) aberto com sucesso
 14/06/2026 11:02:34 - WARNING - Sync nuvem falhou (/admin/eventos): The read operation timed out
+14/06/2026 11:09:47 - INFO - Pool PostgreSQL inicializado
+14/06/2026 11:09:48 - INFO - Tabelas Neon verificadas/criadas
+14/06/2026 11:09:49 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
+14/06/2026 11:09:49 - INFO - Configurações sincronizadas com a API na nuvem
+14/06/2026 11:09:56 - INFO - Painel admin (CTk) aberto com sucesso
+14/06/2026 11:13:18 - INFO - Importação forçada — tabela=avaliacoes arquivo=20260525_145044_avaliacoes_escola.csv inseridos=360 ignorados=0 erros=0
+14/06/2026 11:15:30 - INFO - Pool PostgreSQL inicializado
+14/06/2026 11:15:31 - INFO - Tabelas Neon verificadas/criadas
+14/06/2026 11:15:32 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
+14/06/2026 11:15:32 - INFO - Configurações sincronizadas com a API na nuvem
+14/06/2026 11:15:36 - INFO - Painel admin (CTk) aberto com sucesso
+14/06/2026 11:18:12 - INFO - Pool PostgreSQL inicializado
+14/06/2026 11:18:13 - INFO - Tabelas Neon verificadas/criadas
+14/06/2026 11:18:14 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
+14/06/2026 11:18:15 - INFO - Configurações sincronizadas com a API na nuvem
+14/06/2026 11:18:21 - INFO - Painel admin (CTk) aberto com sucesso
+14/06/2026 19:19:57 - INFO - Pool PostgreSQL inicializado
+14/06/2026 19:19:58 - INFO - Tabelas Neon verificadas/criadas
+14/06/2026 19:19:59 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
+14/06/2026 19:20:04 - INFO - Painel admin (CTk) aberto com sucesso
+14/06/2026 19:20:13 - WARNING - Sync nuvem falhou (/admin/cardapio): The read operation timed out
+14/06/2026 19:20:29 - WARNING - Sync nuvem falhou (/admin/eventos): The read operation timed out
+14/06/2026 19:25:01 - INFO - Painel admin (CTk) aberto com sucesso
+14/06/2026 19:35:39 - INFO - Pool PostgreSQL inicializado
+14/06/2026 19:35:40 - INFO - Tabelas Neon verificadas/criadas
+14/06/2026 19:35:41 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
+14/06/2026 19:35:43 - INFO - Configurações sincronizadas com a API na nuvem
+14/06/2026 19:35:47 - INFO - Painel admin (CTk) aberto com sucesso
+14/06/2026 19:38:56 - INFO - Pool PostgreSQL inicializado
+14/06/2026 19:38:57 - INFO - Tabelas Neon verificadas/criadas
+14/06/2026 19:38:58 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
+14/06/2026 19:38:59 - INFO - Configurações sincronizadas com a API na nuvem
+14/06/2026 19:39:03 - INFO - Painel admin (CTk) aberto com sucesso
+14/06/2026 19:47:53 - INFO - Pool PostgreSQL inicializado
+14/06/2026 19:47:54 - INFO - Tabelas Neon verificadas/criadas
+14/06/2026 19:47:55 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
+14/06/2026 19:47:55 - INFO - Configurações sincronizadas com a API na nuvem
+14/06/2026 19:48:00 - INFO - Painel admin (CTk) aberto com sucesso
+14/06/2026 20:04:11 - INFO - Pool PostgreSQL inicializado
+14/06/2026 20:04:12 - INFO - Tabelas Neon verificadas/criadas
+14/06/2026 20:04:13 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
+14/06/2026 20:04:14 - INFO - Configurações sincronizadas com a API na nuvem
+14/06/2026 20:04:18 - INFO - Painel admin (CTk) aberto com sucesso
+14/06/2026 20:15:13 - INFO - Pool PostgreSQL inicializado
+14/06/2026 20:15:14 - INFO - Tabelas Neon verificadas/criadas
+14/06/2026 20:15:15 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
+14/06/2026 20:15:16 - INFO - Configurações sincronizadas com a API na nuvem
+14/06/2026 20:39:20 - INFO - Painel admin (CTk) aberto com sucesso

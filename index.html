@@ -340,7 +340,7 @@ const AVAL_ITENS = {
 const TITULOS = {1:"🍽️ COMIDA",2:"🧹 LIMPEZA",3:"📚 ENSINO",4:"✨ EXPERIÊNCIA"};
 const SUB = {1:"Avalie a qualidade das refeições",2:"Avalie a higiene dos ambientes",3:"Avalie a qualidade do ensino",4:"Conte-nos como você se sentiu nesta semana"};
 let avaliacaoState = {nome:'',serie:'',curso:'',estagio:1,respostas:{}};
-function openIdentificacao(){ document.getElementById('modalIdentificacao').style.display='flex'; }
+function openIdentificacao(){ if(!avaliacoesAtivas){ alert('As avaliações estão desativadas no momento.'); return; } document.getElementById('modalIdentificacao').style.display='flex'; }
 function avaliarAnonimo(){ avaliacaoState = {nome:'anonimo',serie:'N/A',curso:'N/A',estagio:1,respostas:{}}; document.getElementById('modalIdentificacao').style.display='none'; openAvaliacao(); }
 async function continuarIdentificacao(){ const nome=document.getElementById('nomeAluno').value.trim(); const serie=document.getElementById('serieAluno').value; const curso=document.getElementById('cursoAluno').value; if(!nome || !serie || !curso){ alert('Preencha todos os campos!'); return }
   // verificar se já avaliou

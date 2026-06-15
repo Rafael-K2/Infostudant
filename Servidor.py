@@ -1,14 +1,3 @@
-import traceback
-import sys
-
-try:
-    # TODO: deixe o restante do seu código abaixo desta linha
-    pass
-
-except Exception:
-    with open("erro.txt", "w", encoding="utf-8") as f:
-        traceback.print_exc(file=f)
-    input("Ocorreu um erro. Veja o arquivo erro.txt e pressione Enter.")
 """
 SERVIDOR MARWIN - ServidorV15.py
 ======================================
@@ -49,12 +38,12 @@ from collections import Counter
 from flask import Flask, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import messagebox
 import customtkinter as ctk
 import datetime
 
 import qrcode
-from PIL import Image, ImageTk
+from PIL import Image
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
@@ -140,7 +129,7 @@ def _cloud_api_url():
     return _ler_cloud_config().get("api_url", "").strip().rstrip("/")
 
 def _sync_nuvem(rota, metodo, dados=None):
-    
+
     cfg = _ler_cloud_config()
     base = cfg.get("api_url", "").strip().rstrip("/")
     if not base:
@@ -163,7 +152,7 @@ def _sync_nuvem(rota, metodo, dados=None):
             ok = 200 <= resp.status < 300
             if not ok:
                 logger.warning(f"Sync nuvem ({rota}): HTTP {resp.status}")
-                
+
             return ok
     except urllib.error.HTTPError as e:
         corpo = ""
@@ -175,7 +164,7 @@ def _sync_nuvem(rota, metodo, dados=None):
         return False
     except Exception as e:
         logger.warning(f"Sync nuvem falhou ({rota}): {e}")
-        
+
         return False
 
 def _sincronizar_tudo_nuvem():
@@ -188,7 +177,7 @@ def _sincronizar_tudo_nuvem():
         ok = False
     if ok and _cloud_api_url():
         logger.info("Configurações sincronizadas com a API na nuvem")
-        
+
     return ok
 
 # ── Credenciais do banco — use variável de ambiente para evitar exposição ──────
@@ -573,7 +562,7 @@ def _avaliacao_ja_existe_db(nome, semana_iso, ano_iso):
     if not nome:
         return False
     try:
-        rows = _executar_pg(    
+        rows = _executar_pg(
             "SELECT data FROM avaliacoes WHERE lower(aluno) = lower(%s)",
             (nome,),
             fetch=True
@@ -876,13 +865,13 @@ def post_avaliacao():
     if not dados: return jsonify({"erro": "JSON invalido"}), 400
     nome, serie, curso = dados.get("nome","Anonimo"), dados.get("serie","N/A"), dados.get("curso","N/A")
     respostas = dados.get("respostas", {})
-    
+
     # Verificar se já avaliou esta semana (apenas se não for anônimo)
     if nome and nome.strip().lower() not in {"anonimo", "anônimo"}:
         hoje = datetime.date.today()
         semana_iso = hoje.isocalendar()[1]
         ano_iso = hoje.isocalendar()[0]
-        
+
         try:
             if _avaliacao_ja_existe_db(nome, semana_iso, ano_iso):
                 logger.warning(f"Avaliação duplicada detectada: {nome} - Semana {semana_iso}/{ano_iso}")
@@ -890,7 +879,7 @@ def post_avaliacao():
         except Exception as e:
             logger.error(f"Erro ao verificar duplicidade de avaliação: {e}")
             return jsonify({"erro": "Banco de dados indisponível"}), 503
-    
+
     data_hora = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     registros = []
     for chave, nota in respostas.items():
@@ -914,11 +903,11 @@ def verificar_avaliacao():
     nome = request.args.get("nome", "").strip()
     if not nome or nome.lower() in {"anonimo", "anônimo"}:
         return jsonify({"ja_avaliou": False}), 200
-    
+
     hoje = datetime.date.today()
     semana_iso = hoje.isocalendar()[1]
     ano_iso = hoje.isocalendar()[0]
-    
+
     try:
         ja_avaliou = _avaliacao_ja_existe_db(nome, semana_iso, ano_iso)
         return jsonify({"ja_avaliou": ja_avaliou}), 200
@@ -1042,7 +1031,7 @@ def registrar_refeicao():
     nome      = dados.get("nome", "Desconhecido").strip()
     serie     = dados.get("serie", "N/A").strip()
     curso     = dados.get("curso", "N/A").strip()
-    
+
     # Limpa dados malformados do leitor USB (não use locals())
     nome = nome or "Desconhecido"
     serie = serie or "N/A"
@@ -1062,7 +1051,7 @@ def registrar_refeicao():
     serie = _limpar_campo(serie)
     curso = _limpar_campo(curso)
     matricula = _limpar_campo(matricula)
-    
+
     today      = _hoje()
     if not matricula:
         return jsonify({"erro": "Matricula nao informada"}), 400
@@ -1076,7 +1065,7 @@ def registrar_refeicao():
             "total_hoje": db_duplicado["total_hoje"],
             "total_refeicao": db_duplicado["total_refeicao"],
         }), 200
-    
+
     hora = datetime.datetime.now().strftime("%H:%M:%S")
     periodo = _aula_por_hora(hora)
     registro = [today, hora, matricula, nome, serie, curso, refeicao]
@@ -1178,7 +1167,7 @@ def registrar_frequencia():
     nome      = dados.get("nome", "Desconhecido").strip()
     serie     = dados.get("serie", "N/A").strip()
     curso     = dados.get("curso", "N/A").strip()
-    
+
     # Limpa dados malformados do leitor USB
     def _limpar_campo(valor: str) -> str:
         if not valor:
@@ -1193,11 +1182,11 @@ def registrar_frequencia():
     serie = _limpar_campo(serie)
     curso = _limpar_campo(curso)
     matricula = _limpar_campo(matricula)
-    
+
     nome = nome or "Desconhecido"
     serie = serie or "N/A"
     curso = curso or "N/A"
-    
+
     hoje = _hoje()
     if not matricula:
         return jsonify({"erro": "Matricula nao informada"}), 400
@@ -1205,7 +1194,7 @@ def registrar_frequencia():
     db_duplicado = _frequencia_duplicado_db(matricula)
     if db_duplicado:
         return jsonify({"status": "ja_registrado", "nome": db_duplicado["nome"], "hora": db_duplicado["hora"], "total_hoje": db_duplicado["total_hoje"]}), 200
-    
+
     hora = datetime.datetime.now().strftime("%H:%M:%S")
     aula = _aula_por_hora(hora)
     registro = [hoje, hora, matricula, nome, serie, curso, aula]
@@ -1220,7 +1209,7 @@ def registrar_frequencia():
         return jsonify({"erro": "Erro ao registrar frequência"}), 500
 
     logger.info(f"Frequência registrada: {nome} ({matricula})")
-    
+
     registros = _ler_frequencia_hoje_db()
     total_hoje = len(registros)
     return jsonify({"status": "ok", "nome": nome, "hora": hora, "aula": aula, "total_hoje": total_hoje}), 200
@@ -1293,17 +1282,17 @@ def _enviar_backup_email():
         cfg = ler_json(CONFIG_FILE, {})
         if not cfg.get("email_backup_ativo", False):
             return
-        
+
         email_remetente = cfg.get("email_remetente", "")
         email_senha = cfg.get("email_senha_app", "")
         email_destino = cfg.get("email_destino", "")
         email_smtp = cfg.get("email_smtp", "smtp.gmail.com")
         email_porta = cfg.get("email_porta", 587)
-        
+
         if not all([email_remetente, email_senha, email_destino]):
             logger.warning("Backup por e-mail desativado: credenciais incompletas")
             return
-        
+
         ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         zip_name = f"backup_marwin_{ts}.zip"
         pasta_exp, arquivos_csv = _exportar_backup_mensal_csv(f"email_{ts}")
@@ -1312,29 +1301,29 @@ def _enviar_backup_email():
                 zf.write(os.path.join(pasta_exp, nome_arq), arcname=nome_arq)
             if os.path.exists(LISTA_ALUNOS_FILE):
                 zf.write(LISTA_ALUNOS_FILE, arcname="lista_alunos.json")
-        
+
         # Enviar por SMTP
         msg = MIMEMultipart()
         msg["From"] = email_remetente
         msg["To"] = email_destino
         msg["Subject"] = f"Backup MARWIN - {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}"
-        
+
         body = f"Backup automático do sistema MARWIN - {datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')}"
         msg.attach(MIMEText(body, "plain", "utf-8"))
-        
+
         with open(zip_name, "rb") as attachment:
             part = MIMEBase("application", "octet-stream")
             part.set_payload(attachment.read())
             encoders.encode_base64(part)
             part.add_header("Content-Disposition", f"attachment; filename= {zip_name}")
             msg.attach(part)
-        
+
         server = smtplib.SMTP(email_smtp, email_porta)
         server.starttls()
         server.login(email_remetente, email_senha)
         server.send_message(msg)
         server.quit()
-        
+
         os.remove(zip_name)
         logger.info(f"Backup enviado por e-mail para {email_destino}")
     except Exception as e:
@@ -1351,7 +1340,7 @@ def _agendar_backup_email():
             tempo_espera = (proxima_exec - agora).total_seconds()
             time.sleep(tempo_espera)
             _enviar_backup_email()
-    
+
     thread = threading.Thread(target=_loop_backup, daemon=True)
     thread.start()
 
@@ -1543,62 +1532,6 @@ def carregar_tema():
 def salvar_tema_tk(tema):
     with open(TEMA_FILE,"w") as f: json.dump({"tema":tema},f)
 
-def configurar_janela(win, titulo):
-    win.title(titulo); win.state("zoomed"); win.configure(bg=T["BG_MAIN"])
-    win.bind("<F11>", lambda e: win.attributes("-fullscreen", not win.attributes("-fullscreen")))
-    win.bind("<Escape>", lambda e: win.destroy())
-
-def _configurar_layout_portrait(corpo, painel_lateral, painel_principal, lado="left", largura_limite=980):
-    def reajustar(event=None):
-        corpo.update_idletasks()
-        if corpo.winfo_width() <= largura_limite:
-            painel_lateral.pack_forget(); painel_principal.pack_forget()
-            painel_lateral.pack(fill="x", padx=0, pady=(0, 12))
-            painel_principal.pack(fill="both", expand=True)
-        else:
-            painel_lateral.pack_forget(); painel_principal.pack_forget()
-            if lado == "right":
-                painel_principal.pack(side="left", fill="both", expand=True)
-                painel_lateral.pack(side="right", fill="y")
-            else:
-                painel_lateral.pack(side="left", fill="y")
-                painel_principal.pack(side="left", fill="both", expand=True)
-    corpo.bind("<Configure>", reajustar)
-    reajustar()
-
-def criar_scrollable_frame(parent):
-    canvas = tk.Canvas(parent, bg=T["BG_MAIN"], highlightthickness=0)
-    sb = ttk.Scrollbar(parent, orient="vertical", command=canvas.yview)
-    sf = tk.Frame(canvas, bg=T["BG_MAIN"])
-    wid = canvas.create_window((0,0), window=sf, anchor="nw")
-    canvas.bind("<Configure>", lambda e: canvas.itemconfig(wid, width=e.width))
-    sf.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-    canvas.configure(yscrollcommand=sb.set)
-    canvas.bind_all("<MouseWheel>", lambda e: canvas.yview_scroll(int(-1*(e.delta/120)),"units"))
-    canvas.pack(side="left", fill="both", expand=True); sb.pack(side="right", fill="y")
-    return sf
-
-def criar_barra_topo(win, titulo, cmd_voltar=None, subtitulo=None):
-    """Barra de topo institucional verde + linha amarela — padrão EEEP Marwin."""
-    barra = tk.Frame(win, bg=T["ACCENT_VIBRANT"], height=56)
-    barra.pack(fill="x"); barra.pack_propagate(False)
-    if cmd_voltar:
-        tk.Button(barra, text="← Voltar", font=("Segoe UI", 11, "bold"),
-                  bg=T["ACCENT_VIBRANT"], fg="white", bd=0, padx=14, cursor="hand2",
-                  activebackground=T["ACCENT_SOFT"],
-                  command=cmd_voltar).pack(side="left", padx=16, pady=14)
-        tk.Frame(barra, bg="#ffffff", width=1).pack(side="left", fill="y", pady=12)
-    tk.Label(barra, text=titulo, font=("Segoe UI", 14, "bold"),
-             bg=T["ACCENT_VIBRANT"], fg="white").pack(side="left", padx=16, pady=16)
-    if subtitulo:
-        tk.Label(barra, text=subtitulo, font=("Segoe UI", 10),
-                 bg=T["ACCENT_VIBRANT"], fg="#b2dfb4").pack(side="right", padx=20)
-    else:
-        tk.Label(barra, text="EEEP MARWIN  —  Servidor Admin", font=("Segoe UI", 10),
-                 bg=T["ACCENT_VIBRANT"], fg="#b2dfb4").pack(side="right", padx=20)
-    tk.Frame(win, bg=T["HIGHLIGHT_YELLOW"], height=4).pack(fill="x")
-    return barra
-
 def pedir_senha_tk():
     win = tk.Toplevel(janela); win.title("Acesso Administrativo"); win.resizable(False, False)
     win.configure(bg=T["BG_MAIN"]); win.transient(janela); win.grab_set()
@@ -1651,8 +1584,8 @@ BRANCO         = "#FFFFFF"
 TEXTO_CINZA    = "#6B7280"
 TEXTO_ESCURO   = "#1F2937"
 TEXTO_CLARO    = "#D7E8DE"
- 
- 
+
+
 def abrir_painel_admin_ctk(event=None):
     """Abre o Painel Administrativo com o novo visual (CustomTkinter).
  
@@ -1660,7 +1593,7 @@ def abrir_painel_admin_ctk(event=None):
     de dados do painel original — só muda a interface.
     """
     senha = pedir_senha_tk()
- 
+
     def _local_check(pw: str) -> bool:
         if not pw:
             return False
@@ -1670,43 +1603,44 @@ def abrir_painel_admin_ctk(event=None):
             except Exception:
                 return False
         return secrets.compare_digest(pw, ADMIN_PASSWORD)
- 
+
     if not _local_check(senha):
         if senha is not None:
             logger.warning("Tentativa de acesso admin com senha incorreta")
             messagebox.showerror("Acesso negado", "Senha incorreta!")
         return
- 
+
     logger.info("Painel admin (CTk) aberto com sucesso")
- 
+
     ctk.set_appearance_mode("light")
     ctk.set_default_color_theme("green")
- 
+
     jd = ctk.CTkToplevel(janela)
     jd.title("Painel Administrativo — EEEP MARWIN")
     jd.geometry("1400x850")
+    jd.state("zoomed")
     jd.configure(fg_color=CINZA_BG)
     jd.attributes("-topmost", True)
     jd.lift()
     jd.focus_force()
     jd.after(100, lambda: jd.attributes("-topmost", False))
- 
+
     jd.grid_columnconfigure(0, weight=0)
     jd.grid_columnconfigure(1, weight=1)
     jd.grid_rowconfigure(0, weight=1)
- 
+
     paginas = {}
- 
+
     # ──────────────────────────────────────────────────────────────────
     # SIDEBAR
     # ──────────────────────────────────────────────────────────────────
     sidebar = ctk.CTkFrame(jd, width=230, corner_radius=0, fg_color=VERDE_SIDEBAR)
     sidebar.grid(row=0, column=0, sticky="nsew")
     sidebar.grid_propagate(False)
- 
+
     topo = ctk.CTkFrame(sidebar, fg_color="transparent")
     topo.pack(fill="x", padx=20, pady=(24, 20))
- 
+
     logo_path = _buscar_logo_png()
     logo_ref = None
     if logo_path:
@@ -1721,14 +1655,14 @@ def abrir_painel_admin_ctk(event=None):
     else:
         ctk.CTkLabel(topo, text="🏫", font=("Segoe UI", 28), width=40).pack(side="left")
     jd._logo_ref = logo_ref  # mantém referência viva
- 
+
     textos_logo = ctk.CTkFrame(topo, fg_color="transparent")
     textos_logo.pack(side="left", padx=(8, 0))
     ctk.CTkLabel(textos_logo, text="Painel Administrativo",
                   font=("Segoe UI", 14, "bold"), text_color="white").pack(anchor="w")
     ctk.CTkLabel(textos_logo, text="EEEP MARWIN",
                   font=("Segoe UI", 11), text_color=TEXTO_CLARO).pack(anchor="w")
- 
+
     itens_menu = [
         ("🏠", "Visão Geral"),
         ("📋", "Avaliações"),
@@ -1741,16 +1675,16 @@ def abrir_painel_admin_ctk(event=None):
         ("🔲", "QR Codes"),
         ("📄", "Logs"),
     ]
- 
+
     botoes_menu = {}
- 
+
     def selecionar_botao(nome):
         for n, b in botoes_menu.items():
             if n == nome:
                 b.configure(fg_color=VERDE_SELECAO, text_color="white", hover_color=VERDE_SELECAO)
             else:
                 b.configure(fg_color="transparent", text_color=TEXTO_CLARO, hover_color=VERDE_HOVER)
- 
+
     def mostrar_pagina(nome):
         selecionar_botao(nome)
         if nome not in paginas:
@@ -1797,7 +1731,7 @@ def abrir_painel_admin_ctk(event=None):
         box.insert("1.0", erro_texto)
         box.configure(state="disabled")
         return page
- 
+
     for icone, nome in itens_menu:
         btn = ctk.CTkButton(
             sidebar, text=f"  {icone}   {nome}", anchor="w", font=("Segoe UI", 13),
@@ -1807,7 +1741,7 @@ def abrir_painel_admin_ctk(event=None):
         )
         btn.pack(fill="x", padx=12, pady=2)
         botoes_menu[nome] = btn
- 
+
     rodape = ctk.CTkFrame(sidebar, fg_color=VERDE_SELECAO, corner_radius=10)
     rodape.pack(fill="x", padx=12, pady=16, side="bottom")
     ctk.CTkLabel(rodape, text="👤", font=("Segoe UI", 22), text_color="white"
@@ -1820,7 +1754,7 @@ def abrir_painel_admin_ctk(event=None):
                   text_color="#B2DFB4").pack(anchor="w")
     ctk.CTkLabel(info_rodape, text="● Online", font=("Segoe UI", 10),
                   text_color="#7BE08C").pack(anchor="w")
- 
+
     # ──────────────────────────────────────────────────────────────────
     # ÁREA DE CONTEÚDO + HEADER
     # ──────────────────────────────────────────────────────────────────
@@ -1828,7 +1762,7 @@ def abrir_painel_admin_ctk(event=None):
     container.grid(row=0, column=1, sticky="nsew")
     container.grid_rowconfigure(1, weight=1)
     container.grid_columnconfigure(0, weight=1)
- 
+
     header = ctk.CTkFrame(container, fg_color=VERDE_VIBRANTE, height=56, corner_radius=0)
     header.grid(row=0, column=0, sticky="ew")
     header.grid_propagate(False)
@@ -1838,7 +1772,7 @@ def abrir_painel_admin_ctk(event=None):
     ctk.CTkLabel(status, text="●", font=("Segoe UI", 14), text_color="#4CAF50").pack(side="left")
     servidor_txt = f"  Servidor: {url_ngrok_global}" if url_ngrok_global else "  Servidor: indisponível"
     ctk.CTkLabel(status, text=servidor_txt, font=("Segoe UI", 12), text_color="white").pack(side="left")
- 
+
     # ──────────────────────────────────────────────────────────────────
     # HELPERS DE LAYOUT (cards / tabelas)
     # ──────────────────────────────────────────────────────────────────
@@ -1860,13 +1794,13 @@ def abrir_painel_admin_ctk(event=None):
         sub_lbl = ctk.CTkLabel(textos, text=subtitulo, font=("Segoe UI", 10), text_color=TEXTO_CINZA)
         sub_lbl.pack(anchor="w")
         return valor_lbl, sub_lbl
- 
+
     def card_tabela(parent, titulo, colunas, linhas, rodape="", larguras=None):
         card = ctk.CTkFrame(parent, fg_color=BRANCO, corner_radius=12)
         topo = ctk.CTkFrame(card, fg_color="transparent")
         topo.pack(fill="x", padx=18, pady=(16, 10))
         ctk.CTkLabel(topo, text=titulo, font=("Segoe UI", 13, "bold"), text_color=TEXTO_ESCURO).pack(side="left")
- 
+
         header_t = ctk.CTkFrame(card, fg_color=VERDE_ESCURO, corner_radius=6)
         header_t.pack(fill="x", padx=18)
         n = len(colunas)
@@ -1875,7 +1809,7 @@ def abrir_painel_admin_ctk(event=None):
             ctk.CTkLabel(header_t, text=c, font=("Segoe UI", 10, "bold"), text_color="white",
                           width=w or 0, anchor="w").pack(side="left", expand=(i == n - 1),
                                                             fill="x", padx=8, pady=8)
- 
+
         if not linhas:
             ctk.CTkLabel(card, text="Nenhum registro encontrado.", font=("Segoe UI", 11),
                           text_color=TEXTO_CINZA).pack(anchor="w", padx=18, pady=12)
@@ -1890,33 +1824,33 @@ def abrir_painel_admin_ctk(event=None):
                                   text_color="#374151").pack(side="left", expand=(i == n - 1),
                                                                 fill="x", padx=8, pady=8)
                 ctk.CTkFrame(card, fg_color="#F0F0F0", height=1).pack(fill="x", padx=18)
- 
+
         if rodape:
             ctk.CTkLabel(card, text=rodape, font=("Segoe UI", 10),
                           text_color="#2E7D32").pack(anchor="w", padx=18, pady=(10, 16))
         else:
             ctk.CTkFrame(card, fg_color="transparent", height=10).pack()
         return card
- 
+
     # ──────────────────────────────────────────────────────────────────
     # PÁGINA: VISÃO GERAL (ligada ao banco)
     # ──────────────────────────────────────────────────────────────────
     def criar_pagina_visao_geral():
         page = ctk.CTkScrollableFrame(container, fg_color=CINZA_BG)
         page.grid_columnconfigure((0, 1, 2), weight=1)
- 
+
         # Cabeçalho com data de hoje
         cab = ctk.CTkFrame(page, fg_color="transparent")
         cab.grid(row=0, column=0, columnspan=3, sticky="ew", pady=(0, 16))
         cab.grid_columnconfigure(0, weight=1)
- 
+
         textos = ctk.CTkFrame(cab, fg_color="transparent")
         textos.grid(row=0, column=0, sticky="w")
         ctk.CTkLabel(textos, text="Bom dia, Administrador! 👋",
                       font=("Segoe UI", 22, "bold"), text_color=TEXTO_ESCURO).pack(anchor="w")
         ctk.CTkLabel(textos, text="Aqui está um resumo das atividades de hoje.",
                       font=("Segoe UI", 12), text_color=TEXTO_CINZA).pack(anchor="w")
- 
+
         hoje_dt = datetime.date.today()
         dias_semana_pt = ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira",
                             "Sexta-feira", "Sábado", "Domingo"]
@@ -1929,26 +1863,26 @@ def abrir_painel_admin_ctk(event=None):
                       text_color=TEXTO_ESCURO).pack(anchor="w")
         ctk.CTkLabel(txt_data, text=dias_semana_pt[hoje_dt.weekday()], font=("Segoe UI", 10),
                       text_color=TEXTO_CINZA).pack(anchor="w")
- 
+
         # ── Cards de resumo ──────────────────────────────────────────
         try:
             refeitorio_hoje = _ler_refeitorio_hoje_db()
         except Exception as e:
             logger.error(f"Erro ao ler refeitorio do banco: {e}")
             refeitorio_hoje = []
- 
+
         try:
             freq_hoje = _ler_frequencia_hoje_db()
         except Exception as e:
             logger.error(f"Erro ao ler frequencia do banco: {e}")
             freq_hoje = []
- 
+
         try:
             avaliacoes_todas = _ler_avaliacoes_db()
         except Exception as e:
             logger.error(f"Erro ao ler avaliacoes do banco: {e}")
             avaliacoes_todas = []
- 
+
         # Conta avaliações da semana atual (segunda a domingo)
         inicio_semana = hoje_dt - datetime.timedelta(days=hoje_dt.weekday())
         fim_semana = inicio_semana + datetime.timedelta(days=6)
@@ -1960,14 +1894,14 @@ def abrir_painel_admin_ctk(event=None):
                     avaliacoes_semana += 1
             except Exception:
                 continue
- 
+
         card_resumo(page, 1, 0, "📋", VERDE_CLARO, VERDE_VIBRANTE,
                        "Refeições hoje", str(len(refeitorio_hoje)), "registros no refeitório")
         card_resumo(page, 1, 1, "👥", AZUL_CLARO, "#2196F3",
                        "Presenças hoje", str(len(freq_hoje)), "alunos registrados")
         card_resumo(page, 1, 2, "⭐", ROXO_CLARO, "#9C27B0",
                        "Avaliações (semana)", str(avaliacoes_semana), "respostas esta semana")
- 
+
         # ── Últimas entradas no refeitório ─────────────────────────────
         ultimas_refeicoes = refeitorio_hoje[-5:][::-1]  # 5 mais recentes
         linhas_ref = [
@@ -1978,7 +1912,7 @@ def abrir_painel_admin_ctk(event=None):
                                  ["HORA", "NOME", "SÉRIE", "CURSO", "REFEIÇÃO"],
                                  linhas_ref, rodape=f"Total: {len(refeitorio_hoje)} registros")
         tabela1.grid(row=2, column=0, columnspan=2, sticky="nsew", padx=(0, 8), pady=(8, 0))
- 
+
         # ── Últimas presenças registradas hoje ──────────────────────────
         ultimas_presencas = freq_hoje[-5:][::-1]
         linhas_freq = [
@@ -1989,7 +1923,7 @@ def abrir_painel_admin_ctk(event=None):
                                  ["HORA", "NOME", "SÉRIE", "CURSO", "AULA"],
                                  linhas_freq, rodape=f"Total: {len(freq_hoje)} registros")
         tabela2.grid(row=2, column=2, columnspan=1, sticky="nsew", padx=(8, 0), pady=(8, 0))
- 
+
         # ── Eventos cadastrados ───────────────────────────────────────
         try:
             eventos = ler_json(EVENTOS_FILE, EVENTOS_PADRAO)
@@ -1999,7 +1933,197 @@ def abrir_painel_admin_ctk(event=None):
         tabela_eventos = card_tabela(page, "📅  Eventos cadastrados",
                                          ["DATA", "EVENTO"], linhas_eventos, larguras={0: 80})
         tabela_eventos.grid(row=3, column=0, columnspan=3, sticky="nsew", pady=(16, 0))
- 
+
+        # ── Importar CSV(s) para o banco de dados ──────────────────────
+        def _dialogo_mapeamento_manual(nome_arquivo, colunas_csv):
+            """Pede ao usuário a tabela de destino quando a detecção automática falha.
+            Retorna 'refeitorio', 'frequencia', 'avaliacoes' ou None (cancelado)."""
+            resultado = {"tabela": None}
+            dlg = ctk.CTkToplevel(jd)
+            dlg.title("Mapeamento manual de tabela")
+            dlg.configure(fg_color=BRANCO)
+            dlg.transient(jd)
+            dlg.grab_set()
+            dlg.resizable(False, False)
+            dlg.geometry("440x320")
+
+            ctk.CTkLabel(dlg, text="Tabela de destino não reconhecida",
+                          font=("Segoe UI", 14, "bold"), text_color=VERDE_VIBRANTE
+                          ).pack(padx=20, pady=(20, 4))
+            ctk.CTkLabel(dlg, text=f"Arquivo: {nome_arquivo}",
+                          font=("Segoe UI", 10, "italic"), text_color=TEXTO_CINZA
+                          ).pack(padx=20)
+            ctk.CTkLabel(dlg, text=f"Colunas detectadas: {', '.join(colunas_csv)}",
+                          font=("Segoe UI", 9), text_color=TEXTO_ESCURO,
+                          wraplength=400, justify="left").pack(padx=20, pady=(4, 12))
+            ctk.CTkLabel(dlg, text="Selecione a tabela de destino para esta importação:",
+                          font=("Segoe UI", 10), text_color=TEXTO_ESCURO).pack(padx=20, pady=(0, 8))
+
+            tabela_var = ctk.StringVar(value="")
+            opcoes = [
+                ("refeitorio", "Refeitório  (Data, HoraEntrada, Matricula, Nome, Serie, Curso, Refeicao)"),
+                ("frequencia", "Frequência  (Data, HoraEntrada, Matricula, Nome, Serie, Curso, Aula)"),
+                ("avaliacoes", "Avaliações  (Data, Aluno, Serie, Curso, Estagio, Item, Nota)"),
+            ]
+            for val, texto in opcoes:
+                ctk.CTkRadioButton(dlg, text=texto, variable=tabela_var, value=val,
+                                    font=("Segoe UI", 10), fg_color=VERDE_VIBRANTE,
+                                    hover_color=VERDE_ESCURO, wraplength=380
+                                    ).pack(anchor="w", padx=30, pady=4)
+
+            def _confirmar():
+                if not tabela_var.get():
+                    messagebox.showwarning("Aviso", "Selecione uma tabela de destino.", parent=dlg)
+                    return
+                resultado["tabela"] = tabela_var.get()
+                dlg.destroy()
+
+            def _cancelar():
+                dlg.destroy()
+
+            btn_r = ctk.CTkFrame(dlg, fg_color="transparent")
+            btn_r.pack(pady=(16, 16))
+            ctk.CTkButton(btn_r, text="Cancelar", command=_cancelar,
+                           fg_color="#6B7280", hover_color="#4B5563",
+                           font=("Segoe UI", 11, "bold")).pack(side="left", padx=6)
+            ctk.CTkButton(btn_r, text="Importar", command=_confirmar,
+                           fg_color=VERDE_VIBRANTE, hover_color=VERDE_ESCURO,
+                           font=("Segoe UI", 11, "bold")).pack(side="left", padx=6)
+
+            dlg.wait_window()
+            return resultado["tabela"]
+
+        import_card = ctk.CTkFrame(page, fg_color=BRANCO, corner_radius=12)
+        import_card.grid(row=4, column=0, columnspan=3, sticky="nsew", pady=(16, 0))
+
+        ctk.CTkLabel(import_card, text="💾  Importar CSV(s) para o banco de dados",
+                      font=("Segoe UI", 13, "bold"), text_color=TEXTO_ESCURO
+                      ).pack(anchor="w", padx=18, pady=(16, 4))
+        ctk.CTkLabel(import_card,
+                      text="Selecione um ou mais arquivos CSV (refeitório, frequência ou avaliações) "
+                           "para importar/restaurar no banco. A tabela de destino é detectada "
+                           "automaticamente pelas colunas do arquivo; se não for reconhecida, "
+                           "você poderá escolher manualmente.",
+                      font=("Segoe UI", 11), text_color=TEXTO_CINZA,
+                      wraplength=1000, justify="left").pack(anchor="w", padx=18, pady=(0, 10))
+
+        linha_import = ctk.CTkFrame(import_card, fg_color="transparent")
+        linha_import.pack(fill="x", padx=18, pady=(0, 6))
+
+        var_ignorar_dup = ctk.BooleanVar(value=True)
+        ctk.CTkCheckBox(linha_import, text="Ignorar duplicatas (recomendado)",
+                          variable=var_ignorar_dup, fg_color=VERDE_VIBRANTE,
+                          hover_color=VERDE_ESCURO, font=("Segoe UI", 11)
+                          ).pack(side="left", padx=(0, 16))
+
+        prog_import = ctk.CTkProgressBar(linha_import, width=240)
+        prog_import.set(0)
+
+        lbl_import_status = ctk.CTkLabel(import_card, text="", font=("Segoe UI", 10),
+                                          text_color=TEXTO_CINZA, wraplength=1000, justify="left")
+
+        def _selecionar_e_importar():
+            from tkinter import filedialog
+            pasta_backups = os.path.join(DADOS_DIR, "backups")
+            inicial = pasta_backups if os.path.isdir(pasta_backups) else DADOS_DIR
+            caminhos = filedialog.askopenfilenames(
+                parent=jd,
+                title="Selecionar CSV(s) para importar",
+                initialdir=inicial,
+                filetypes=[("Arquivos CSV", "*.csv"), ("Todos os arquivos", "*.*")],
+            )
+            if not caminhos:
+                return
+
+            # Pré-leitura e detecção da tabela de cada arquivo (rápido, local)
+            tarefas = []
+            for caminho in caminhos:
+                nome_arq = os.path.basename(caminho)
+                try:
+                    with open(caminho, "r", encoding="utf-8") as f:
+                        primeiras = list(csv.DictReader(f))
+                except Exception as e:
+                    messagebox.showerror("Erro", f"Falha ao ler {nome_arq}:\n{e}")
+                    continue
+                if not primeiras:
+                    continue
+                colunas_csv = list(primeiras[0].keys())
+                tabela = _detectar_tabela_csv(colunas_csv)
+                if tabela is None:
+                    tabela = _dialogo_mapeamento_manual(nome_arq, colunas_csv)
+                    if tabela is None:
+                        continue
+                tarefas.append((caminho, tabela))
+
+            if not tarefas:
+                return
+
+            ignorar_dup = var_ignorar_dup.get()
+            total_arquivos = len(tarefas)
+
+            btn_import.configure(state="disabled")
+            prog_import.set(0)
+            prog_import.pack(side="left", padx=(0, 12))
+            lbl_import_status.configure(text="Iniciando importação...")
+            lbl_import_status.pack(anchor="w", padx=18, pady=(0, 12))
+
+            def _thread_body():
+                resumo_total = {"inseridos": 0, "ignorados": 0, "erros": 0}
+                detalhes = []
+
+                for idx_arq, (caminho, tabela) in enumerate(tarefas, 1):
+                    nome_arq = os.path.basename(caminho)
+
+                    def _progresso(atual, total, _a=idx_arq, _t=total_arquivos, _nome=nome_arq):
+                        frac = (_a - 1 + atual / max(total, 1)) / _t
+                        page.after(0, lambda: (
+                            prog_import.set(frac),
+                            lbl_import_status.configure(text=f"[{_a}/{_t}] {_nome} — {atual}/{total}")
+                        ))
+
+                    try:
+                        resultado = _importar_csv_para_banco_forcado(caminho, tabela, ignorar_dup, _progresso)
+                    except Exception as e_imp:
+                        resumo_total["erros"] += 1
+                        detalhes.append(f"❌ {nome_arq}: {e_imp}")
+                        continue
+
+                    resumo_total["inseridos"] += resultado["inseridos"]
+                    resumo_total["ignorados"] += resultado["ignorados"]
+                    resumo_total["erros"] += resultado["erros"]
+                    detalhes.append(
+                        f"✅ {nome_arq} → {resultado['tabela']}: "
+                        f"{resultado['inseridos']} inserido(s), "
+                        f"{resultado['ignorados']} ignorado(s), "
+                        f"{resultado['erros']} erro(s)."
+                    )
+
+                def _finalizar():
+                    prog_import.set(1)
+                    btn_import.configure(state="normal")
+                    lbl_import_status.configure(text="Importação concluída.")
+                    msg = (
+                        f"Importação concluída!\n\n"
+                        f"✅ Inseridos: {resumo_total['inseridos']}\n"
+                        f"⏭ Ignorados: {resumo_total['ignorados']}\n"
+                        f"❌ Erros: {resumo_total['erros']}\n\n"
+                        + "\n".join(detalhes)
+                    )
+                    messagebox.showinfo("Resumo da importação", msg)
+                    page.after(2500, lambda: (prog_import.pack_forget(), lbl_import_status.pack_forget()))
+
+                page.after(0, _finalizar)
+
+            threading.Thread(target=_thread_body, daemon=True).start()
+
+        btn_import = ctk.CTkButton(linha_import, text="📂  Selecionar CSV(s) e importar para o banco",
+                                     fg_color=VERDE_VIBRANTE, hover_color=VERDE_ESCURO,
+                                     font=("Segoe UI", 11, "bold"), height=34,
+                                     command=_selecionar_e_importar)
+        btn_import.pack(side="left")
+
+        ctk.CTkFrame(import_card, fg_color="transparent", height=8).pack()
+
         return page
 
     def criar_pagina_em_construcao(nome):
@@ -2010,7 +2134,7 @@ def abrir_painel_admin_ctk(event=None):
                       font=("Segoe UI", 16), text_color=TEXTO_CINZA, justify="center"
                       ).grid(row=0, column=0)
         return page
- 
+
     mostrar_pagina("Visão Geral")
     # ──────────────────────────────────────────────────────────────────
     # PÁGINA: AVALIAÇÕES (ligada ao banco)
@@ -2019,7 +2143,7 @@ def abrir_painel_admin_ctk(event=None):
         page = ctk.CTkFrame(container, fg_color=CINZA_BG)
         page.grid_columnconfigure(0, weight=1)
         page.grid_rowconfigure(3, weight=1)
- 
+
         # Título
         bloco = ctk.CTkFrame(page, fg_color="transparent")
         bloco.grid(row=0, column=0, sticky="ew", padx=24, pady=(20, 12))
@@ -2027,14 +2151,14 @@ def abrir_painel_admin_ctk(event=None):
                       text_color=TEXTO_ESCURO).pack(anchor="w")
         ctk.CTkLabel(bloco, text="Acompanhe e filtre as avaliações dos alunos.",
                       font=("Segoe UI", 12), text_color=TEXTO_CINZA).pack(anchor="w")
- 
+
         # ── Card de filtros ────────────────────────────────────────────
         filtros_card = ctk.CTkFrame(page, fg_color=BRANCO, corner_radius=12)
         filtros_card.grid(row=1, column=0, sticky="ew", padx=24, pady=(0, 12))
- 
+
         linha1 = ctk.CTkFrame(filtros_card, fg_color="transparent")
         linha1.pack(fill="x", padx=18, pady=(18, 6))
- 
+
         def _campo(parent, label, widget_cls, **kwargs):
             blk = ctk.CTkFrame(parent, fg_color="transparent")
             blk.pack(side="left", padx=(0, 16))
@@ -2043,19 +2167,19 @@ def abrir_painel_admin_ctk(event=None):
             w = widget_cls(blk, width=170, height=34, **kwargs)
             w.pack(anchor="w", pady=(4, 0))
             return w
- 
+
         ent_nome = _campo(linha1, "Nome", ctk.CTkEntry, placeholder_text="Buscar por nome...")
         ent_data = _campo(linha1, "Data (dd/mm/aaaa)", ctk.CTkEntry, placeholder_text="dd/mm/aaaa")
- 
+
         combo_est = _campo(linha1, "Estágio", ctk.CTkComboBox,
                               values=["Todos", "Comida", "Limpeza", "Ensino", "Semana"])
         combo_est.set("Todos")
- 
+
         # ── Estatísticas (preenchidas em carregar_dados) ────────────────
         stats_frame = ctk.CTkFrame(page, fg_color="transparent")
         stats_frame.grid(row=2, column=0, sticky="ew", padx=24, pady=(0, 12))
         stats_frame.grid_columnconfigure((0, 1, 2, 3), weight=1)
- 
+
         lbl_total, _ = card_resumo(stats_frame, 0, 0, "📋", AZUL_CLARO, "#2196F3",
                                        "Total de avaliações", "0", "")
         lbl_pos, sub_pos = card_resumo(stats_frame, 0, 1, "🙂", VERDE_CLARO, "#4CAF50",
@@ -2064,16 +2188,16 @@ def abrir_painel_admin_ctk(event=None):
                                            "Neutras", "0", "")
         lbl_neg, sub_neg = card_resumo(stats_frame, 0, 3, "🙁", VERMELHO_CLARO, "#F44336",
                                            "Negativas", "0", "")
- 
+
         # ── Tabela (scrollable) ──────────────────────────────────────────
         tabela_card = ctk.CTkFrame(page, fg_color=BRANCO, corner_radius=12)
         tabela_card.grid(row=3, column=0, sticky="nsew", padx=24, pady=(0, 8))
         tabela_card.grid_rowconfigure(1, weight=1)
         tabela_card.grid_columnconfigure(0, weight=1)
- 
+
         colunas = ["DATA", "ALUNO", "SÉRIE", "CURSO", "ESTÁGIO", "CATEGORIA", "ITEM", "RESPOSTA"]
         larguras = {0: 110, 1: 140, 2: 60, 3: 60, 4: 70, 5: 110, 6: 0, 7: 90}
- 
+
         header_t = ctk.CTkFrame(tabela_card, fg_color=VERDE_ESCURO, corner_radius=6)
         header_t.grid(row=0, column=0, sticky="ew", padx=18, pady=(18, 0))
         n = len(colunas)
@@ -2081,20 +2205,20 @@ def abrir_painel_admin_ctk(event=None):
             ctk.CTkLabel(header_t, text=c, font=("Segoe UI", 10, "bold"),
                           text_color="white", width=larguras.get(i, 0),
                           anchor="w").pack(side="left", expand=(i == n - 1), fill="x", padx=8, pady=8)
- 
+
         corpo = ctk.CTkScrollableFrame(tabela_card, fg_color="transparent")
         corpo.grid(row=1, column=0, sticky="nsew", padx=18)
- 
+
         lbl_cnt = ctk.CTkLabel(tabela_card, text="0 registro(s)", font=("Segoe UI", 10),
                                   text_color=TEXTO_CINZA)
         lbl_cnt.grid(row=2, column=0, sticky="w", padx=18, pady=(4, 14))
- 
+
         # ── Lógica (igual ao painel antigo) ──────────────────────────────
         MAPA_ESTAGIO = {"Comida": "1", "Limpeza": "2", "Ensino": "3", "Semana": "4"}
- 
+
         def _eh_almoco_favorito(item):
             return "almoco favorito" in item.lower() or "almoço favorito" in item.lower()
- 
+
         def carregar_dados():
             for w in corpo.winfo_children():
                 w.destroy()
@@ -2180,12 +2304,12 @@ def abrir_painel_admin_ctk(event=None):
                 corpo.after(0, lambda: _renderizar(linhas, erro))
 
             threading.Thread(target=_thread_body, daemon=True).start()
- 
+
         # Botões Buscar / Exportar PDF
         ctk.CTkButton(linha1, text="🔍 Buscar", fg_color=VERDE_VIBRANTE, hover_color=VERDE_ESCURO,
                         width=100, height=34, font=("Segoe UI", 11, "bold"),
                         command=carregar_dados).pack(side="left", padx=(20, 4), pady=(18, 0))
- 
+
         def exportar_pdf():
             def _gerar():
                 try:
@@ -2223,20 +2347,20 @@ def abrir_painel_admin_ctk(event=None):
                     corpo.after(0, lambda: messagebox.showerror("Erro ao exportar", f"Falha ao gerar PDF:\n{e}"))
 
             threading.Thread(target=_gerar, daemon=True).start()
- 
+
         ctk.CTkButton(linha1, text="⭳ Exportar PDF", fg_color="#374151", hover_color="#1F2937",
                         width=130, height=34, font=("Segoe UI", 11, "bold"),
                         command=exportar_pdf).pack(side="left", padx=4, pady=(18, 0))
- 
+
         # ── Linha 2: Avaliações ativas / modo de leitura / apagar tudo ───
         linha2 = ctk.CTkFrame(filtros_card, fg_color="transparent")
         linha2.pack(fill="x", padx=18, pady=(4, 18))
- 
+
         cfg_sys = ler_json(CONFIG_FILE, {"avaliacoes_ativas": True, "modo_leitura": "camera"})
- 
+
         var_ativas = ctk.BooleanVar(value=cfg_sys.get("avaliacoes_ativas", True))
         var_modo = ctk.StringVar(value=cfg_sys.get("modo_leitura", "camera"))
- 
+
         def salvar_config():
             cfg_sys["avaliacoes_ativas"] = var_ativas.get()
             cfg_sys["modo_leitura"] = var_modo.get()
@@ -2245,18 +2369,18 @@ def abrir_painel_admin_ctk(event=None):
                 _sync_nuvem("/admin/config", "PUT", cfg_sys)
             except Exception:
                 pass
- 
+
         ctk.CTkCheckBox(linha2, text="Avaliações Ativas", variable=var_ativas,
                           fg_color=VERDE_VIBRANTE, hover_color=VERDE_ESCURO,
                           command=salvar_config).pack(side="left", padx=(0, 16))
- 
+
         ctk.CTkLabel(linha2, text="Modo de leitura:", font=("Segoe UI", 11),
                       text_color=TEXTO_CINZA).pack(side="left", padx=(0, 8))
         ctk.CTkRadioButton(linha2, text="Webcam", variable=var_modo, value="camera",
                               fg_color=VERDE_VIBRANTE, command=salvar_config).pack(side="left", padx=6)
         ctk.CTkRadioButton(linha2, text="Leitor USB", variable=var_modo, value="usb",
                               fg_color=VERDE_VIBRANTE, command=salvar_config).pack(side="left", padx=6)
- 
+
         def apagar_tudo():
             if messagebox.askyesno("Aviso", "Apagar todos os dados?"):
                 try:
@@ -2265,14 +2389,14 @@ def abrir_painel_admin_ctk(event=None):
                     messagebox.showinfo("Sucesso", "Avaliações apagadas do banco.")
                 except Exception as e:
                     messagebox.showerror("Erro", f"Falha ao apagar avaliações:\n{e}")
- 
+
         ctk.CTkButton(linha2, text="Apagar tudo", fg_color="#C62828", hover_color="#8E1F1F",
                         height=32, font=("Segoe UI", 11, "bold"),
                         command=apagar_tudo).pack(side="right")
- 
+
         carregar_dados()
         return page
-    
+
     def criar_pagina_relatorio_semanal():
         import matplotlib
         matplotlib.use("Agg")
@@ -2280,10 +2404,10 @@ def abrir_painel_admin_ctk(event=None):
         import matplotlib.dates as mdates
         from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
         import tkinter as tk
- 
+
         page = ctk.CTkScrollableFrame(container, fg_color=CINZA_BG)
         page.grid_columnconfigure(0, weight=1)
- 
+
         # ── Cabeçalho ────────────────────────────────────────────────
         cab = ctk.CTkFrame(page, fg_color="transparent")
         cab.grid(row=0, column=0, sticky="ew", pady=(4, 16))
@@ -2291,20 +2415,20 @@ def abrir_painel_admin_ctk(event=None):
                       font=("Segoe UI", 22, "bold"), text_color=TEXTO_ESCURO).pack(anchor="w")
         ctk.CTkLabel(cab, text="Refeições e presenças dos últimos 7 dias.",
                       font=("Segoe UI", 12), text_color=TEXTO_CINZA).pack(anchor="w")
- 
+
         # ── Cards de resumo semanal ───────────────────────────────────
         cards_row = ctk.CTkFrame(page, fg_color="transparent")
         cards_row.grid(row=1, column=0, sticky="ew", pady=(0, 16))
         cards_row.grid_columnconfigure((0, 1, 2), weight=1)
- 
+
         lbl_ref_sem,  sub_ref_sem  = card_resumo(cards_row, 0, 0, "🍽️", VERDE_CLARO,  VERDE_VIBRANTE, "Refeições (semana)", "...", "registros")
         lbl_freq_sem, sub_freq_sem = card_resumo(cards_row, 0, 1, "⏱️", AZUL_CLARO,   "#1565C0",       "Presenças (semana)", "...", "alunos únicos")
         lbl_aval_sem, sub_aval_sem = card_resumo(cards_row, 0, 2, "📋", ROXO_CLARO,   "#6A1B9A",       "Avaliações (semana)", "...", "respostas")
- 
+
         # ── Gráfico de linha matplotlib ───────────────────────────────
         grafico_card = ctk.CTkFrame(page, fg_color=BRANCO, corner_radius=12)
         grafico_card.grid(row=2, column=0, sticky="ew", pady=(0, 16))
- 
+
         topo_graf = ctk.CTkFrame(grafico_card, fg_color="transparent")
         topo_graf.pack(fill="x", padx=18, pady=(16, 4))
         ctk.CTkLabel(topo_graf, text="Atividade diária — últimos 7 dias",
@@ -2312,77 +2436,77 @@ def abrir_painel_admin_ctk(event=None):
         lbl_atualizado = ctk.CTkLabel(topo_graf, text="", font=("Segoe UI", 10),
                                        text_color=TEXTO_CINZA)
         lbl_atualizado.pack(side="right")
- 
+
         # Placeholder enquanto carrega
         frame_graf = ctk.CTkFrame(grafico_card, fg_color="transparent")
         frame_graf.pack(fill="x", padx=18, pady=(0, 16))
         lbl_carregando = ctk.CTkLabel(frame_graf, text="Carregando gráfico...",
                                        font=("Segoe UI", 12), text_color=TEXTO_CINZA)
         lbl_carregando.pack(pady=40)
- 
+
         canvas_ref = {}  # guarda referência do canvas matplotlib
- 
+
         def _renderizar_grafico(dados_ref, dados_freq, dados_aval):
             """Roda na thread principal — cria/atualiza o gráfico."""
             lbl_carregando.pack_forget()
             if "canvas" in canvas_ref:
                 canvas_ref["canvas"].get_tk_widget().destroy()
                 plt.close(canvas_ref.get("fig"))
- 
+
             datas_str = sorted(set(list(dados_ref.keys()) + list(dados_freq.keys()) + list(dados_aval.keys())))
- 
+
             if not datas_str:
                 ctk.CTkLabel(frame_graf, text="Sem dados na semana.",
                               font=("Segoe UI", 12), text_color=TEXTO_CINZA).pack(pady=40)
                 return
- 
+
             try:
                 datas_dt = [datetime.datetime.strptime(d, "%d/%m/%Y") for d in datas_str]
             except Exception:
                 datas_dt = list(range(len(datas_str)))
- 
+
             y_ref  = [dados_ref.get(d, 0)  for d in datas_str]
             y_freq = [dados_freq.get(d, 0) for d in datas_str]
             y_aval = [dados_aval.get(d, 0) for d in datas_str]
- 
+
             fig, ax = plt.subplots(figsize=(10, 3.8))
             fig.patch.set_facecolor(BRANCO)
             ax.set_facecolor(CINZA_BG)
- 
+
             ax.plot(datas_dt, y_ref,  marker="o", linewidth=2.5, color=VERDE_VIBRANTE,
                     label="Refeições",  markersize=7)
             ax.plot(datas_dt, y_freq, marker="s", linewidth=2.5, color="#1565C0",
                     label="Presenças", markersize=7)
             ax.plot(datas_dt, y_aval, marker="^", linewidth=2.5, color="#6A1B9A",
                     label="Avaliações", markersize=7, linestyle="--")
- 
+
             for x, y in zip(datas_dt, y_ref):
                 if y: ax.annotate(str(y), (x, y), textcoords="offset points",
                                   xytext=(0, 8), ha="center", fontsize=9, color=VERDE_VIBRANTE)
             for x, y in zip(datas_dt, y_freq):
                 if y: ax.annotate(str(y), (x, y), textcoords="offset points",
                                   xytext=(0, 8), ha="center", fontsize=9, color="#1565C0")
- 
+
             ax.xaxis.set_major_formatter(mdates.DateFormatter("%d/%m") if datas_dt and isinstance(datas_dt[0], datetime.datetime) else plt.FuncFormatter(lambda v, _: datas_str[int(v)] if int(v) < len(datas_str) else ""))
             ax.xaxis.set_major_locator(mdates.DayLocator() if datas_dt and isinstance(datas_dt[0], datetime.datetime) else plt.MaxNLocator(integer=True))
             plt.setp(ax.xaxis.get_majorticklabels(), rotation=0, ha="center", fontsize=9)
- 
+
             ax.set_ylabel("Quantidade", fontsize=10)
             ax.legend(loc="upper left", fontsize=10, frameon=False)
             ax.spines[["top", "right"]].set_visible(False)
             ax.grid(axis="y", linestyle="--", alpha=0.4)
             ax.set_ylim(bottom=0)
             fig.tight_layout()
- 
+
             canvas_tk = FigureCanvasTkAgg(fig, master=frame_graf)
             canvas_tk.draw()
             canvas_tk.get_tk_widget().pack(fill="x")
             canvas_ref["canvas"] = canvas_tk
             canvas_ref["fig"]    = fig
- 
+
             lbl_atualizado.configure(
                 text=f"Atualizado em {datetime.datetime.now().strftime('%H:%M:%S')}")
- 
+
         # ── Tabela diária detalhada ───────────────────────────────────
         tabela_card = ctk.CTkFrame(page, fg_color=BRANCO, corner_radius=12)
         tabela_card.grid(row=3, column=0, sticky="ew", pady=(0, 16))
@@ -2390,7 +2514,7 @@ def abrir_painel_admin_ctk(event=None):
         topo_tab.pack(fill="x", padx=18, pady=(16, 10))
         ctk.CTkLabel(topo_tab, text="Detalhe por dia",
                       font=("Segoe UI", 13, "bold"), text_color=TEXTO_ESCURO).pack(side="left")
- 
+
         # Cabeçalho da tabela
         header_tab = ctk.CTkFrame(tabela_card, fg_color=VERDE_ESCURO, corner_radius=6)
         header_tab.pack(fill="x", padx=18)
@@ -2401,22 +2525,22 @@ def abrir_painel_admin_ctk(event=None):
                           text_color="white", width=w, anchor="w"
                           ).pack(side="left", expand=(i == len(COLS_TAB)-1),
                                  fill="x", padx=8, pady=8)
- 
+
         corpo_tab = ctk.CTkFrame(tabela_card, fg_color="transparent")
         corpo_tab.pack(fill="x", padx=18)
- 
+
         DIAS_SEMANA = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"]
- 
+
         # ── Função de carga de dados ──────────────────────────────────
         def _carregar():
             hoje_d  = datetime.date.today()
             dias    = [hoje_d - datetime.timedelta(days=i) for i in range(6, -1, -1)]
             datas_s = [d.strftime("%d/%m/%Y") for d in dias]
- 
+
             dados_ref  = {}
             dados_freq = {}
             dados_aval = {}
- 
+
             try:
                 for row in _ler_refeitorio_todos_db():
                     d = row[0]
@@ -2424,7 +2548,7 @@ def abrir_painel_admin_ctk(event=None):
                         dados_ref[d] = dados_ref.get(d, 0) + 1
             except Exception:
                 pass
- 
+
             try:
                 vistos = {}
                 for row in _ler_frequencia_todos_db():
@@ -2436,7 +2560,7 @@ def abrir_painel_admin_ctk(event=None):
                             dados_freq[d] = dados_freq.get(d, 0) + 1
             except Exception:
                 pass
- 
+
             try:
                 for a in _ler_avaliacoes_db():
                     d = a.get("Data", "").split(" ")[0]
@@ -2444,31 +2568,31 @@ def abrir_painel_admin_ctk(event=None):
                         dados_aval[d] = dados_aval.get(d, 0) + 1
             except Exception:
                 pass
- 
+
             total_ref  = sum(dados_ref.values())
             total_freq = sum(dados_freq.values())
             total_aval = sum(dados_aval.values())
- 
+
             # Atualiza na thread principal
             def _atualizar_ui():
                 lbl_ref_sem.configure(text=str(total_ref))
                 lbl_freq_sem.configure(text=str(total_freq))
                 lbl_aval_sem.configure(text=str(total_aval))
- 
+
                 # Limpa corpo da tabela
                 for w in corpo_tab.winfo_children():
                     w.destroy()
- 
+
                 for i, (data_s, dia_d) in enumerate(zip(datas_s, dias)):
                     r_ref  = dados_ref.get(data_s, 0)
                     r_freq = dados_freq.get(data_s, 0)
                     r_aval = dados_aval.get(data_s, 0)
                     dia_nome = DIAS_SEMANA[dia_d.weekday()]
- 
+
                     bg = BRANCO if i % 2 == 0 else "#F8F9FA"
                     linha_f = ctk.CTkFrame(corpo_tab, fg_color=bg, corner_radius=0)
                     linha_f.pack(fill="x")
- 
+
                     valores = [(data_s, 120), (dia_nome, 160),
                                (str(r_ref),  120), (str(r_freq), 120), (str(r_aval), 120)]
                     n = len(valores)
@@ -2480,14 +2604,14 @@ def abrir_painel_admin_ctk(event=None):
                                       ).pack(side="left", expand=(j == n-1),
                                              fill="x", padx=8, pady=7)
                     ctk.CTkFrame(corpo_tab, fg_color="#F0F0F0", height=1).pack(fill="x")
- 
+
                 # Gráfico
                 _renderizar_grafico(dados_ref, dados_freq, dados_aval)
- 
+
             page.after(0, _atualizar_ui)
- 
+
         threading.Thread(target=_carregar, daemon=True).start()
- 
+
         # Botão Atualizar
         btn_row = ctk.CTkFrame(page, fg_color="transparent")
         btn_row.grid(row=4, column=0, sticky="w", pady=(0, 24))
@@ -2500,7 +2624,7 @@ def abrir_painel_admin_ctk(event=None):
     def criar_pagina_cardapio():
         page = ctk.CTkScrollableFrame(container, fg_color=CINZA_BG)
         page.grid_columnconfigure(0, weight=1)
- 
+
         # ── Cabeçalho ─────────────────────────────────────────────────────────
         cab = ctk.CTkFrame(page, fg_color="transparent")
         cab.grid(row=0, column=0, sticky="ew", pady=(4, 8))
@@ -2508,15 +2632,15 @@ def abrir_painel_admin_ctk(event=None):
                       font=("Segoe UI", 22, "bold"), text_color=TEXTO_ESCURO).pack(anchor="w")
         ctk.CTkLabel(cab, text="Edite as refeições de cada dia e clique em Salvar.",
                       font=("Segoe UI", 12), text_color=TEXTO_CINZA).pack(anchor="w")
- 
+
         # ── Botão Salvar (topo) ───────────────────────────────────────────────
         btn_bar = ctk.CTkFrame(page, fg_color="transparent")
         btn_bar.grid(row=1, column=0, sticky="ew", pady=(0, 16))
- 
+
         lbl_status = ctk.CTkLabel(btn_bar, text="", font=("Segoe UI", 11),
                                    text_color=VERDE_VIBRANTE)
         lbl_status.pack(side="right", padx=(12, 0))
- 
+
         # Constantes dos dias
         DIAS = ["SEGUNDA", "TERCA", "QUARTA", "QUINTA", "SEXTA"]
         DIAS_LABEL = {
@@ -2534,17 +2658,17 @@ def abrir_painel_admin_ctk(event=None):
             "QUINTA":  "#E65100",
             "SEXTA":   "#C62828",
         }
- 
+
         # Carrega cardápio atual
         ca = ler_json(CARDAPIO_FILE, CARDAPIO_PADRAO)
         ents = {}  # dia -> [Entry, Entry, Entry]
- 
+
         # ── Grade de cards ─────────────────────────────────────────────────────
         grade = ctk.CTkFrame(page, fg_color="transparent")
         grade.grid(row=2, column=0, sticky="ew")
         grade.grid_columnconfigure(0, weight=1, uniform="col")
         grade.grid_columnconfigure(1, weight=1, uniform="col")
- 
+
         def _criar_card_dia(parent, dia, row, col, colspan=1):
             cor = CORES_DIA[dia]
             card = ctk.CTkFrame(parent, fg_color=BRANCO, corner_radius=12)
@@ -2553,7 +2677,7 @@ def abrir_painel_admin_ctk(event=None):
                           padx=6, pady=6)
             else:
                 card.grid(row=row, column=col, sticky="nsew", padx=6, pady=6)
- 
+
             # Cabeçalho colorido
             hd = ctk.CTkFrame(card, fg_color=cor, corner_radius=8,
                                height=44)
@@ -2562,13 +2686,13 @@ def abrir_painel_admin_ctk(event=None):
             ctk.CTkLabel(hd, text=f"  {DIAS_LABEL[dia]}",
                           font=("Segoe UI", 13, "bold"),
                           text_color="white").place(relx=0, rely=0.5, anchor="w", x=8)
- 
+
             # Campos de refeição
             ents[dia] = []
             valores_dia = ca.get(dia, ["", "", ""])
             inner = ctk.CTkFrame(card, fg_color="transparent")
             inner.pack(fill="x", padx=14, pady=(10, 14))
- 
+
             if colspan == 2:
                 # Sexta: 3 campos lado a lado
                 for j, nome_ref in enumerate(REFEICOES):
@@ -2597,7 +2721,7 @@ def abrir_painel_admin_ctk(event=None):
                     e.insert(0, valores_dia[j] if j < len(valores_dia) else "")
                     e.pack(fill="x")
                     ents[dia].append(e)
- 
+
         # Seg / Ter  (linha 0)
         _criar_card_dia(grade, "SEGUNDA", row=0, col=0)
         _criar_card_dia(grade, "TERCA",   row=0, col=1)
@@ -2606,7 +2730,7 @@ def abrir_painel_admin_ctk(event=None):
         _criar_card_dia(grade, "QUINTA",  row=1, col=1)
         # Sexta em linha cheia (linha 2)
         _criar_card_dia(grade, "SEXTA",   row=2, col=0, colspan=2)
- 
+
         # ── Salvar ────────────────────────────────────────────────────────────
         def salvar():
             novo = {dia: [e.get() for e in ents[dia]] for dia in DIAS}
@@ -2617,7 +2741,7 @@ def abrir_painel_admin_ctk(event=None):
                 pass
             lbl_status.configure(text="✔  Cardápio salvo com sucesso!")
             page.after(3000, lambda: lbl_status.configure(text=""))
- 
+
         ctk.CTkButton(btn_bar, text="💾  Salvar Alterações",
                        fg_color=VERDE_VIBRANTE, hover_color=VERDE_ESCURO,
                        font=("Segoe UI", 12, "bold"), height=40, width=200,
@@ -2628,7 +2752,7 @@ def abrir_painel_admin_ctk(event=None):
         page.grid_columnconfigure(0, weight=0)
         page.grid_columnconfigure(1, weight=1)
         page.grid_rowconfigure(1, weight=1)
- 
+
         # ── Cabeçalho ─────────────────────────────────────────────────────────
         cab = ctk.CTkFrame(page, fg_color="transparent")
         cab.grid(row=0, column=0, columnspan=2, sticky="ew", padx=4, pady=(4, 16))
@@ -2636,12 +2760,12 @@ def abrir_painel_admin_ctk(event=None):
                       font=("Segoe UI", 22, "bold"), text_color=TEXTO_ESCURO).pack(anchor="w")
         ctk.CTkLabel(cab, text="Adicione datas e descrições ao calendário escolar.",
                       font=("Segoe UI", 12), text_color=TEXTO_CINZA).pack(anchor="w")
- 
+
         # ── Coluna esquerda: formulário de novo evento ──────────────────────────
         form_card = ctk.CTkFrame(page, fg_color=BRANCO, corner_radius=12, width=300)
         form_card.grid(row=1, column=0, sticky="ns", padx=(0, 16))
         form_card.grid_propagate(False)
- 
+
         # Logo (se existir)
         logo_path = _buscar_logo_png()
         if logo_path:
@@ -2654,16 +2778,16 @@ def abrir_painel_admin_ctk(event=None):
                 ctk.CTkLabel(form_card, image=_ctk_logo, text="").pack(pady=(24, 8))
             except Exception:
                 pass
- 
+
         ctk.CTkLabel(form_card, text="Novo Evento",
                       font=("Segoe UI", 15, "bold"), text_color=TEXTO_ESCURO).pack(pady=(8, 2))
         ctk.CTkLabel(form_card, text="Cadastre datas especiais\ndo calendário escolar",
                       font=("Segoe UI", 10), text_color=TEXTO_CINZA,
                       justify="center").pack(pady=(0, 16))
- 
+
         linha_div = ctk.CTkFrame(form_card, fg_color="#E5E7EB", height=1)
         linha_div.pack(fill="x", padx=20, pady=(0, 16))
- 
+
         ctk.CTkLabel(form_card, text="Data", font=("Segoe UI", 11, "bold"),
                       text_color=TEXTO_ESCURO).pack(anchor="w", padx=20)
         ctk.CTkLabel(form_card, text="Formato: DD/MM  (ex: 15/07)",
@@ -2672,7 +2796,7 @@ def abrir_painel_admin_ctk(event=None):
                                  border_color=VERDE_VIBRANTE, border_width=2,
                                  placeholder_text="01/01")
         ent_data.pack(fill="x", padx=20, pady=(0, 16))
- 
+
         ctk.CTkLabel(form_card, text="Descrição", font=("Segoe UI", 11, "bold"),
                       text_color=TEXTO_ESCURO).pack(anchor="w", padx=20)
         ctk.CTkLabel(form_card, text="Nome do evento ou feriado",
@@ -2681,17 +2805,17 @@ def abrir_painel_admin_ctk(event=None):
                                  border_color=VERDE_VIBRANTE, border_width=2,
                                  placeholder_text="Ex: Feira Científica")
         ent_desc.pack(fill="x", padx=20, pady=(0, 8))
- 
+
         lbl_form_status = ctk.CTkLabel(form_card, text="", font=("Segoe UI", 10),
                                         text_color=VERDE_VIBRANTE)
         lbl_form_status.pack(pady=(0, 4))
- 
+
         # ── Coluna direita: lista de eventos cadastrados ────────────────────────
         lista_card = ctk.CTkFrame(page, fg_color=BRANCO, corner_radius=12)
         lista_card.grid(row=1, column=1, sticky="nsew")
         lista_card.grid_rowconfigure(2, weight=1)
         lista_card.grid_columnconfigure(0, weight=1)
- 
+
         topo_lista = ctk.CTkFrame(lista_card, fg_color="transparent")
         topo_lista.grid(row=0, column=0, sticky="ew", padx=18, pady=(16, 4))
         ctk.CTkLabel(topo_lista, text="Eventos Cadastrados",
@@ -2699,7 +2823,7 @@ def abrir_painel_admin_ctk(event=None):
         lbl_total = ctk.CTkLabel(topo_lista, text="", font=("Segoe UI", 10),
                                   text_color=TEXTO_CINZA)
         lbl_total.pack(side="right")
- 
+
         # Cabeçalho da tabela
         header_ev = ctk.CTkFrame(lista_card, fg_color=VERDE_ESCURO, corner_radius=6)
         header_ev.grid(row=1, column=0, sticky="ew", padx=18)
@@ -2712,12 +2836,12 @@ def abrir_painel_admin_ctk(event=None):
         ctk.CTkLabel(header_ev, text="", font=("Segoe UI", 10, "bold"),
                       text_color="white", width=40
                       ).pack(side="right", padx=8, pady=8)
- 
+
         # Corpo scrollável da lista
         corpo_ev = ctk.CTkScrollableFrame(lista_card, fg_color="transparent")
         corpo_ev.grid(row=2, column=0, sticky="nsew", padx=18, pady=(0, 16))
         corpo_ev.grid_columnconfigure(0, weight=1)
- 
+
         # ── Funções de carregar / adicionar / remover ───────────────────────────
         def _ordenar_eventos(evs):
             try:
@@ -2725,34 +2849,34 @@ def abrir_painel_admin_ctk(event=None):
                                                     int(x["data"].split("/")[0])))
             except Exception:
                 return evs
- 
+
         def carregar_eventos():
             for w in corpo_ev.winfo_children():
                 w.destroy()
- 
+
             evs = ler_json(EVENTOS_FILE, EVENTOS_PADRAO)
             evs = _ordenar_eventos(evs)
             lbl_total.configure(text=f"{len(evs)} evento(s) cadastrado(s)")
- 
+
             if not evs:
                 ctk.CTkLabel(corpo_ev, text="Nenhum evento cadastrado.",
                               font=("Segoe UI", 12), text_color=TEXTO_CINZA
                               ).grid(row=0, column=0, pady=24)
                 return
- 
+
             for i, ev in enumerate(evs):
                 bg = BRANCO if i % 2 == 0 else "#F8F9FA"
                 linha = ctk.CTkFrame(corpo_ev, fg_color=bg, corner_radius=6)
                 linha.grid(row=i, column=0, sticky="ew", pady=2)
                 linha.grid_columnconfigure(1, weight=1)
- 
+
                 ctk.CTkLabel(linha, text=ev["data"], font=("Segoe UI", 11, "bold"),
                               text_color=VERDE_VIBRANTE, width=90, anchor="w"
                               ).grid(row=0, column=0, padx=8, pady=8, sticky="w")
                 ctk.CTkLabel(linha, text=ev["evento"], font=("Segoe UI", 11),
                               text_color="#374151", anchor="w"
                               ).grid(row=0, column=1, padx=8, pady=8, sticky="ew")
- 
+
                 def _remover(e=ev):
                     if not messagebox.askyesno("Confirmar", f"Remover o evento '{e['evento']}' ({e['data']})?"):
                         return
@@ -2764,17 +2888,17 @@ def abrir_painel_admin_ctk(event=None):
                     except Exception:
                         pass
                     carregar_eventos()
- 
+
                 ctk.CTkButton(linha, text="🗑", width=36, height=28,
                                fg_color="#FEE2E2", hover_color="#FCA5A5",
                                text_color="#C62828", font=("Segoe UI", 12),
                                command=_remover
                                ).grid(row=0, column=2, padx=8, pady=8)
- 
+
         def adicionar_evento():
             data = ent_data.get().strip()
             desc = ent_desc.get().strip()
- 
+
             if not data or not desc:
                 lbl_form_status.configure(text="⚠ Preencha a data e a descrição.",
                                            text_color="#C62828")
@@ -2783,7 +2907,7 @@ def abrir_painel_admin_ctk(event=None):
                 lbl_form_status.configure(text="⚠ Use o formato DD/MM (ex: 15/07).",
                                            text_color="#C62828")
                 return
- 
+
             evs = ler_json(EVENTOS_FILE, EVENTOS_PADRAO)
             evs.append({"data": data, "evento": desc})
             salvar_json(EVENTOS_FILE, evs)
@@ -2791,34 +2915,34 @@ def abrir_painel_admin_ctk(event=None):
                 _sync_nuvem("/admin/eventos", "PUT", evs)
             except Exception:
                 pass
- 
+
             lbl_form_status.configure(text="✔ Evento adicionado!", text_color=VERDE_VIBRANTE)
             ent_data.delete(0, "end")
             ent_desc.delete(0, "end")
             ent_data.focus()
             carregar_eventos()
             page.after(2500, lambda: lbl_form_status.configure(text=""))
- 
+
         ctk.CTkButton(form_card, text="➕  Adicionar Evento",
                        fg_color=VERDE_VIBRANTE, hover_color=VERDE_ESCURO,
                        font=("Segoe UI", 12, "bold"), height=40,
                        command=adicionar_evento
                        ).pack(fill="x", padx=20, pady=(4, 24))
- 
+
         ent_desc.bind("<Return>", lambda e: adicionar_evento())
         ent_data.bind("<Return>", lambda e: ent_desc.focus())
- 
+
         carregar_eventos()
         return page
 
 
     def criar_pagina_refeitorio():
         import unicodedata as _ud
- 
+
         page = ctk.CTkFrame(container, fg_color=CINZA_BG)
         page.grid_columnconfigure(0, weight=1)
         page.grid_rowconfigure(4, weight=1)
- 
+
         # ── Mapas de siglas / cursos / normalização (mesma lógica do painel antigo) ──
         SIGLAS_LABEL = {
             "1DS": "1º DS",  "1HOS": "1º HOS", "1ENF": "1º ENF", "1MOD": "1º MOD",
@@ -2840,10 +2964,10 @@ def abrir_painel_admin_ctk(event=None):
             "3MOD": {"serie": "3 Ano", "curso": "Modelagem do Vestuario"},
         }
         CORES_ANO = {"1": VERDE_VIBRANTE, "2": "#6A1B9A", "3": "#C62828"}
- 
+
         def _norm(texto):
             return _ud.normalize("NFD", str(texto).lower()).encode("ascii", "ignore").decode("ascii")
- 
+
         _GRUPOS_SERIE = {
             "1": ["1º", "1o", "1 ano", "primeiro ano", "primeiro", "1"],
             "2": ["2º", "2o", "2 ano", "segundo ano",  "segundo",  "2"],
@@ -2855,7 +2979,7 @@ def abrir_painel_admin_ctk(event=None):
             "hosp": ["hosp", "hospedagem"],
             "mod":  ["mod", "modelagem do vestuario", "modelagem", "vestuario"],
         }
- 
+
         def _grupo_serie(texto):
             t = _norm(texto).strip()
             for chave, variantes in _GRUPOS_SERIE.items():
@@ -2863,7 +2987,7 @@ def abrir_painel_admin_ctk(event=None):
                     if t == v or t.startswith(v) or v.startswith(t):
                         return chave
             return None
- 
+
         def _grupo_curso(texto):
             t = _norm(texto).strip()
             for chave, variantes in _GRUPOS_CURSO.items():
@@ -2871,7 +2995,7 @@ def abrir_painel_admin_ctk(event=None):
                     if t == v or t in v or v in t:
                         return chave
             return None
- 
+
         def _serie_bate(serie_aluno, filtro_serie):
             if filtro_serie in ("(Todas)", ""):
                 return True
@@ -2879,7 +3003,7 @@ def abrir_painel_admin_ctk(event=None):
             if g_a is None or g_f is None:
                 return _norm(filtro_serie) in _norm(serie_aluno)
             return g_a == g_f
- 
+
         def _curso_bate(curso_aluno, filtro_curso):
             if filtro_curso in ("(Todos)", ""):
                 return True
@@ -2887,7 +3011,7 @@ def abrir_painel_admin_ctk(event=None):
             if g_a is None or g_f is None:
                 return _norm(filtro_curso) in _norm(curso_aluno)
             return g_a == g_f
- 
+
         # ── Cabeçalho ─────────────────────────────────────────────────────────
         cab = ctk.CTkFrame(page, fg_color="transparent")
         cab.grid(row=0, column=0, sticky="ew", padx=4, pady=(4, 12))
@@ -2895,14 +3019,14 @@ def abrir_painel_admin_ctk(event=None):
                       font=("Segoe UI", 22, "bold"), text_color=TEXTO_ESCURO).pack(anchor="w")
         ctk.CTkLabel(cab, text=f"Controle de refeições — hoje ({_hoje()})",
                       font=("Segoe UI", 12), text_color=TEXTO_CINZA).pack(anchor="w")
- 
+
         # ── Filtros ───────────────────────────────────────────────────────────
         filtro_card = ctk.CTkFrame(page, fg_color=BRANCO, corner_radius=12)
         filtro_card.grid(row=1, column=0, sticky="ew", pady=(0, 12))
- 
+
         filtro_row = ctk.CTkFrame(filtro_card, fg_color="transparent")
         filtro_row.pack(fill="x", padx=14, pady=(12, 8))
- 
+
         ctk.CTkLabel(filtro_row, text="Série:", font=("Segoe UI", 11, "bold"),
                       text_color=TEXTO_ESCURO).pack(side="left", padx=(0, 6))
         cb_serie = ctk.CTkOptionMenu(filtro_row, values=["(Todas)", "1 Ano", "2 Ano", "3 Ano"],
@@ -2910,7 +3034,7 @@ def abrir_painel_admin_ctk(event=None):
                                       button_color=VERDE_ESCURO, button_hover_color=VERDE_ESCURO)
         cb_serie.set("(Todas)")
         cb_serie.pack(side="left", padx=(0, 14))
- 
+
         ctk.CTkLabel(filtro_row, text="Curso:", font=("Segoe UI", 11, "bold"),
                       text_color=TEXTO_ESCURO).pack(side="left", padx=(0, 6))
         cb_curso = ctk.CTkOptionMenu(filtro_row,
@@ -2920,26 +3044,26 @@ def abrir_painel_admin_ctk(event=None):
                                       button_color=VERDE_ESCURO, button_hover_color=VERDE_ESCURO)
         cb_curso.set("(Todos)")
         cb_curso.pack(side="left", padx=(0, 14))
- 
+
         ctk.CTkLabel(filtro_row, text="Nome:", font=("Segoe UI", 11, "bold"),
                       text_color=TEXTO_ESCURO).pack(side="left", padx=(0, 6))
         ent_nome = ctk.CTkEntry(filtro_row, width=180, height=30,
                                  placeholder_text="Buscar por nome...")
         ent_nome.pack(side="left", padx=(0, 14))
- 
+
         # Salas rápidas
         sala_row = ctk.CTkFrame(filtro_card, fg_color="transparent")
         sala_row.pack(fill="x", padx=14, pady=(0, 12))
         ctk.CTkLabel(sala_row, text="Sala rápida:", font=("Segoe UI", 10, "bold"),
                       text_color=TEXTO_CINZA).pack(side="left", padx=(0, 8))
- 
+
         btn_sala_refs = {}
- 
+
         # ── Cards de resumo ───────────────────────────────────────────────────
         cards_row = ctk.CTkFrame(page, fg_color="transparent")
         cards_row.grid(row=2, column=0, sticky="ew", pady=(0, 12))
         cards_row.grid_columnconfigure((0, 1, 2, 3), weight=1)
- 
+
         lbl_total, sub_total = card_resumo(cards_row, 0, 0, "👥", VERDE_CLARO, VERDE_VIBRANTE,
                                             "Total Filtrado", "0", "alunos")
         lbl_sim,   sub_sim   = card_resumo(cards_row, 0, 1, "✔️", "#E8F5E9", "#2E7D32",
@@ -2948,32 +3072,32 @@ def abrir_painel_admin_ctk(event=None):
                                             "Não Almoçaram", "0", "pendentes")
         lbl_pct,   sub_pct   = card_resumo(cards_row, 0, 3, "📊", ROXO_CLARO, "#6A1B9A",
                                             "Adesão", "0%", "geral hoje")
- 
+
         # ── Linha: gráfico de rosca + tabela ────────────────────────────────────
         meio_row = ctk.CTkFrame(page, fg_color="transparent")
         meio_row.grid(row=3, column=0, sticky="ew", pady=(0, 12))
         meio_row.grid_columnconfigure(0, weight=0)
         meio_row.grid_columnconfigure(1, weight=1)
- 
+
         # Donut
         donut_card = ctk.CTkFrame(meio_row, fg_color=BRANCO, corner_radius=12, width=260)
         donut_card.grid(row=0, column=0, sticky="ns", padx=(0, 12))
         donut_card.grid_propagate(False)
         ctk.CTkLabel(donut_card, text="Adesão Geral",
                       font=("Segoe UI", 13, "bold"), text_color=TEXTO_ESCURO).pack(pady=(16, 4))
- 
+
         cv_donut = tk.Canvas(donut_card, bg=BRANCO, highlightthickness=0, height=180)
         cv_donut.pack(fill="x", padx=20, pady=(4, 8))
- 
+
         legenda_donut = ctk.CTkFrame(donut_card, fg_color="transparent")
         legenda_donut.pack(pady=(0, 16))
- 
+
         # Tabela de alunos
         tabela_card = ctk.CTkFrame(meio_row, fg_color=BRANCO, corner_radius=12)
         tabela_card.grid(row=0, column=1, sticky="nsew")
         tabela_card.grid_rowconfigure(2, weight=1)
         tabela_card.grid_columnconfigure(0, weight=1)
- 
+
         topo_tab = ctk.CTkFrame(tabela_card, fg_color="transparent")
         topo_tab.grid(row=0, column=0, sticky="ew", padx=14, pady=(14, 6))
         ctk.CTkLabel(topo_tab, text="Alunos — hoje",
@@ -2981,7 +3105,7 @@ def abrir_painel_admin_ctk(event=None):
         lbl_filtro_ativo = ctk.CTkLabel(topo_tab, text="", font=("Segoe UI", 9),
                                          text_color=TEXTO_CINZA)
         lbl_filtro_ativo.pack(side="right")
- 
+
         header_tab = ctk.CTkFrame(tabela_card, fg_color=VERDE_ESCURO, corner_radius=6)
         header_tab.grid(row=1, column=0, sticky="ew", padx=14)
         COLS = [("Aluno", 220), ("Série", 80), ("Curso", 200), ("Almoço", 90), ("Aula", 110)]
@@ -2990,18 +3114,18 @@ def abrir_painel_admin_ctk(event=None):
                           text_color="white", width=w, anchor="w"
                           ).pack(side="left", expand=(i == len(COLS)-1),
                                  fill="x", padx=6, pady=8)
- 
+
         corpo_tab = ctk.CTkScrollableFrame(tabela_card, fg_color="transparent", height=300)
         corpo_tab.grid(row=2, column=0, sticky="nsew", padx=14, pady=(0, 14))
         corpo_tab.grid_columnconfigure(0, weight=1)
- 
+
         # ── Botões de ação ────────────────────────────────────────────────────
         btn_row = ctk.CTkFrame(page, fg_color="transparent")
         btn_row.grid(row=4, column=0, sticky="sw", pady=(0, 4))
- 
+
         lbl_acao_status = ctk.CTkLabel(btn_row, text="", font=("Segoe UI", 10),
                                         text_color=VERDE_VIBRANTE)
- 
+
         # ── Função de desenho do donut ───────────────────────────────────────
         def _desenhar_donut(sim, nao):
             cv_donut.delete("all")
@@ -3010,7 +3134,7 @@ def abrir_painel_admin_ctk(event=None):
             h = cv_donut.winfo_height() or 180
             cx, cy = w / 2, h / 2
             r_ext, r_int = min(w, h) / 2 - 10, (min(w, h) / 2 - 10) * 0.55
- 
+
             total = sim + nao
             if total == 0:
                 cv_donut.create_oval(cx - r_ext, cy - r_ext, cx + r_ext, cy + r_ext,
@@ -3020,7 +3144,7 @@ def abrir_painel_admin_ctk(event=None):
                 cv_donut.create_text(cx, cy, text="Sem\ndados", font=("Segoe UI", 11),
                                       fill=TEXTO_CINZA)
                 return
- 
+
             angulo = 90
             for valor, cor in [(sim, "#4CAF50"), (nao, "#F44336")]:
                 if valor <= 0:
@@ -3030,7 +3154,7 @@ def abrir_painel_admin_ctk(event=None):
                                      start=angulo, extent=ext_ang,
                                      fill=cor, outline=BRANCO, width=2, style="pieslice")
                 angulo += ext_ang
- 
+
             cv_donut.create_oval(cx - r_int, cy - r_int, cx + r_int, cy + r_int,
                                   fill=BRANCO, outline="")
             pct = (sim / total * 100) if total else 0
@@ -3038,7 +3162,7 @@ def abrir_painel_admin_ctk(event=None):
                                   font=("Segoe UI", 16, "bold"), fill="#2E7D32")
             cv_donut.create_text(cx, cy + 12, text="almoçaram",
                                   font=("Segoe UI", 8), fill=TEXTO_CINZA)
- 
+
         def _atualizar_legenda(sim, nao):
             for w in legenda_donut.winfo_children():
                 w.destroy()
@@ -3052,19 +3176,19 @@ def abrir_painel_admin_ctk(event=None):
                               text_color=TEXTO_ESCURO).pack(side="left")
                 ctk.CTkLabel(row_l, text=f"{val_l} ({pct_l:.0f}%)", font=("Segoe UI", 10, "bold"),
                               text_color=TEXTO_CINZA).pack(side="right")
- 
+
         # ── Atualização principal ────────────────────────────────────────────
         def atualizar_ref():
             f_serie = cb_serie.get()
             f_curso = cb_curso.get()
             f_nome = ent_nome.get().strip().lower()
- 
+
             def _thread_body():
                 registros = _registros_hoje()
                 page.after(0, lambda: _renderizar(registros, f_serie, f_curso, f_nome))
- 
+
             threading.Thread(target=_thread_body, daemon=True).start()
- 
+
         def _renderizar(registros, f_serie, f_curso, f_nome):
             alunos = {}
             for r in registros:
@@ -3084,52 +3208,52 @@ def abrir_painel_admin_ctk(event=None):
                         alunos[mat]["aula"] = _aula_por_hora(hora)
                 if ref == "almoco":
                     alunos[mat]["almoca"] = True
- 
+
             exibidos = []
             for info in alunos.values():
                 if not _serie_bate(info["serie"], f_serie): continue
                 if not _curso_bate(info["curso"], f_curso): continue
                 if f_nome and f_nome not in info["nome"].lower(): continue
                 exibidos.append(info)
- 
+
             cnt_total = len(exibidos)
             cnt_sim = sum(1 for a in exibidos if a["almoca"])
             cnt_nao = cnt_total - cnt_sim
             pct = (cnt_sim / cnt_total * 100) if cnt_total else 0
- 
+
             lbl_total.configure(text=str(cnt_total))
             lbl_sim.configure(text=str(cnt_sim))
             lbl_nao.configure(text=str(cnt_nao))
             lbl_pct.configure(text=f"{pct:.0f}%")
- 
+
             partes_filtro = []
             if f_serie not in ("(Todas)", ""): partes_filtro.append(f_serie)
             if f_curso not in ("(Todos)", ""): partes_filtro.append(f_curso)
             if f_nome: partes_filtro.append(f'"{f_nome}"')
             lbl_filtro_ativo.configure(
                 text=("Filtro: " + " | ".join(partes_filtro)) if partes_filtro else "")
- 
+
             _desenhar_donut(cnt_sim, cnt_nao)
             _atualizar_legenda(cnt_sim, cnt_nao)
- 
+
             # Tabela
             for w in corpo_tab.winfo_children():
                 w.destroy()
- 
+
             if not exibidos:
                 ctk.CTkLabel(corpo_tab, text="Nenhum registro encontrado.",
                               font=("Segoe UI", 12), text_color=TEXTO_CINZA
                               ).grid(row=0, column=0, pady=24)
                 return
- 
+
             for i, info in enumerate(sorted(exibidos, key=lambda a: a["nome"].lower())):
                 bg = BRANCO if i % 2 == 0 else "#F8F9FA"
                 cor_status = "#2E7D32" if info["almoca"] else "#C62828"
                 texto_status = "✔ Sim" if info["almoca"] else "✘ Não"
- 
+
                 linha = ctk.CTkFrame(corpo_tab, fg_color=bg, corner_radius=4)
                 linha.grid(row=i, column=0, sticky="ew", pady=1)
- 
+
                 valores = [(info["nome"] or "-", 220, "#374151"),
                            (info["serie"] or "-", 80, "#374151"),
                            (info["curso"] or "-", 200, "#374151"),
@@ -3140,7 +3264,7 @@ def abrir_painel_admin_ctk(event=None):
                     ctk.CTkLabel(linha, text=val, font=("Segoe UI", 11),
                                   width=w, anchor="w", text_color=cor_t
                                   ).pack(side="left", expand=(j == n-1), fill="x", padx=6, pady=6)
- 
+
         # ── Filtro por sala rápida ────────────────────────────────────────────
         def _filtrar_por_sigla(sigla):
             info = SIGLAS[sigla]
@@ -3151,7 +3275,7 @@ def abrir_painel_admin_ctk(event=None):
                 b.configure(fg_color=CORES_ANO[s[0]], text_color="white")
             btn_sala_refs[sigla].configure(fg_color="white", text_color=CORES_ANO[sigla[0]])
             atualizar_ref()
- 
+
         for sigla, label in SIGLAS_LABEL.items():
             ano = sigla[0]
             cor = CORES_ANO[ano]
@@ -3161,7 +3285,7 @@ def abrir_painel_admin_ctk(event=None):
                                command=lambda s=sigla: _filtrar_por_sigla(s))
             b.pack(side="left", padx=2)
             btn_sala_refs[sigla] = b
- 
+
         # ── Limpar filtros ────────────────────────────────────────────────────
         def limpar_filtros():
             cb_serie.set("(Todas)")
@@ -3170,12 +3294,12 @@ def abrir_painel_admin_ctk(event=None):
             for sigla, b in btn_sala_refs.items():
                 b.configure(fg_color=CORES_ANO[sigla[0]], text_color="white")
             atualizar_ref()
- 
+
         ctk.CTkButton(filtro_row, text="✕ Limpar", font=("Segoe UI", 10, "bold"),
                        fg_color="transparent", hover_color="#F0F0F0",
                        text_color=VERDE_VIBRANTE, width=80, height=30,
                        command=limpar_filtros).pack(side="left")
- 
+
         # ── Exportar CSV ──────────────────────────────────────────────────────
         def exportar_csv_ref():
             try:
@@ -3189,7 +3313,7 @@ def abrir_painel_admin_ctk(event=None):
             except Exception as e:
                 lbl_acao_status.configure(text=f"⚠ Falha ao exportar: {e}", text_color="#C62828")
             page.after(4000, lambda: lbl_acao_status.configure(text=""))
- 
+
         # ── Apagar registros de hoje ──────────────────────────────────────────
         def apagar_hoje():
             if not messagebox.askyesno("Confirmar", f"Apagar todos os registros de hoje ({_hoje()})?"):
@@ -3201,7 +3325,7 @@ def abrir_painel_admin_ctk(event=None):
                 lbl_acao_status.configure(text=f"⚠ Falha ao apagar: {e}", text_color="#C62828")
             page.after(4000, lambda: lbl_acao_status.configure(text=""))
             atualizar_ref()
- 
+
         ctk.CTkButton(btn_row, text="↻  Atualizar", fg_color=VERDE_VIBRANTE,
                        hover_color=VERDE_ESCURO, font=("Segoe UI", 11, "bold"),
                        height=36, width=130, command=atualizar_ref).pack(side="left", padx=(0, 8))
@@ -3212,24 +3336,24 @@ def abrir_painel_admin_ctk(event=None):
                        hover_color="#8E1010", font=("Segoe UI", 11, "bold"),
                        height=36, width=140, command=apagar_hoje).pack(side="left", padx=(0, 12))
         lbl_acao_status.pack(side="left")
- 
+
         # Gatilhos automáticos de filtro
         cb_serie.configure(command=lambda _: atualizar_ref())
         cb_curso.configure(command=lambda _: atualizar_ref())
         ent_nome.bind("<KeyRelease>", lambda e: atualizar_ref())
- 
+
         # Carrega na primeira abertura
         page.after(150, atualizar_ref)
         cv_donut.bind("<Configure>", lambda e: atualizar_ref())
- 
+
         return page
     def criar_pagina_frequencia():
         import unicodedata as _ud
- 
+
         page = ctk.CTkFrame(container, fg_color=CINZA_BG)
         page.grid_columnconfigure(0, weight=1)
         page.grid_rowconfigure(3, weight=1)
- 
+
         # ── Mapas de siglas / cursos / normalização ──────────────────────────
         SIGLAS_LABEL = {
             "1DS": "1º DS",  "1HOS": "1º HOS", "1ENF": "1º ENF", "1MOD": "1º MOD",
@@ -3251,10 +3375,10 @@ def abrir_painel_admin_ctk(event=None):
             "3MOD": {"serie": "3 Ano", "curso": "Modelagem do Vestuario"},
         }
         CORES_ANO = {"1": VERDE_VIBRANTE, "2": "#6A1B9A", "3": "#C62828"}
- 
+
         def _norm(texto):
             return _ud.normalize("NFD", str(texto).lower()).encode("ascii", "ignore").decode("ascii")
- 
+
         _GRUPOS_SERIE = {
             "1": ["1º", "1o", "1 ano", "primeiro ano", "primeiro", "1"],
             "2": ["2º", "2o", "2 ano", "segundo ano",  "segundo",  "2"],
@@ -3266,7 +3390,7 @@ def abrir_painel_admin_ctk(event=None):
             "hosp": ["hosp", "hospedagem"],
             "mod":  ["mod", "modelagem do vestuario", "modelagem", "vestuario"],
         }
- 
+
         def _grupo_serie(texto):
             t = _norm(texto).strip()
             for chave, variantes in _GRUPOS_SERIE.items():
@@ -3274,7 +3398,7 @@ def abrir_painel_admin_ctk(event=None):
                     if t == v or t.startswith(v) or v.startswith(t):
                         return chave
             return None
- 
+
         def _grupo_curso(texto):
             t = _norm(texto).strip()
             for chave, variantes in _GRUPOS_CURSO.items():
@@ -3282,7 +3406,7 @@ def abrir_painel_admin_ctk(event=None):
                     if t == v or t in v or v in t:
                         return chave
             return None
- 
+
         def _serie_bate(serie_aluno, filtro_serie):
             if filtro_serie in ("(Todas)", ""):
                 return True
@@ -3290,7 +3414,7 @@ def abrir_painel_admin_ctk(event=None):
             if g_a is None or g_f is None:
                 return _norm(filtro_serie) in _norm(serie_aluno)
             return g_a == g_f
- 
+
         def _curso_bate(curso_aluno, filtro_curso):
             if filtro_curso in ("(Todos)", ""):
                 return True
@@ -3298,7 +3422,7 @@ def abrir_painel_admin_ctk(event=None):
             if g_a is None or g_f is None:
                 return _norm(filtro_curso) in _norm(curso_aluno)
             return g_a == g_f
- 
+
         # ── Cabeçalho ─────────────────────────────────────────────────────────
         cab = ctk.CTkFrame(page, fg_color="transparent")
         cab.grid(row=0, column=0, sticky="ew", padx=4, pady=(4, 12))
@@ -3306,14 +3430,14 @@ def abrir_painel_admin_ctk(event=None):
                       font=("Segoe UI", 22, "bold"), text_color=TEXTO_ESCURO).pack(anchor="w")
         ctk.CTkLabel(cab, text=f"Controle de presença — hoje ({_hoje()})",
                       font=("Segoe UI", 12), text_color=TEXTO_CINZA).pack(anchor="w")
- 
+
         # ── Filtros ───────────────────────────────────────────────────────────
         filtro_card = ctk.CTkFrame(page, fg_color=BRANCO, corner_radius=12)
         filtro_card.grid(row=1, column=0, sticky="ew", pady=(0, 12))
- 
+
         filtro_row = ctk.CTkFrame(filtro_card, fg_color="transparent")
         filtro_row.pack(fill="x", padx=14, pady=(12, 8))
- 
+
         ctk.CTkLabel(filtro_row, text="Série:", font=("Segoe UI", 11, "bold"),
                       text_color=TEXTO_ESCURO).pack(side="left", padx=(0, 6))
         cb_serie = ctk.CTkOptionMenu(filtro_row, values=["(Todas)", "1 Ano", "2 Ano", "3 Ano"],
@@ -3321,7 +3445,7 @@ def abrir_painel_admin_ctk(event=None):
                                       button_color=VERDE_ESCURO, button_hover_color=VERDE_ESCURO)
         cb_serie.set("(Todas)")
         cb_serie.pack(side="left", padx=(0, 14))
- 
+
         ctk.CTkLabel(filtro_row, text="Curso:", font=("Segoe UI", 11, "bold"),
                       text_color=TEXTO_ESCURO).pack(side="left", padx=(0, 6))
         cb_curso = ctk.CTkOptionMenu(filtro_row,
@@ -3331,39 +3455,39 @@ def abrir_painel_admin_ctk(event=None):
                                       button_color=VERDE_ESCURO, button_hover_color=VERDE_ESCURO)
         cb_curso.set("(Todos)")
         cb_curso.pack(side="left", padx=(0, 14))
- 
+
         ctk.CTkLabel(filtro_row, text="Nome:", font=("Segoe UI", 11, "bold"),
                       text_color=TEXTO_ESCURO).pack(side="left", padx=(0, 6))
         ent_nome = ctk.CTkEntry(filtro_row, width=180, height=30,
                                  placeholder_text="Buscar por nome...")
         ent_nome.pack(side="left", padx=(0, 14))
- 
+
         # Salas rápidas
         sala_row = ctk.CTkFrame(filtro_card, fg_color="transparent")
         sala_row.pack(fill="x", padx=14, pady=(0, 12))
         ctk.CTkLabel(sala_row, text="Sala rápida:", font=("Segoe UI", 10, "bold"),
                       text_color=TEXTO_CINZA).pack(side="left", padx=(0, 8))
- 
+
         btn_sala_refs = {}
- 
+
         # ── Cards de resumo ───────────────────────────────────────────────────
         cards_row = ctk.CTkFrame(page, fg_color="transparent")
         cards_row.grid(row=2, column=0, sticky="ew", pady=(0, 12))
         cards_row.grid_columnconfigure((0, 1, 2), weight=1)
- 
+
         lbl_total, sub_total = card_resumo(cards_row, 0, 0, "👥", VERDE_CLARO, VERDE_VIBRANTE,
                                             "Presentes (filtro)", "0", "alunos")
         lbl_cad,   sub_cad   = card_resumo(cards_row, 0, 1, "📋", AZUL_CLARO, "#1565C0",
                                             "Total Cadastrados", "0", "alunos na lista")
         lbl_aus,   sub_aus   = card_resumo(cards_row, 0, 2, "🚫", "#FFEBEE", "#C62828",
                                             "Ausentes", "0", "ainda não vieram")
- 
+
         # ── Tabela de presentes ──────────────────────────────────────────────
         tabela_card = ctk.CTkFrame(page, fg_color=BRANCO, corner_radius=12)
         tabela_card.grid(row=3, column=0, sticky="nsew")
         tabela_card.grid_rowconfigure(2, weight=1)
         tabela_card.grid_columnconfigure(0, weight=1)
- 
+
         topo_tab = ctk.CTkFrame(tabela_card, fg_color="transparent")
         topo_tab.grid(row=0, column=0, sticky="ew", padx=14, pady=(14, 6))
         ctk.CTkLabel(topo_tab, text="Alunos Presentes — hoje",
@@ -3371,7 +3495,7 @@ def abrir_painel_admin_ctk(event=None):
         lbl_filtro_ativo = ctk.CTkLabel(topo_tab, text="", font=("Segoe UI", 9),
                                          text_color=TEXTO_CINZA)
         lbl_filtro_ativo.pack(side="right")
- 
+
         header_tab = ctk.CTkFrame(tabela_card, fg_color=VERDE_ESCURO, corner_radius=6)
         header_tab.grid(row=1, column=0, sticky="ew", padx=14)
         COLS = [("Aluno", 240), ("Série", 80), ("Curso", 220), ("Hora Entrada", 120), ("Aula", 110)]
@@ -3380,27 +3504,27 @@ def abrir_painel_admin_ctk(event=None):
                           text_color="white", width=w, anchor="w"
                           ).pack(side="left", expand=(i == len(COLS)-1),
                                  fill="x", padx=6, pady=8)
- 
+
         corpo_tab = ctk.CTkScrollableFrame(tabela_card, fg_color="transparent")
         corpo_tab.grid(row=2, column=0, sticky="nsew", padx=14, pady=(0, 14))
         corpo_tab.grid_columnconfigure(0, weight=1)
- 
+
         # ── Botões de ação ────────────────────────────────────────────────────
         btn_row = ctk.CTkFrame(page, fg_color="transparent")
         btn_row.grid(row=4, column=0, sticky="w", pady=(12, 4))
- 
+
         lbl_acao_status = ctk.CTkLabel(btn_row, text="", font=("Segoe UI", 10),
                                         text_color=VERDE_VIBRANTE)
- 
+
         # ── Estado interno ────────────────────────────────────────────────────
         _estado = {"alunos_unicos": {}, "lista_todos": []}
- 
+
         # ── Atualização principal ────────────────────────────────────────────
         def atualizar_freq():
             f_serie = cb_serie.get()
             f_curso = cb_curso.get()
             f_nome = ent_nome.get().strip().lower()
- 
+
             def _thread_body():
                 registros = _registros_freq_hoje()
                 lista_todos = []
@@ -3411,9 +3535,9 @@ def abrir_painel_admin_ctk(event=None):
                     except Exception:
                         lista_todos = []
                 page.after(0, lambda: _renderizar(registros, lista_todos, f_serie, f_curso, f_nome))
- 
+
             threading.Thread(target=_thread_body, daemon=True).start()
- 
+
         def _renderizar(registros, lista_todos, f_serie, f_curso, f_nome):
             alunos_unicos = {}
             for r in registros:
@@ -3430,46 +3554,46 @@ def abrir_painel_admin_ctk(event=None):
                     if hora and alunos_unicos[mat].get("hora", "") and hora < alunos_unicos[mat]["hora"]:
                         alunos_unicos[mat]["hora"] = hora
                         alunos_unicos[mat]["aula"] = aula
- 
+
             _estado["alunos_unicos"] = alunos_unicos
             _estado["lista_todos"] = lista_todos
- 
+
             exibidos = []
             for info in alunos_unicos.values():
                 if not _serie_bate(info["serie"], f_serie): continue
                 if not _curso_bate(info["curso"], f_curso): continue
                 if f_nome and f_nome not in info["nome"].lower(): continue
                 exibidos.append(info)
- 
+
             presentes_total = len(alunos_unicos)
             cadastrados_total = len(lista_todos)
             ausentes_total = max(0, cadastrados_total - presentes_total) if cadastrados_total else 0
- 
+
             lbl_total.configure(text=str(len(exibidos)))
             lbl_cad.configure(text=str(cadastrados_total))
             lbl_aus.configure(text=str(ausentes_total))
- 
+
             partes_filtro = []
             if f_serie not in ("(Todas)", ""): partes_filtro.append(f_serie)
             if f_curso not in ("(Todos)", ""): partes_filtro.append(f_curso)
             if f_nome: partes_filtro.append(f'"{f_nome}"')
             lbl_filtro_ativo.configure(
                 text=("Filtro: " + " | ".join(partes_filtro)) if partes_filtro else "")
- 
+
             for w in corpo_tab.winfo_children():
                 w.destroy()
- 
+
             if not exibidos:
                 ctk.CTkLabel(corpo_tab, text="Nenhum registro encontrado.",
                               font=("Segoe UI", 12), text_color=TEXTO_CINZA
                               ).grid(row=0, column=0, pady=24)
                 return
- 
+
             for i, info in enumerate(sorted(exibidos, key=lambda a: a["nome"].lower())):
                 bg = BRANCO if i % 2 == 0 else "#F8F9FA"
                 linha = ctk.CTkFrame(corpo_tab, fg_color=bg, corner_radius=4)
                 linha.grid(row=i, column=0, sticky="ew", pady=1)
- 
+
                 valores = [(info["nome"] or "-", 240),
                            (info["serie"] or "-", 80),
                            (info["curso"] or "-", 220),
@@ -3482,7 +3606,7 @@ def abrir_painel_admin_ctk(event=None):
                     ctk.CTkLabel(linha, text=val, font=fonte,
                                   width=w, anchor="w", text_color=cor_t
                                   ).pack(side="left", expand=(j == n-1), fill="x", padx=6, pady=6)
- 
+
         # ── Filtro por sala rápida ────────────────────────────────────────────
         def _filtrar_por_sigla(sigla):
             info = SIGLAS[sigla]
@@ -3493,7 +3617,7 @@ def abrir_painel_admin_ctk(event=None):
                 b.configure(fg_color=CORES_ANO[s[0]], text_color="white")
             btn_sala_refs[sigla].configure(fg_color="white", text_color=CORES_ANO[sigla[0]])
             atualizar_freq()
- 
+
         for sigla, label in SIGLAS_LABEL.items():
             ano = sigla[0]
             cor = CORES_ANO[ano]
@@ -3503,7 +3627,7 @@ def abrir_painel_admin_ctk(event=None):
                                command=lambda s=sigla: _filtrar_por_sigla(s))
             b.pack(side="left", padx=2)
             btn_sala_refs[sigla] = b
- 
+
         # ── Limpar filtros ────────────────────────────────────────────────────
         def limpar_filtros():
             cb_serie.set("(Todas)")
@@ -3512,27 +3636,27 @@ def abrir_painel_admin_ctk(event=None):
             for sigla, b in btn_sala_refs.items():
                 b.configure(fg_color=CORES_ANO[sigla[0]], text_color="white")
             atualizar_freq()
- 
+
         ctk.CTkButton(filtro_row, text="✕ Limpar", font=("Segoe UI", 10, "bold"),
                        fg_color="transparent", hover_color="#F0F0F0",
                        text_color=VERDE_VIBRANTE, width=80, height=30,
                        command=limpar_filtros).pack(side="left")
- 
+
         # ── Ver ausentes (janela secundária CTk) ─────────────────────────────
         def abrir_ausentes():
             lista_todos = _estado["lista_todos"]
             presentes = set(_estado["alunos_unicos"].keys())
             ausentes = [al for al in lista_todos if al.get("matricula", "") not in presentes]
- 
+
             win = ctk.CTkToplevel(page)
             win.title("Alunos Ausentes Hoje")
             win.geometry("760x560")
             win.configure(fg_color=CINZA_BG)
- 
+
             ctk.CTkLabel(win, text="👥  Alunos Ausentes Hoje",
                           font=("Segoe UI", 16, "bold"), text_color=TEXTO_ESCURO
                           ).pack(anchor="w", padx=20, pady=(16, 4))
- 
+
             filt = ctk.CTkFrame(win, fg_color="transparent")
             filt.pack(fill="x", padx=20, pady=(0, 8))
             ctk.CTkLabel(filt, text="Série:", font=("Segoe UI", 11, "bold"),
@@ -3542,7 +3666,7 @@ def abrir_painel_admin_ctk(event=None):
                                               button_color=VERDE_ESCURO, button_hover_color=VERDE_ESCURO)
             cb_serie_aus.set("(Todas)")
             cb_serie_aus.pack(side="left", padx=(0, 14))
- 
+
             ctk.CTkLabel(filt, text="Curso:", font=("Segoe UI", 11, "bold"),
                           text_color=TEXTO_ESCURO).pack(side="left", padx=(0, 6))
             cb_curso_aus = ctk.CTkOptionMenu(filt, values=["(Todos)", "Desenvolvimento de Sistemas",
@@ -3551,12 +3675,12 @@ def abrir_painel_admin_ctk(event=None):
                                               button_color=VERDE_ESCURO, button_hover_color=VERDE_ESCURO)
             cb_curso_aus.set("(Todos)")
             cb_curso_aus.pack(side="left")
- 
+
             lista_card = ctk.CTkFrame(win, fg_color=BRANCO, corner_radius=12)
             lista_card.pack(fill="both", expand=True, padx=20, pady=(0, 8))
             lista_card.grid_rowconfigure(1, weight=1)
             lista_card.grid_columnconfigure(0, weight=1)
- 
+
             hdr = ctk.CTkFrame(lista_card, fg_color=VERDE_ESCURO, corner_radius=6)
             hdr.grid(row=0, column=0, sticky="ew", padx=14, pady=(14, 0))
             ctk.CTkLabel(hdr, text="Nome", font=("Segoe UI", 10, "bold"),
@@ -3565,14 +3689,14 @@ def abrir_painel_admin_ctk(event=None):
                           text_color="white", width=100, anchor="w").pack(side="left", padx=6, pady=8)
             ctk.CTkLabel(hdr, text="Curso", font=("Segoe UI", 10, "bold"),
                           text_color="white", anchor="w").pack(side="left", expand=True, fill="x", padx=6, pady=8)
- 
+
             corpo_aus = ctk.CTkScrollableFrame(lista_card, fg_color="transparent")
             corpo_aus.grid(row=1, column=0, sticky="nsew", padx=14, pady=(0, 14))
             corpo_aus.grid_columnconfigure(0, weight=1)
- 
+
             lbl_cnt_aus = ctk.CTkLabel(win, text="", font=("Segoe UI", 10), text_color=TEXTO_CINZA)
             lbl_cnt_aus.pack(anchor="w", padx=20, pady=(0, 12))
- 
+
             def _preencher():
                 for w in corpo_aus.winfo_children():
                     w.destroy()
@@ -3583,15 +3707,15 @@ def abrir_painel_admin_ctk(event=None):
                     if not _serie_bate(al.get("serie", ""), f_serie): continue
                     if not _curso_bate(al.get("curso", ""), f_curso): continue
                     exibidos.append(al)
- 
+
                 lbl_cnt_aus.configure(text=f"{len(exibidos)} ausente(s) de {len(lista_todos)} cadastrado(s)")
- 
+
                 if not exibidos:
                     ctk.CTkLabel(corpo_aus, text="Nenhum ausente encontrado.",
                                   font=("Segoe UI", 12), text_color=TEXTO_CINZA
                                   ).grid(row=0, column=0, pady=24)
                     return
- 
+
                 for i, al in enumerate(sorted(exibidos, key=lambda a: a.get("nome", "").lower())):
                     bg = BRANCO if i % 2 == 0 else "#F8F9FA"
                     linha = ctk.CTkFrame(corpo_aus, fg_color=bg, corner_radius=4)
@@ -3605,7 +3729,7 @@ def abrir_painel_admin_ctk(event=None):
                     ctk.CTkLabel(linha, text=al.get("curso", "-"), font=("Segoe UI", 11),
                                   anchor="w", text_color="#374151"
                                   ).pack(side="left", expand=True, fill="x", padx=6, pady=6)
- 
+
             def _exportar():
                 try:
                     nome_arq = f"ausentes_frequencia_{_hoje().replace('/', '_')}.csv"
@@ -3622,17 +3746,17 @@ def abrir_painel_admin_ctk(event=None):
                     messagebox.showinfo("Sucesso", f"CSV exportado:\n{nome_arq}")
                 except Exception as e:
                     messagebox.showerror("Erro", f"Falha ao exportar:\n{e}")
- 
+
             btn_row_aus = ctk.CTkFrame(win, fg_color="transparent")
             btn_row_aus.pack(anchor="w", padx=20, pady=(0, 16))
             ctk.CTkButton(btn_row_aus, text="⬇  Exportar CSV", fg_color="#1565C0",
                            hover_color="#0D47A1", font=("Segoe UI", 11, "bold"),
                            height=34, command=_exportar).pack(side="left")
- 
+
             cb_serie_aus.configure(command=lambda _: _preencher())
             cb_curso_aus.configure(command=lambda _: _preencher())
             _preencher()
- 
+
         # ── Exportar CSV ──────────────────────────────────────────────────────
         def exportar_csv_freq():
             try:
@@ -3646,7 +3770,7 @@ def abrir_painel_admin_ctk(event=None):
             except Exception as e:
                 lbl_acao_status.configure(text=f"⚠ Falha ao exportar: {e}", text_color="#C62828")
             page.after(4000, lambda: lbl_acao_status.configure(text=""))
- 
+
         # ── Apagar registros de hoje ──────────────────────────────────────────
         def apagar_hoje_freq():
             if not messagebox.askyesno("Confirmar", f"Apagar todos os registros de hoje ({_hoje()})?"):
@@ -3658,7 +3782,7 @@ def abrir_painel_admin_ctk(event=None):
                 lbl_acao_status.configure(text=f"⚠ Falha ao apagar: {e}", text_color="#C62828")
             page.after(4000, lambda: lbl_acao_status.configure(text=""))
             atualizar_freq()
- 
+
         ctk.CTkButton(btn_row, text="👁  Ver Ausentes", fg_color=VERDE_VIBRANTE,
                        hover_color=VERDE_ESCURO, font=("Segoe UI", 11, "bold"),
                        height=36, width=140, command=abrir_ausentes).pack(side="left", padx=(0, 8))
@@ -3672,12 +3796,12 @@ def abrir_painel_admin_ctk(event=None):
                        hover_color="#8E1010", font=("Segoe UI", 11, "bold"),
                        height=36, width=140, command=apagar_hoje_freq).pack(side="left", padx=(0, 12))
         lbl_acao_status.pack(side="left")
- 
+
         # Gatilhos automáticos de filtro
         cb_serie.configure(command=lambda _: atualizar_freq())
         cb_curso.configure(command=lambda _: atualizar_freq())
         ent_nome.bind("<KeyRelease>", lambda e: atualizar_freq())
- 
+
         atualizar_freq()
         return page
     def criar_pagina_historico():
@@ -3685,13 +3809,13 @@ def abrir_painel_admin_ctk(event=None):
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
         from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
- 
+
         page = ctk.CTkScrollableFrame(container, fg_color=CINZA_BG)
         page.grid_columnconfigure(0, weight=1)
- 
+
         # ── Estado ────────────────────────────────────────────────────────────
         _estado = {"tipo": "refeitorio", "periodo": "hoje", "dados_por_data": {}}
- 
+
         # ── Cabeçalho ─────────────────────────────────────────────────────────
         cab = ctk.CTkFrame(page, fg_color="transparent")
         cab.grid(row=0, column=0, sticky="ew", pady=(4, 12))
@@ -3699,17 +3823,17 @@ def abrir_painel_admin_ctk(event=None):
                       font=("Segoe UI", 22, "bold"), text_color=TEXTO_ESCURO).pack(anchor="w")
         ctk.CTkLabel(cab, text="Consulte o histórico de refeições ou frequência por período.",
                       font=("Segoe UI", 12), text_color=TEXTO_CINZA).pack(anchor="w")
- 
+
         # ── Card de filtros ───────────────────────────────────────────────────
         filtro_card = ctk.CTkFrame(page, fg_color=BRANCO, corner_radius=12)
         filtro_card.grid(row=1, column=0, sticky="ew", pady=(0, 12))
- 
+
         # Linha 1: seletor de tipo (segmented button)
         topo_filtro = ctk.CTkFrame(filtro_card, fg_color="transparent")
         topo_filtro.pack(fill="x", padx=14, pady=(14, 8))
         ctk.CTkLabel(topo_filtro, text="Histórico de:", font=("Segoe UI", 12, "bold"),
                       text_color=TEXTO_ESCURO).pack(side="left", padx=(0, 10))
- 
+
         seg_tipo = ctk.CTkSegmentedButton(topo_filtro, values=["Refeitório", "Frequência"],
                                            fg_color="#F0F0F0", selected_color=VERDE_VIBRANTE,
                                            selected_hover_color=VERDE_ESCURO,
@@ -3717,13 +3841,13 @@ def abrir_painel_admin_ctk(event=None):
                                            text_color=TEXTO_ESCURO)
         seg_tipo.set("Refeitório")
         seg_tipo.pack(side="left")
- 
+
         # Linha 2: período
         periodo_row = ctk.CTkFrame(filtro_card, fg_color="transparent")
         periodo_row.pack(fill="x", padx=14, pady=(0, 8))
         ctk.CTkLabel(periodo_row, text="Período:", font=("Segoe UI", 12, "bold"),
                       text_color=TEXTO_ESCURO).pack(side="left", padx=(0, 10))
- 
+
         seg_periodo = ctk.CTkSegmentedButton(periodo_row,
                                               values=["Hoje", "Esta semana", "Este mês", "Personalizado"],
                                               fg_color="#F0F0F0", selected_color="#1565C0",
@@ -3732,26 +3856,26 @@ def abrir_painel_admin_ctk(event=None):
                                               text_color=TEXTO_ESCURO)
         seg_periodo.set("Hoje")
         seg_periodo.pack(side="left")
- 
+
         # Linha 3: período personalizado (oculta por padrão)
         custom_row = ctk.CTkFrame(filtro_card, fg_color="transparent")
- 
+
         ctk.CTkLabel(custom_row, text="De:", font=("Segoe UI", 11),
                       text_color=TEXTO_ESCURO).pack(side="left", padx=(0, 6))
         ent_data_ini = ctk.CTkEntry(custom_row, width=110, height=30, placeholder_text="01/01/2026")
         ent_data_ini.insert(0, "01/01/2026")
         ent_data_ini.pack(side="left", padx=(0, 14))
- 
+
         ctk.CTkLabel(custom_row, text="Até:", font=("Segoe UI", 11),
                       text_color=TEXTO_ESCURO).pack(side="left", padx=(0, 6))
         ent_data_fim = ctk.CTkEntry(custom_row, width=110, height=30)
         ent_data_fim.insert(0, datetime.date.today().strftime("%d/%m/%Y"))
         ent_data_fim.pack(side="left")
- 
+
         # Linha 4: série / curso
         serie_curso_row = ctk.CTkFrame(filtro_card, fg_color="transparent")
         serie_curso_row.pack(fill="x", padx=14, pady=(0, 14))
- 
+
         ctk.CTkLabel(serie_curso_row, text="Série:", font=("Segoe UI", 11, "bold"),
                       text_color=TEXTO_ESCURO).pack(side="left", padx=(0, 6))
         cb_serie = ctk.CTkOptionMenu(serie_curso_row, values=["(Todas)", "1 Ano", "2 Ano", "3 Ano"],
@@ -3759,7 +3883,7 @@ def abrir_painel_admin_ctk(event=None):
                                       button_color=VERDE_ESCURO, button_hover_color=VERDE_ESCURO)
         cb_serie.set("(Todas)")
         cb_serie.pack(side="left", padx=(0, 14))
- 
+
         ctk.CTkLabel(serie_curso_row, text="Curso:", font=("Segoe UI", 11, "bold"),
                       text_color=TEXTO_ESCURO).pack(side="left", padx=(0, 6))
         cb_curso = ctk.CTkOptionMenu(serie_curso_row,
@@ -3769,24 +3893,24 @@ def abrir_painel_admin_ctk(event=None):
                                       button_color=VERDE_ESCURO, button_hover_color=VERDE_ESCURO)
         cb_curso.set("(Todos)")
         cb_curso.pack(side="left", padx=(0, 14))
- 
+
         ctk.CTkButton(serie_curso_row, text="🔍  Buscar", fg_color=VERDE_VIBRANTE,
                        hover_color=VERDE_ESCURO, font=("Segoe UI", 11, "bold"),
                        height=32, width=110,
                        command=lambda: buscar_historico()).pack(side="left")
- 
+
         # ── Resumo geral ──────────────────────────────────────────────────────
         resumo_row = ctk.CTkFrame(page, fg_color="transparent")
         resumo_row.grid(row=2, column=0, sticky="ew", pady=(0, 12))
         resumo_row.grid_columnconfigure((0, 1, 2), weight=1)
- 
+
         lbl_total, sub_total = card_resumo(resumo_row, 0, 0, "📋", AZUL_CLARO, "#1565C0",
                                             "Total Geral", "0", "registros")
         lbl_pos,   sub_pos   = card_resumo(resumo_row, 0, 1, "✔️", "#E8F5E9", "#2E7D32",
                                             "Almoços / Presentes", "0", "no período")
         lbl_pct,   sub_pct   = card_resumo(resumo_row, 0, 2, "📊", ROXO_CLARO, "#6A1B9A",
                                             "% Geral", "0%", "adesão / presença")
- 
+
         # ── Gráfico ───────────────────────────────────────────────────────────
         grafico_card = ctk.CTkFrame(page, fg_color=BRANCO, corner_radius=12)
         grafico_card.grid(row=3, column=0, sticky="ew", pady=(0, 12))
@@ -3796,16 +3920,16 @@ def abrir_painel_admin_ctk(event=None):
         frame_graf = ctk.CTkFrame(grafico_card, fg_color="transparent")
         frame_graf.pack(fill="x", padx=18, pady=(0, 16))
         canvas_ref = {}
- 
+
         # ── Tabela ────────────────────────────────────────────────────────────
         tabela_card = ctk.CTkFrame(page, fg_color=BRANCO, corner_radius=12)
         tabela_card.grid(row=4, column=0, sticky="ew", pady=(0, 12))
- 
+
         topo_tab = ctk.CTkFrame(tabela_card, fg_color="transparent")
         topo_tab.pack(fill="x", padx=14, pady=(14, 6))
         ctk.CTkLabel(topo_tab, text="Detalhe por dia",
                       font=("Segoe UI", 13, "bold"), text_color=TEXTO_ESCURO).pack(side="left")
- 
+
         header_tab = ctk.CTkFrame(tabela_card, fg_color=VERDE_ESCURO, corner_radius=6)
         header_tab.pack(fill="x", padx=14)
         col_labels = {}
@@ -3815,21 +3939,21 @@ def abrir_painel_admin_ctk(event=None):
                                 text_color="white", width=w, anchor="w")
             lbl.pack(side="left", expand=(i == len(COLS)-1), fill="x", padx=6, pady=8)
             col_labels[col] = lbl
- 
+
         corpo_tab = ctk.CTkFrame(tabela_card, fg_color="transparent")
         corpo_tab.pack(fill="x", padx=14, pady=(0, 14))
- 
+
         # ── Botões inferiores ─────────────────────────────────────────────────
         btn_row = ctk.CTkFrame(page, fg_color="transparent")
         btn_row.grid(row=5, column=0, sticky="w", pady=(0, 24))
         lbl_status = ctk.CTkLabel(btn_row, text="", font=("Segoe UI", 10), text_color=VERDE_VIBRANTE)
- 
+
         # ── Lógica de busca ───────────────────────────────────────────────────
         def buscar_historico():
             tipo_label = seg_tipo.get()
             eh_frequencia = (tipo_label == "Frequência")
             _estado["tipo"] = "frequencia" if eh_frequencia else "refeitorio"
- 
+
             periodo_label = seg_periodo.get()
             hoje = datetime.date.today()
             if periodo_label == "Hoje":
@@ -3847,10 +3971,10 @@ def abrir_painel_admin_ctk(event=None):
                 except Exception:
                     lbl_status.configure(text="⚠ Data inválida. Use DD/MM/AAAA.", text_color="#C62828")
                     return
- 
+
             f_serie = cb_serie.get()
             f_curso = cb_curso.get()
- 
+
             def _thread_body():
                 try:
                     linhas = _ler_frequencia_todos_db() if eh_frequencia else _ler_refeitorio_todos_db()
@@ -3858,7 +3982,7 @@ def abrir_painel_admin_ctk(event=None):
                     page.after(0, lambda: lbl_status.configure(
                         text=f"⚠ Falha ao carregar: {e}", text_color="#C62828"))
                     return
- 
+
                 dados_por_data = {}
                 for row in linhas:
                     if len(row) < 7:
@@ -3869,18 +3993,18 @@ def abrir_painel_admin_ctk(event=None):
                         continue
                     if not (d_inicio <= data_obj <= d_fim):
                         continue
- 
+
                     serie = row[4] if len(row) > 4 else ""
                     curso = row[5] if len(row) > 5 else ""
                     if f_serie != "(Todas)" and f_serie not in serie:
                         continue
                     if f_curso != "(Todos)" and f_curso not in curso:
                         continue
- 
+
                     if data_obj not in dados_por_data:
                         dados_por_data[data_obj] = {"total": 0, "presentes": 0,
                                                        "almocou": 0, "nao_almocou": 0}
- 
+
                     if eh_frequencia:
                         dados_por_data[data_obj]["presentes"] += 1
                         dados_por_data[data_obj]["total"] += 1
@@ -3891,14 +4015,14 @@ def abrir_painel_admin_ctk(event=None):
                         else:
                             dados_por_data[data_obj]["nao_almocou"] += 1
                         dados_por_data[data_obj]["total"] += 1
- 
+
                 page.after(0, lambda: _renderizar(dados_por_data, eh_frequencia))
- 
+
             threading.Thread(target=_thread_body, daemon=True).start()
- 
+
         def _renderizar(dados_por_data, eh_frequencia):
             _estado["dados_por_data"] = dados_por_data
- 
+
             if eh_frequencia:
                 col_labels["Total"].configure(text="Total Alunos")
                 col_labels["Almoços"].configure(text="Presentes")
@@ -3913,10 +4037,10 @@ def abrir_painel_admin_ctk(event=None):
                 col_labels["% Adesão"].configure(text="% Adesão")
                 sub_pos.configure(text="almoços")
                 sub_pct.configure(text="adesão")
- 
+
             for w in corpo_tab.winfo_children():
                 w.destroy()
- 
+
             if not dados_por_data:
                 ctk.CTkLabel(corpo_tab, text="Nenhum dado para o período selecionado.",
                               font=("Segoe UI", 12), text_color=TEXTO_CINZA).pack(pady=20)
@@ -3925,37 +4049,37 @@ def abrir_painel_admin_ctk(event=None):
                 lbl_pct.configure(text="0%")
                 _renderizar_grafico({}, eh_frequencia)
                 return
- 
+
             total_geral = 0
             pos_geral = 0  # presentes ou almoços, dependendo do tipo
- 
+
             for i, data_obj in enumerate(sorted(dados_por_data.keys(), reverse=True)):
                 dados = dados_por_data[data_obj]
                 data_str = data_obj.strftime("%d/%m/%Y")
                 total = dados["total"]
- 
+
                 if eh_frequencia:
                     valor_pos = dados["presentes"]
                     valor_neg = total - valor_pos
                 else:
                     valor_pos = dados["almocou"]
                     valor_neg = dados["nao_almocou"]
- 
+
                 pct = (valor_pos / total * 100) if total else 0
                 total_geral += total
                 pos_geral += valor_pos
- 
+
                 if pct >= 70:
                     cor_pct = "#2E7D32"
                 elif pct >= 40:
                     cor_pct = "#E65100"
                 else:
                     cor_pct = "#C62828"
- 
+
                 bg = BRANCO if i % 2 == 0 else "#F8F9FA"
                 linha = ctk.CTkFrame(corpo_tab, fg_color=bg, corner_radius=4)
                 linha.pack(fill="x", pady=1)
- 
+
                 valores = [(data_str, 110, "#374151"), (str(total), 130, "#374151"),
                            (str(valor_pos), 130, "#2E7D32"), (str(valor_neg), 150, "#C62828"),
                            (f"{pct:.1f}%", 110, cor_pct)]
@@ -3964,32 +4088,32 @@ def abrir_painel_admin_ctk(event=None):
                     ctk.CTkLabel(linha, text=val, font=("Segoe UI", 11, "bold" if j == 4 else "normal"),
                                   width=w, anchor="w", text_color=cor_t
                                   ).pack(side="left", expand=(j == n-1), fill="x", padx=6, pady=6)
- 
+
             pct_geral = (pos_geral / total_geral * 100) if total_geral else 0
             lbl_total.configure(text=str(total_geral))
             lbl_pos.configure(text=str(pos_geral))
             lbl_pct.configure(text=f"{pct_geral:.1f}%")
- 
+
             _renderizar_grafico(dados_por_data, eh_frequencia)
- 
+
         # ── Gráfico matplotlib ────────────────────────────────────────────────
         def _renderizar_grafico(dados_por_data, eh_frequencia):
             if "canvas" in canvas_ref:
                 canvas_ref["canvas"].get_tk_widget().destroy()
                 plt.close(canvas_ref["fig"])
                 del canvas_ref["canvas"]
- 
+
             for w in frame_graf.winfo_children():
                 w.destroy()
- 
+
             if not dados_por_data:
                 ctk.CTkLabel(frame_graf, text="Sem dados para exibir.",
                               font=("Segoe UI", 12), text_color=TEXTO_CINZA).pack(pady=40)
                 return
- 
+
             datas_ordenadas = sorted(dados_por_data.keys())[-30:]
             labels = [d.strftime("%d/%m") for d in datas_ordenadas]
- 
+
             if eh_frequencia:
                 valores = [dados_por_data[d]["presentes"] for d in datas_ordenadas]
                 totais  = [dados_por_data[d]["total"] for d in datas_ordenadas]
@@ -3998,7 +4122,7 @@ def abrir_painel_admin_ctk(event=None):
                 valores = [dados_por_data[d]["almocou"] for d in datas_ordenadas]
                 totais  = [dados_por_data[d]["total"] for d in datas_ordenadas]
                 cor_label = "Almoços"
- 
+
             cores = []
             for v, t in zip(valores, totais):
                 pct = (v / t * 100) if t else 0
@@ -4008,30 +4132,30 @@ def abrir_painel_admin_ctk(event=None):
                     cores.append("#FDD835")
                 else:
                     cores.append("#F44336")
- 
+
             fig, ax = plt.subplots(figsize=(10, 3.6))
             fig.patch.set_facecolor(BRANCO)
             ax.set_facecolor(CINZA_BG)
- 
+
             bars = ax.bar(labels, valores, color=cores, edgecolor="white", linewidth=1.5)
             for b, v in zip(bars, valores):
                 if v > 0:
                     ax.annotate(str(v), (b.get_x() + b.get_width() / 2, b.get_height()),
                                  textcoords="offset points", xytext=(0, 4),
                                  ha="center", fontsize=9, color="#374151")
- 
+
             ax.set_ylabel(cor_label, fontsize=10)
             ax.spines[["top", "right"]].set_visible(False)
             ax.grid(axis="y", linestyle="--", alpha=0.4)
             plt.setp(ax.get_xticklabels(), rotation=45, ha="right", fontsize=8)
             fig.tight_layout()
- 
+
             canvas_tk = FigureCanvasTkAgg(fig, master=frame_graf)
             canvas_tk.draw()
             canvas_tk.get_tk_widget().pack(fill="x")
             canvas_ref["canvas"] = canvas_tk
             canvas_ref["fig"] = fig
- 
+
         # ── Exportações ───────────────────────────────────────────────────────
         def exportar_csv_historico():
             dados = _estado["dados_por_data"]
@@ -4058,7 +4182,7 @@ def abrir_painel_admin_ctk(event=None):
             except Exception as e:
                 lbl_status.configure(text=f"⚠ Falha: {e}", text_color="#C62828")
             page.after(4000, lambda: lbl_status.configure(text=""))
- 
+
         def exportar_pdf_historico():
             dados = _estado["dados_por_data"]
             if not dados:
@@ -4102,7 +4226,7 @@ def abrir_painel_admin_ctk(event=None):
             except Exception as e:
                 lbl_status.configure(text=f"⚠ Falha: {e}", text_color="#C62828")
             page.after(4000, lambda: lbl_status.configure(text=""))
- 
+
         ctk.CTkButton(btn_row, text="⬇  Exportar CSV", fg_color="#1565C0",
                        hover_color="#0D47A1", font=("Segoe UI", 11, "bold"),
                        height=36, width=150, command=exportar_csv_historico).pack(side="left", padx=(0, 8))
@@ -4110,7 +4234,7 @@ def abrir_painel_admin_ctk(event=None):
                        hover_color="#4A148C", font=("Segoe UI", 11, "bold"),
                        height=36, width=150, command=exportar_pdf_historico).pack(side="left", padx=(0, 12))
         lbl_status.pack(side="left")
- 
+
         # ── Mostrar/ocultar período personalizado ────────────────────────────
         def _on_periodo_change(valor):
             if valor == "Personalizado":
@@ -4118,15 +4242,15 @@ def abrir_painel_admin_ctk(event=None):
             else:
                 custom_row.pack_forget()
             buscar_historico()
- 
+
         def _on_tipo_change(valor):
             buscar_historico()
- 
+
         seg_periodo.configure(command=_on_periodo_change)
         seg_tipo.configure(command=_on_tipo_change)
         cb_serie.configure(command=lambda _: buscar_historico())
         cb_curso.configure(command=lambda _: buscar_historico())
- 
+
         buscar_historico()
         return page
 
@@ -4136,22 +4260,22 @@ def abrir_painel_admin_ctk(event=None):
         page.grid_columnconfigure(1, weight=1)
         page.grid_columnconfigure(2, weight=0)
         page.grid_rowconfigure(1, weight=1)
- 
+
         # ── Helpers / lógica reaproveitada do painel antigo ─────────────────────
         LISTA_FILE = os.path.join(DADOS_DIR, "lista_alunos.json")
         QR_DIR     = "qrcodes_marwin"
         os.makedirs(QR_DIR, exist_ok=True)
- 
+
         def _ler_lista():
             if os.path.exists(LISTA_FILE):
                 with open(LISTA_FILE, "r", encoding="utf-8") as f:
                     return json.load(f)
             return []
- 
+
         def _salvar_lista(lista):
             with open(LISTA_FILE, "w", encoding="utf-8") as f:
                 json.dump(lista, f, ensure_ascii=False, indent=2)
- 
+
         def _extrair_ano_serie(serie):
             if not serie:
                 return ""
@@ -4169,14 +4293,14 @@ def abrir_painel_admin_ctk(event=None):
                 if ch.isdigit():
                     return ch
             return ""
- 
+
         def _limpar_texto_pasta(texto):
             invalidos = r'\/:*?"<>|'
             resultado = ""
             for ch in str(texto):
                 resultado += "_" if ch in invalidos else ch
             return resultado.strip()
- 
+
         def _limpar_texto_arquivo(texto):
             return (str(texto)
                     .replace(" ", "_")
@@ -4192,7 +4316,7 @@ def abrir_painel_admin_ctk(event=None):
                     .replace(">", "_")
                     .replace("|", "_")
                     .strip("_"))
- 
+
         def _pasta_turma(al):
             serie = al.get("serie", "").strip()
             curso = al.get("curso", "").strip()
@@ -4202,7 +4326,7 @@ def abrir_painel_admin_ctk(event=None):
             pasta = os.path.join(QR_DIR, nome_serie, nome_curso)
             os.makedirs(pasta, exist_ok=True)
             return pasta
- 
+
         def _nome_arquivo(al):
             matricula = _limpar_texto_arquivo(al.get("matricula", "sem_matricula"))
             nome      = _limpar_texto_arquivo(al.get("nome",      "sem_nome"))
@@ -4214,7 +4338,7 @@ def abrir_painel_admin_ctk(event=None):
             nome_arq = "_".join(partes) + ".png"
             pasta    = _pasta_turma(al)
             return os.path.join(pasta, nome_arq)
- 
+
         def _gerar_png(al):
             payload = json.dumps({
                 "matricula": al["matricula"],
@@ -4231,7 +4355,7 @@ def abrir_painel_admin_ctk(event=None):
             caminho = _nome_arquivo(al)
             img.save(caminho)
             return caminho
- 
+
         # ── Cabeçalho ─────────────────────────────────────────────────────────
         cab = ctk.CTkFrame(page, fg_color="transparent")
         cab.grid(row=0, column=0, columnspan=3, sticky="ew", padx=4, pady=(4, 12))
@@ -4239,18 +4363,18 @@ def abrir_painel_admin_ctk(event=None):
                       font=("Segoe UI", 22, "bold"), text_color=TEXTO_ESCURO).pack(anchor="w")
         ctk.CTkLabel(cab, text="Cadastre alunos e gere QR Codes individuais ou em lote.",
                       font=("Segoe UI", 12), text_color=TEXTO_CINZA).pack(anchor="w")
- 
+
         # ══════════════════════════════════════════════════════════════════════
         # COLUNA ESQUERDA — Novo aluno + preview QR
         # ══════════════════════════════════════════════════════════════════════
         esq = ctk.CTkFrame(page, fg_color=BRANCO, corner_radius=12, width=300)
         esq.grid(row=1, column=0, sticky="ns", padx=(0, 12))
         esq.grid_propagate(False)
- 
+
         ctk.CTkLabel(esq, text="Novo Aluno", font=("Segoe UI", 15, "bold"),
                       text_color=TEXTO_ESCURO).pack(pady=(18, 2))
         ctk.CTkFrame(esq, fg_color="#E5E7EB", height=1).pack(fill="x", padx=18, pady=(10, 12))
- 
+
         campos = {}
         defs = [("Matrícula *", "matricula", "2026001"),
                 ("Nome *", "nome", "Nome do Aluno"),
@@ -4263,9 +4387,9 @@ def abrir_painel_admin_ctk(event=None):
                               placeholder_text=ph)
             e.pack(fill="x", padx=18, pady=(2, 8))
             campos[key] = e
- 
+
         ctk.CTkFrame(esq, fg_color="#E5E7EB", height=1).pack(fill="x", padx=18, pady=(4, 8))
- 
+
         dica_frame = ctk.CTkFrame(esq, fg_color="#F8F9FA", corner_radius=6)
         dica_frame.pack(fill="x", padx=18, pady=(0, 8))
         ctk.CTkLabel(dica_frame, text="Pasta gerada:", font=("Segoe UI", 9, "bold"),
@@ -4274,7 +4398,7 @@ def abrir_painel_admin_ctk(event=None):
                                  text="qrcodes_marwin/\n  1 Ano/\n    Desenvolvimento de Sistemas/",
                                  font=("Courier", 9), text_color=TEXTO_CINZA, justify="left")
         dica_lbl.pack(anchor="w", padx=8, pady=(2, 6))
- 
+
         def _atualizar_dica(*_):
             serie = campos["serie"].get().strip()
             curso = campos["curso"].get().strip()
@@ -4282,10 +4406,10 @@ def abrir_painel_admin_ctk(event=None):
             nome_s = f"{ano} Ano" if ano else "Sem Serie"
             nome_c = _limpar_texto_pasta(curso) if curso else "Sem Curso"
             dica_lbl.configure(text=f"qrcodes_marwin/\n  {nome_s}/\n    {nome_c}/")
- 
+
         campos["serie"].bind("<KeyRelease>", _atualizar_dica)
         campos["curso"].bind("<KeyRelease>", _atualizar_dica)
- 
+
         # Preview QR
         preview_frame = ctk.CTkFrame(esq, fg_color="#F8F9FA", corner_radius=8,
                                        width=250, height=250)
@@ -4295,7 +4419,7 @@ def abrir_painel_admin_ctk(event=None):
                                     font=("Segoe UI", 10), text_color=TEXTO_CINZA)
         preview_lbl.pack(expand=True)
         _img_ref = {}
- 
+
         def _preview_qr(al):
             payload = json.dumps({
                 "matricula": al["matricula"], "nome": al["nome"],
@@ -4309,11 +4433,11 @@ def abrir_painel_admin_ctk(event=None):
             img_ctk = ctk.CTkImage(light_image=img_pil, dark_image=img_pil, size=(230, 230))
             _img_ref["img"] = img_ctk
             preview_lbl.configure(image=img_ctk, text="")
- 
+
         lbl_form_status = ctk.CTkLabel(esq, text="", font=("Segoe UI", 10),
                                         text_color=VERDE_VIBRANTE, wraplength=260, justify="center")
         lbl_form_status.pack(pady=(4, 4), padx=18)
- 
+
         def _campos_para_dict():
             return {
                 "matricula": campos["matricula"].get().strip(),
@@ -4321,7 +4445,7 @@ def abrir_painel_admin_ctk(event=None):
                 "serie":     campos["serie"].get().strip(),
                 "curso":     campos["curso"].get().strip(),
             }
- 
+
         def adicionar_aluno():
             al = _campos_para_dict()
             if not al["matricula"] or not al["nome"]:
@@ -4340,7 +4464,7 @@ def abrir_painel_admin_ctk(event=None):
             carregar_lista()
             lbl_form_status.configure(text=f"✔ Aluno adicionado!\nQR salvo em:\n{caminho}",
                                        text_color=VERDE_VIBRANTE)
- 
+
         def reemitir_selecionado():
             sel = _estado.get("selecionado")
             if not sel:
@@ -4358,14 +4482,14 @@ def abrir_painel_admin_ctk(event=None):
             _atualizar_dica()
             lbl_form_status.configure(text=f"✔ QR reemitido!\nSalvo em:\n{caminho}",
                                        text_color=VERDE_VIBRANTE)
- 
+
         ctk.CTkButton(esq, text="➕  Adicionar e Gerar QR", fg_color=VERDE_VIBRANTE,
                        hover_color=VERDE_ESCURO, font=("Segoe UI", 11, "bold"),
                        height=38, command=adicionar_aluno).pack(fill="x", padx=18, pady=(4, 4))
         ctk.CTkButton(esq, text="🔁  Reemitir QR Selecionado", fg_color="#1565C0",
                        hover_color="#0D47A1", font=("Segoe UI", 11, "bold"),
                        height=38, command=reemitir_selecionado).pack(fill="x", padx=18, pady=(0, 16))
- 
+
         # ══════════════════════════════════════════════════════════════════════
         # COLUNA CENTRAL — Lista de alunos cadastrados
         # ══════════════════════════════════════════════════════════════════════
@@ -4373,14 +4497,14 @@ def abrir_painel_admin_ctk(event=None):
         mid.grid(row=1, column=1, sticky="nsew", padx=(0, 12))
         mid.grid_rowconfigure(3, weight=1)
         mid.grid_columnconfigure(0, weight=1)
- 
+
         topo_mid = ctk.CTkFrame(mid, fg_color="transparent")
         topo_mid.grid(row=0, column=0, sticky="ew", padx=14, pady=(14, 4))
         ctk.CTkLabel(topo_mid, text="Alunos Cadastrados", font=("Segoe UI", 14, "bold"),
                       text_color=TEXTO_ESCURO).pack(side="left")
         lbl_cnt = ctk.CTkLabel(topo_mid, text="", font=("Segoe UI", 10), text_color=TEXTO_CINZA)
         lbl_cnt.pack(side="left", padx=10)
- 
+
         busca_row = ctk.CTkFrame(mid, fg_color="transparent")
         busca_row.grid(row=1, column=0, sticky="ew", padx=14, pady=(0, 8))
         ctk.CTkLabel(busca_row, text="Buscar:", font=("Segoe UI", 11),
@@ -4388,7 +4512,7 @@ def abrir_painel_admin_ctk(event=None):
         ent_busca = ctk.CTkEntry(busca_row, height=32,
                                   placeholder_text="Nome, matrícula, série ou curso...")
         ent_busca.pack(side="left", fill="x", expand=True)
- 
+
         header_lista = ctk.CTkFrame(mid, fg_color=VERDE_ESCURO, corner_radius=6)
         header_lista.grid(row=2, column=0, sticky="ew", padx=14)
         COLS = [("QR", 50), ("Matrícula", 100), ("Nome", 220), ("Série", 110), ("Curso", 200)]
@@ -4396,19 +4520,19 @@ def abrir_painel_admin_ctk(event=None):
             ctk.CTkLabel(header_lista, text=col, font=("Segoe UI", 10, "bold"),
                           text_color="white", width=w, anchor="w"
                           ).pack(side="left", expand=(i == len(COLS)-1), fill="x", padx=6, pady=8)
- 
+
         corpo_lista = ctk.CTkScrollableFrame(mid, fg_color="transparent")
         corpo_lista.grid(row=3, column=0, sticky="nsew", padx=14, pady=(0, 8))
         corpo_lista.grid_columnconfigure(0, weight=1)
- 
+
         _estado = {"selecionado": None, "linha_widgets": {}}
- 
+
         # Botões inferiores da coluna central
         btn_row_mid = ctk.CTkFrame(mid, fg_color="transparent")
         btn_row_mid.grid(row=4, column=0, sticky="ew", padx=14, pady=(0, 14))
         lbl_mid_status = ctk.CTkLabel(btn_row_mid, text="", font=("Segoe UI", 10),
                                        text_color=VERDE_VIBRANTE)
- 
+
         def remover_aluno():
             sel = _estado.get("selecionado")
             if not sel:
@@ -4423,7 +4547,7 @@ def abrir_painel_admin_ctk(event=None):
             _salvar_lista(lista)
             _estado["selecionado"] = None
             carregar_lista()
- 
+
         def gerar_lote():
             lista = _ler_lista()
             if not lista:
@@ -4441,7 +4565,7 @@ def abrir_painel_admin_ctk(event=None):
                     f"    3 Ano/\n"
                     f"      ..."):
                 return
- 
+
             def _thread_body():
                 erros = 0
                 pastas_criadas = set()
@@ -4458,9 +4582,9 @@ def abrir_painel_admin_ctk(event=None):
                 page.after(0, lambda: (lbl_mid_status.configure(text=msg, text_color=VERDE_VIBRANTE),
                                         carregar_lista(ent_busca.get())))
                 page.after(6000, lambda: lbl_mid_status.configure(text=""))
- 
+
             threading.Thread(target=_thread_body, daemon=True).start()
- 
+
         def abrir_pasta():
             import subprocess as sp
             try:
@@ -4474,7 +4598,7 @@ def abrir_painel_admin_ctk(event=None):
             except Exception as e:
                 lbl_mid_status.configure(text=f"⚠ {e}", text_color="#C62828")
                 page.after(4000, lambda: lbl_mid_status.configure(text=""))
- 
+
         ctk.CTkButton(btn_row_mid, text="🗑  Remover", fg_color="#C62828",
                        hover_color="#8E1010", font=("Segoe UI", 11, "bold"),
                        height=36, width=110, command=remover_aluno).pack(side="left", padx=(0, 8))
@@ -4485,18 +4609,18 @@ def abrir_painel_admin_ctk(event=None):
                        hover_color="#0D47A1", font=("Segoe UI", 11, "bold"),
                        height=36, width=160, command=abrir_pasta).pack(side="left", padx=(0, 12))
         lbl_mid_status.pack(side="left")
- 
+
         # ── Carregamento da lista ────────────────────────────────────────────
         def _selecionar(al):
             _estado["selecionado"] = al
             for mat, frame in _estado["linha_widgets"].items():
                 frame.configure(fg_color=(BRANCO if mat != al["matricula"] else "#E8F5E9"))
- 
+
         def carregar_lista(filtro=""):
             for w in corpo_lista.winfo_children():
                 w.destroy()
             _estado["linha_widgets"] = {}
- 
+
             lista = _ler_lista()
             filtro_lower = filtro.lower()
             exibidos = []
@@ -4509,33 +4633,33 @@ def abrir_painel_admin_ctk(event=None):
                         and filtro_lower not in serie.lower():
                     continue
                 exibidos.append(al)
- 
+
             lbl_cnt.configure(text=f"({len(exibidos)} de {len(lista)} aluno(s))")
- 
+
             if not exibidos:
                 ctk.CTkLabel(corpo_lista, text="Nenhum aluno encontrado.",
                               font=("Segoe UI", 12), text_color=TEXTO_CINZA
                               ).grid(row=0, column=0, pady=24)
                 return
- 
+
             for i, al in enumerate(exibidos):
                 serie = al.get("serie", "")
                 curso = al.get("curso", "")
                 tem_png = os.path.exists(_nome_arquivo(al))
                 ano = _extrair_ano_serie(serie)
                 ano_exib = f"{ano}º Ano" if ano else "-"
- 
+
                 bg_normal = BRANCO if i % 2 == 0 else "#F8F9FA"
                 if not tem_png:
                     bg_normal = "#FFF9C4"
- 
+
                 linha = ctk.CTkFrame(corpo_lista, fg_color=bg_normal, corner_radius=4, cursor="hand2")
                 linha.grid(row=i, column=0, sticky="ew", pady=1)
                 _estado["linha_widgets"][al["matricula"]] = linha
- 
+
                 icone_qr = "✔" if tem_png else "✘"
                 cor_icone = "#2E7D32" if tem_png else "#C62828"
- 
+
                 valores = [(icone_qr, 50, cor_icone), (al.get("matricula", ""), 100, "#374151"),
                            (al.get("nome", ""), 220, "#374151"), (ano_exib, 110, "#374151"),
                            (curso or "-", 200, "#374151")]
@@ -4546,28 +4670,28 @@ def abrir_painel_admin_ctk(event=None):
                                         width=w, anchor="w", text_color=cor_t)
                     lbl.pack(side="left", expand=(j == n-1), fill="x", padx=6, pady=6)
                     widgets_linha.append(lbl)
- 
+
                 def _bind_click(widget, a=al):
                     widget.bind("<Button-1>", lambda e, _a=a: _selecionar(_a))
- 
+
                 _bind_click(linha)
                 for w in widgets_linha:
                     _bind_click(w)
- 
+
         ent_busca.bind("<KeyRelease>", lambda e: carregar_lista(ent_busca.get()))
- 
+
         # ══════════════════════════════════════════════════════════════════════
         # COLUNA DIREITA — Importar planilha
         # ══════════════════════════════════════════════════════════════════════
         dir_col = ctk.CTkScrollableFrame(page, fg_color=BRANCO, corner_radius=12, width=300)
         dir_col.grid(row=1, column=2, sticky="ns")
- 
+
         ctk.CTkLabel(dir_col, text="Importar Planilha", font=("Segoe UI", 15, "bold"),
                       text_color=TEXTO_ESCURO).pack(pady=(18, 2))
         ctk.CTkLabel(dir_col, text="XLSX ou CSV com os alunos",
                       font=("Segoe UI", 10), text_color=TEXTO_CINZA).pack(pady=(0, 8))
         ctk.CTkFrame(dir_col, fg_color="#E5E7EB", height=1).pack(fill="x", padx=18, pady=(0, 12))
- 
+
         frame_inst = ctk.CTkFrame(dir_col, fg_color="#F8F9FA", corner_radius=8)
         frame_inst.pack(fill="x", padx=18, pady=(0, 10))
         ctk.CTkLabel(frame_inst, text="Colunas esperadas:", font=("Segoe UI", 10, "bold"),
@@ -4582,12 +4706,12 @@ def abrir_painel_admin_ctk(event=None):
                            "  2 Ano/\n    ...\n  3 Ano/\n    ...",
                       font=("Courier", 8), text_color=TEXTO_CINZA, justify="left"
                       ).pack(anchor="w", padx=10, pady=(4, 8))
- 
+
         ctk.CTkLabel(dir_col, text="Mapear colunas (opcional)", font=("Segoe UI", 10, "bold"),
                       text_color=VERDE_VIBRANTE).pack(anchor="w", padx=18, pady=(4, 0))
         ctk.CTkLabel(dir_col, text="Deixe em branco p/ detecção automática.",
                       font=("Segoe UI", 9), text_color=TEXTO_CINZA).pack(anchor="w", padx=18, pady=(0, 6))
- 
+
         map_vars = {}
         for campo_mk, rotulo_mk in [("matricula", "Col. Matrícula"), ("nome", "Col. Nome"),
                                      ("serie", "Col. Série"), ("curso", "Col. Curso")]:
@@ -4598,29 +4722,29 @@ def abrir_painel_admin_ctk(event=None):
             ent = ctk.CTkEntry(fr, height=28, font=("Segoe UI", 9))
             ent.pack(side="left", fill="x", expand=True)
             map_vars[campo_mk] = ent
- 
+
         ctk.CTkFrame(dir_col, fg_color="#E5E7EB", height=1).pack(fill="x", padx=18, pady=(10, 10))
- 
+
         gerar_qr_import_var = ctk.BooleanVar(value=True)
         ctk.CTkCheckBox(dir_col, text="Gerar QR Codes ao importar",
                          variable=gerar_qr_import_var, font=("Segoe UI", 10, "bold"),
                          text_color=VERDE_VIBRANTE, fg_color=VERDE_VIBRANTE,
                          hover_color=VERDE_ESCURO).pack(anchor="w", padx=18, pady=(0, 4))
- 
+
         sobreescrever_var = ctk.BooleanVar(value=False)
         ctk.CTkCheckBox(dir_col, text="Atualizar duplicatas",
                          variable=sobreescrever_var, font=("Segoe UI", 10),
                          text_color=TEXTO_ESCURO, fg_color=VERDE_VIBRANTE,
                          hover_color=VERDE_ESCURO).pack(anchor="w", padx=18, pady=(0, 10))
- 
+
         lbl_import_status = ctk.CTkLabel(dir_col, text="", font=("Segoe UI", 10, "bold"),
                                           text_color=VERDE_VIBRANTE, wraplength=250, justify="center")
         lbl_import_status.pack(pady=4, padx=18)
- 
+
         prog_bar = ctk.CTkProgressBar(dir_col, height=10)
         prog_bar.set(0)
         prog_bar.pack(fill="x", padx=18, pady=(0, 10))
- 
+
         def _normalizar_cabecalho(cabecalho):
             mapa_auto = {}
             sinonimos = {
@@ -4643,7 +4767,7 @@ def abrir_painel_admin_ctk(event=None):
                     if campo in mapa_auto:
                         break
             return mapa_auto
- 
+
         def importar_planilha():
             from tkinter import filedialog
             caminho_pl = filedialog.askopenfilename(
@@ -4654,13 +4778,13 @@ def abrir_painel_admin_ctk(event=None):
                            ("Todos", "*.*")])
             if not caminho_pl:
                 return
- 
+
             lbl_import_status.configure(text="Lendo arquivo...", text_color=TEXTO_CINZA)
             page.update()
- 
+
             ext = os.path.splitext(caminho_pl)[1].lower()
             linhas_raw = []
- 
+
             try:
                 if ext in (".xlsx", ".xls"):
                     try:
@@ -4695,51 +4819,51 @@ def abrir_painel_admin_ctk(event=None):
             except Exception as e:
                 lbl_import_status.configure(text=f"⚠ Erro ao ler arquivo: {e}", text_color="#C62828")
                 return
- 
+
             if len(linhas_raw) < 2:
                 lbl_import_status.configure(text="⚠ Arquivo sem dados suficientes.", text_color="#C62828")
                 return
- 
+
             cabecalho = linhas_raw[0]
             mapa = _normalizar_cabecalho(cabecalho)
- 
+
             if "matricula" not in mapa or "nome" not in mapa:
                 lbl_import_status.configure(
                     text="⚠ Não foi possível identificar colunas de Matrícula e Nome.\n"
                          "Use o mapeamento manual.",
                     text_color="#C62828")
                 return
- 
+
             lista_atual = _ler_lista()
             mats_existentes = {a["matricula"]: i for i, a in enumerate(lista_atual)}
- 
+
             novos = 0; atualizados = 0; ignorados = 0
             dados_importados = []
- 
+
             linhas_dados = [l for l in linhas_raw[1:] if any(c for c in l)]
             total_linhas = max(len(linhas_dados), 1)
- 
+
             for idx_linha, linha in enumerate(linhas_dados):
                 prog_bar.set((idx_linha + 1) / total_linhas)
                 page.update_idletasks()
- 
+
                 def _cel(campo, _linha=linha):
                     idx_c = mapa.get(campo)
                     if idx_c is None or idx_c >= len(_linha):
                         return ""
                     return str(_linha[idx_c]).strip()
- 
+
                 matricula = _cel("matricula")
                 nome      = _cel("nome")
                 serie     = _cel("serie")
                 curso     = _cel("curso")
- 
+
                 if not matricula or not nome:
                     ignorados += 1
                     continue
- 
+
                 al = {"matricula": matricula, "nome": nome, "serie": serie, "curso": curso}
- 
+
                 if matricula in mats_existentes:
                     if sobreescrever_var.get():
                         lista_atual[mats_existentes[matricula]] = al
@@ -4752,9 +4876,9 @@ def abrir_painel_admin_ctk(event=None):
                     mats_existentes[matricula] = len(lista_atual) - 1
                     novos += 1
                     dados_importados.append(al)
- 
+
             _salvar_lista(lista_atual)
- 
+
             msg_qr = ""
             if gerar_qr_import_var.get() and dados_importados:
                 lbl_import_status.configure(text=f"Gerando {len(dados_importados)} QR Code(s)...",
@@ -4775,22 +4899,22 @@ def abrir_painel_admin_ctk(event=None):
                           f"em {len(pastas_criadas)} pasta(s) dentro de '{QR_DIR}/'.")
                 if erros_qr:
                     msg_qr += f" ({erros_qr} erros)"
- 
+
             prog_bar.set(0)
             carregar_lista(ent_busca.get())
- 
+
             resumo = (f"✔ Importação concluída!\n"
                       f"Novos: {novos}  |  Atualizados: {atualizados}  |  "
                       f"Ignorados: {ignorados}{msg_qr}")
             lbl_import_status.configure(text=resumo, text_color=VERDE_VIBRANTE)
- 
+
         ctk.CTkButton(dir_col, text="📂  Selecionar Arquivo e Importar", fg_color=VERDE_VIBRANTE,
                        hover_color=VERDE_ESCURO, font=("Segoe UI", 11, "bold"),
                        height=42, command=importar_planilha).pack(fill="x", padx=18, pady=(0, 6))
         ctk.CTkButton(dir_col, text="📁  Abrir Pasta dos QR Codes", fg_color="#1565C0",
                        hover_color="#0D47A1", font=("Segoe UI", 10, "bold"),
                        height=34, command=abrir_pasta).pack(fill="x", padx=18, pady=(0, 18))
- 
+
         carregar_lista()
         return page
 
@@ -5115,7 +5239,6 @@ def iniciar_tkinter(url_publica):
             _img.thumbnail((520, 520), _PilImg.LANCZOS)
             _logo_tk = _PilImgTk.PhotoImage(_img, master=janela)
             tk.Label(center_wrap, image=_logo_tk, bg=T["BG_MAIN"]).pack(pady=(0, 10))
-            center_wrap._logo_ref = _logo_tk
             center_wrap._logo_ref = _logo_tk   # evitar GC
     except Exception:
         tk.Label(center_wrap, text="🏫", font=("Segoe UI", 44), bg=T["BG_MAIN"]).pack(pady=(0, 8))
@@ -5245,5 +5368,5 @@ if __name__ == "__main__":
     logger.info(f"Servidor MARWIN iniciado em {url}")
     print(f"\n[CLIENTE] Acesse localmente em: {url}")
     print(f"[CLIENTE] Ou use http://localhost:5000 no proprio computador")
-    
+
     iniciar_tkinter(url)
