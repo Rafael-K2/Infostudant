@@ -261,6 +261,16 @@ async function apiPost(route, data){
   }catch(e){ console.warn('POST',route,e); return null; }
 }
 
+// ---------- Config (avaliações ativas/inativas) ----------
+let avaliacoesAtivas = true;
+async function verificarConfig(){
+  const cfg = await apiGet('/config', null);
+  if(!cfg) return; // mantém último estado conhecido em caso de falha de rede
+  avaliacoesAtivas = cfg.avaliacoes_ativas !== false;
+  const btn = document.getElementById('btnStart');
+  if(btn) btn.style.display = avaliacoesAtivas ? '' : 'none';
+}
+
 // ---------- Cardápio ----------
 async function openCardapio(){ document.getElementById('modalCardapio').style.display='flex'; loadCardapio(); }
 function closeModal(id){document.getElementById(id).style.display='none'}
@@ -533,6 +543,8 @@ async function verificarApi(){
   }
 }
 verificarApi();
+verificarConfig();
+setInterval(verificarConfig, 30000);
 
 // Close modals on backdrop click
 document.querySelectorAll('.modal').forEach(m=> m.addEventListener('click', (e)=>{ if(e.target===m) m.style.display='none' }));
