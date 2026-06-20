@@ -153,6 +153,80 @@ try:
 except Exception:
     BCRYPT_AVAILABLE = False
 
+def _senha_bate(pw: str, senha_config: str) -> bool:
+    """Compara `pw` com `senha_config`, aceitando tanto senha em texto puro
+    quanto hash bcrypt (mesma regra usada para a senha de admin)."""
+    if not pw or not senha_config:
+        return False
+    if BCRYPT_AVAILABLE and isinstance(senha_config, str) and senha_config.startswith("$2"):
+        try:
+            return bcrypt.checkpw(pw.encode("utf-8"), senha_config.encode("utf-8"))
+        except Exception:
+            return False
+    return secrets.compare_digest(pw, senha_config)
+
+# ── Hierarquia de senhas do Painel Administrativo (desktop) ────────────────
+# Cada perfil tem sua própria senha e só enxerga as abas relevantes ao seu
+# trabalho. ADM continua usando MARWIN_ADMIN_PASS (compatível com instalações
+# já existentes) e sempre tem acesso a tudo.
+DEFAULT_COOR_PLAIN       = "Coordenacao2026"
+DEFAULT_SERC_PLAIN       = "Secretaria2026"
+DEFAULT_REFEITORIO_PLAIN = "Refeitorio2026"
+
+COOR_PASSWORD       = os.getenv("MARWIN_COOR_PASS", DEFAULT_COOR_PLAIN)
+SERC_PASSWORD       = os.getenv("MARWIN_SERC_PASS", DEFAULT_SERC_PLAIN)
+REFEITORIO_PASSWORD = os.getenv("MARWIN_REFEITORIO_PASS", DEFAULT_REFEITORIO_PLAIN)
+
+for _nome_var, _valor_atual, _valor_padrao in (
+    ("MARWIN_COOR_PASS", COOR_PASSWORD, DEFAULT_COOR_PLAIN),
+    ("MARWIN_SERC_PASS", SERC_PASSWORD, DEFAULT_SERC_PLAIN),
+    ("MARWIN_REFEITORIO_PASS", REFEITORIO_PASSWORD, DEFAULT_REFEITORIO_PLAIN),
+):
+    if _valor_atual == _valor_padrao:
+        print(
+            f"\n[AVISO DE SEGURANÇA] A variável de ambiente {_nome_var} não está definida.\n"
+            f"O servidor está usando a senha padrão desse perfil. Defina {_nome_var} para maior segurança.\n"
+        )
+
+PERFIS_SENHAS = {
+    "ADM": ADMIN_PASSWORD,
+    "COOR": COOR_PASSWORD,
+    "SERC": SERC_PASSWORD,
+    "REFEITORIO": REFEITORIO_PASSWORD,
+}
+PERFIS_NOME_EXIBICAO = {
+    "ADM": "Administrador(a)",
+    "COOR": "Coordenação",
+    "SERC": "Secretaria",
+    "REFEITORIO": "Refeitório",
+}
+# Quais abas do Painel Administrativo cada perfil pode ver.
+PERFIS_ABAS = {
+    "ADM": {
+        "Visão Geral", "Avaliações", "Relatório Semanal", "Editar Cardápio",
+        "Editar Eventos", "Refeitório", "Frequência", "Histórico",
+        "QR Codes", "Logs",
+    },
+    "COOR": {
+        "Visão Geral", "Avaliações", "Relatório Semanal",
+        "Editar Eventos", "Frequência", "Histórico",
+    },
+    "SERC": {
+        "Visão Geral", "Editar Eventos", "Frequência", "Histórico", "QR Codes",
+    },
+    "REFEITORIO": {
+        "Visão Geral", "Editar Cardápio", "Refeitório",
+    },
+}
+
+def _identificar_perfil(pw: str):
+    """Devolve o nome do perfil (ADM/COOR/SERC/REFEITORIO) cuja senha bate
+    com `pw` — checa ADM primeiro — ou None se nenhuma senha bater."""
+    for perfil, senha_config in PERFIS_SENHAS.items():
+        if _senha_bate(pw, senha_config):
+            return perfil
+    return None
+
 def ler_json(path, padrao):
     if os.path.exists(path):
         with open(path, "r", encoding="utf-8") as f:
@@ -1735,23 +1809,15 @@ def abrir_painel_admin_ctk(event=None):
     """
     senha = pedir_senha_tk()
 
-    def _local_check(pw: str) -> bool:
-        if not pw:
-            return False
-        if BCRYPT_AVAILABLE and isinstance(ADMIN_PASSWORD, str) and ADMIN_PASSWORD.startswith("$2"):
-            try:
-                return bcrypt.checkpw(pw.encode("utf-8"), ADMIN_PASSWORD.encode("utf-8"))
-            except Exception:
-                return False
-        return secrets.compare_digest(pw, ADMIN_PASSWORD)
-
-    if not _local_check(senha):
+    perfil = _identificar_perfil(senha)
+    if not perfil:
         if senha is not None:
             logger.warning("Tentativa de acesso admin com senha incorreta")
             messagebox.showerror("Acesso negado", "Senha incorreta!")
         return
 
-    logger.info("Painel admin (CTk) aberto com sucesso")
+    abas_permitidas = PERFIS_ABAS.get(perfil, set())
+    logger.info(f"Painel admin (CTk) aberto com sucesso — perfil: {perfil}")
 
     ctk.set_appearance_mode("light")
     ctk.set_default_color_theme("green")
@@ -1801,10 +1867,10 @@ def abrir_painel_admin_ctk(event=None):
     textos_logo.pack(side="left", padx=(8, 0))
     ctk.CTkLabel(textos_logo, text="Painel Administrativo",
                   font=("Segoe UI", 14, "bold"), text_color="white").pack(anchor="w")
-    ctk.CTkLabel(textos_logo, text="EEEP MARWIN",
+    ctk.CTkLabel(textos_logo, text=f"EEEP MARWIN · {PERFIS_NOME_EXIBICAO.get(perfil, perfil)}",
                   font=("Segoe UI", 11), text_color=TEXTO_CLARO).pack(anchor="w")
 
-    itens_menu = [
+    TODOS_ITENS_MENU = [
         ("🏠", "Visão Geral"),
         ("📋", "Avaliações"),
         ("📅", "Relatório Semanal"),
@@ -1816,6 +1882,8 @@ def abrir_painel_admin_ctk(event=None):
         ("🔲", "QR Codes"),
         ("📄", "Logs"),
     ]
+    # Só mostra, no menu lateral, as abas liberadas para o perfil logado.
+    itens_menu = [(icone, nome) for icone, nome in TODOS_ITENS_MENU if nome in abas_permitidas]
 
     botoes_menu = {}
 
@@ -1833,6 +1901,9 @@ def abrir_painel_admin_ctk(event=None):
                         "Editar Cardápio", "Editar Eventos", "Relatório Semanal"}
 
     def mostrar_pagina(nome):
+        if nome not in abas_permitidas:
+            logger.warning(f"Perfil {perfil} tentou abrir aba não permitida: {nome}")
+            return
         selecionar_botao(nome)
         _scroll_canvas.yview_moveto(0)  # Volta ao topo ao trocar de página
 
@@ -2093,7 +2164,9 @@ def abrir_painel_admin_ctk(event=None):
                       ).grid(row=0, column=0)
         return page
 
-    mostrar_pagina("Visão Geral")
+    pagina_inicial = "Visão Geral" if "Visão Geral" in abas_permitidas else (itens_menu[0][1] if itens_menu else None)
+    if pagina_inicial:
+        mostrar_pagina(pagina_inicial)
     # ──────────────────────────────────────────────────────────────────
     # PÁGINA: AVALIAÇÕES (ligada ao banco)
     # ──────────────────────────────────────────────────────────────────

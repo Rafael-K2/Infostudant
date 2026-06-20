@@ -1,10 +1,7 @@
 """
 Aba "Histórico" do Painel Administrativo.
 
-Extraído de abrir_painel_admin_ctk (Servidor.py) sem alterar a lógica —
-inclusive a peculiaridade de que `threading.Thread(target=_thread_body, ...)`
-fica no escopo de criar_pagina_historico (não dentro de buscar_historico),
-exatamente como no código original.
+Extraído de abrir_painel_admin_ctk (Servidor.py).
 """
 import csv
 import datetime
@@ -272,8 +269,7 @@ def criar_pagina_historico(_scroll_inner, cores, _agora_br,
                 canvas_ref.clear()
 
         page.bind("<Destroy>", _limpar_hist)
-
-    threading.Thread(target=_thread_body, daemon=True).start()
+        threading.Thread(target=_thread_body, daemon=True).start()
 
     def _renderizar(dados_por_data, eh_frequencia):
         if not _ativo_hist["vivo"] or not page.winfo_exists():
