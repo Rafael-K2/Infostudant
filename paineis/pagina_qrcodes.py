@@ -41,7 +41,7 @@ def criar_pagina_qrcodes(_scroll_inner, cores, DADOS_DIR):
 
     # ── Helpers / lógica reaproveitada do painel antigo ─────────────────────
     LISTA_FILE = os.path.join(DADOS_DIR, "lista_alunos.json")
-    QR_DIR     = "dados/qrcodes_marwin"
+    QR_DIR     = os.path.join(DADOS_DIR, "qrcodes_marwin")
     os.makedirs(QR_DIR, exist_ok=True)
 
     def _ler_lista():
@@ -420,41 +420,71 @@ def criar_pagina_qrcodes(_scroll_inner, cores, DADOS_DIR):
                           ).grid(row=0, column=0, pady=24)
             return
 
-        for i, al in enumerate(exibidos):
-            serie = al.get("serie", "")
-            curso = al.get("curso", "")
-            tem_png = os.path.exists(_nome_arquivo(al))
-            ano = _extrair_ano_serie(serie)
-            ano_exib = f"{ano}º Ano" if ano else "-"
+        _estado_pag_qr = {"pagina": 0, "exibidos": exibidos}
+        LIMITE = 10
 
-            bg_normal = BRANCO if i % 2 == 0 else "#F8F9FA"
-            if not tem_png:
-                bg_normal = "#FFF9C4"
+        def _renderizar_pagina_qr():
+            for w in corpo_lista.winfo_children():
+                w.destroy()
+            _estado["linha_widgets"] = {}
+            pag = _estado_pag_qr["pagina"]
+            dados = _estado_pag_qr["exibidos"]
+            inicio = pag * LIMITE
+            fatia = dados[inicio:inicio + LIMITE]
 
-            linha = ctk.CTkFrame(corpo_lista, fg_color=bg_normal, corner_radius=4, cursor="hand2")
-            linha.grid(row=i, column=0, sticky="ew", pady=1)
-            _estado["linha_widgets"][al["matricula"]] = linha
+            for i, al in enumerate(fatia):
+                serie = al.get("serie", "")
+                curso = al.get("curso", "")
+                tem_png = os.path.exists(_nome_arquivo(al))
+                ano = _extrair_ano_serie(serie)
+                ano_exib = f"{ano}º Ano" if ano else "-"
+                bg_normal = BRANCO if i % 2 == 0 else "#F8F9FA"
+                if not tem_png:
+                    bg_normal = "#FFF9C4"
+                linha = ctk.CTkFrame(corpo_lista, fg_color=bg_normal, corner_radius=4, cursor="hand2")
+                linha.grid(row=i, column=0, sticky="ew", pady=1)
+                _estado["linha_widgets"][al["matricula"]] = linha
+                icone_qr = "✔" if tem_png else "✘"
+                cor_icone = "#2E7D32" if tem_png else "#C62828"
+                valores = [(icone_qr, 50, cor_icone), (al.get("matricula", ""), 100, "#374151"),
+                           (al.get("nome", ""), 220, "#374151"), (ano_exib, 110, "#374151"),
+                           (curso or "-", 200, "#374151")]
+                n = len(valores)
+                widgets_linha = []
+                for j, (val, w, cor_t) in enumerate(valores):
+                    lbl = ctk.CTkLabel(linha, text=val, font=("Segoe UI", 11),
+                                        width=w, anchor="w", text_color=cor_t)
+                    lbl.pack(side="left", expand=(j == n-1), fill="x", padx=6, pady=6)
+                    widgets_linha.append(lbl)
 
-            icone_qr = "✔" if tem_png else "✘"
-            cor_icone = "#2E7D32" if tem_png else "#C62828"
+                def _bind_click(widget, a=al):
+                    widget.bind("<Button-1>", lambda e, _a=a: _selecionar(_a))
 
-            valores = [(icone_qr, 50, cor_icone), (al.get("matricula", ""), 100, "#374151"),
-                       (al.get("nome", ""), 220, "#374151"), (ano_exib, 110, "#374151"),
-                       (curso or "-", 200, "#374151")]
-            n = len(valores)
-            widgets_linha = []
-            for j, (val, w, cor_t) in enumerate(valores):
-                lbl = ctk.CTkLabel(linha, text=val, font=("Segoe UI", 11),
-                                    width=w, anchor="w", text_color=cor_t)
-                lbl.pack(side="left", expand=(j == n-1), fill="x", padx=6, pady=6)
-                widgets_linha.append(lbl)
+                _bind_click(linha)
+                for w in widgets_linha:
+                    _bind_click(w)
 
-            def _bind_click(widget, a=al):
-                widget.bind("<Button-1>", lambda e, _a=a: _selecionar(_a))
+            # Rodapé de paginação
+            rod = ctk.CTkFrame(corpo_lista, fg_color="transparent")
+            rod.grid(row=LIMITE + 1, column=0, sticky="ew", pady=(6, 2))
+            ctk.CTkLabel(rod, text=f"Exibindo {inicio+1}–{min(inicio+LIMITE, len(dados))} de {len(dados)}",
+                          font=("Segoe UI", 10), text_color=TEXTO_CINZA).pack(side="left", padx=4)
+            if pag > 0:
+                ctk.CTkButton(rod, text="← Anterior", width=90, height=26,
+                               fg_color=VERDE_VIBRANTE, hover_color=VERDE_ESCURO,
+                               font=("Segoe UI", 10, "bold"),
+                               command=lambda: [_estado_pag_qr.update({"pagina": pag - 1}),
+                                                _renderizar_pagina_qr()]
+                               ).pack(side="left", padx=4)
+            if inicio + LIMITE < len(dados):
+                ctk.CTkButton(rod, text="Ver mais →", width=90, height=26,
+                               fg_color=VERDE_VIBRANTE, hover_color=VERDE_ESCURO,
+                               font=("Segoe UI", 10, "bold"),
+                               command=lambda: [_estado_pag_qr.update({"pagina": pag + 1}),
+                                                _renderizar_pagina_qr()]
+                               ).pack(side="left", padx=4)
 
-            _bind_click(linha)
-            for w in widgets_linha:
-                _bind_click(w)
+        _renderizar_pagina_qr()
 
     ent_busca.bind("<KeyRelease>", lambda e: carregar_lista(ent_busca.get()))
 

@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from paineis.helpers import card_resumo
+from paineis.helpers import iniciar_polling
 
 
 def criar_pagina_historico(_scroll_inner, cores, _agora_br,
@@ -514,4 +515,5 @@ def criar_pagina_historico(_scroll_inner, cores, _agora_br,
     cb_curso.configure(command=lambda _: buscar_historico())
 
     buscar_historico()
+    iniciar_polling(page, buscar_historico())
     return page

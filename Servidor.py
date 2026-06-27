@@ -76,6 +76,74 @@ def _agora_br():
 app = Flask(__name__)
 CORS(app)
 
+# ==============================================================================
+# SSE — Server-Sent Events (atualização automática do app)
+# ==============================================================================
+import queue as _queue_mod
+
+# Cada cliente SSE conectado recebe sua própria fila de mensagens.
+# Isso evita que uma fila lotada bloqueie outros clientes.
+_sse_clientes: list = []
+_sse_clientes_lock = threading.Lock()
+
+def _sse_notificar(tipo: str, dados: dict = None):
+    """Envia um evento SSE a todos os clientes conectados.
+
+    Chamado sempre que um dado novo é inserido no banco
+    (frequência, refeitório, avaliação). Cada cliente tem sua
+    própria fila — mensagens são descartadas apenas para o cliente
+    cujo buffer esteja cheio, sem afetar os demais.
+    """
+    evento = json.dumps({
+        "tipo": tipo,
+        "dados": dados or {},
+        "ts": datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=-3))).isoformat(),
+    })
+    with _sse_clientes_lock:
+        for q in list(_sse_clientes):
+            try:
+                q.put_nowait(evento)
+            except Exception:
+                pass  # fila cheia — descarta só para este cliente
+
+@app.route("/eventos-sse")
+def eventos_sse():
+    """Canal SSE — o app conecta aqui e recebe atualizações em tempo real.
+
+    O navegador reconecta automaticamente se a conexão cair.
+    Um 'ping' é enviado a cada 25 s para manter a conexão viva
+    em proxies e balanceadores que fecham conexões ociosas.
+    """
+    q: _queue_mod.Queue = _queue_mod.Queue(maxsize=50)
+    with _sse_clientes_lock:
+        _sse_clientes.append(q)
+
+    def _stream():
+        try:
+            yield 'data: {"tipo": "conectado"}\n\n'
+            while True:
+                try:
+                    msg = q.get(timeout=25)
+                    yield f"data: {msg}\n\n"
+                except _queue_mod.Empty:
+                    yield ": ping\n\n"  # keepalive
+        finally:
+            with _sse_clientes_lock:
+                try:
+                    _sse_clientes.remove(q)
+                except ValueError:
+                    pass
+
+    return app.response_class(
+        _stream(),
+        mimetype="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+            "Connection": "keep-alive",
+        },
+    )
+
 DADOS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "dados"))
 os.makedirs(DADOS_DIR, exist_ok=True)
 
@@ -310,6 +378,18 @@ def _sincronizar_tudo_nuvem():
         ok = False
     if not _sync_nuvem("/admin/config", "PUT", ler_json(CONFIG_FILE, {"avaliacoes_ativas": True, "modo_leitura": "camera"})):
         ok = False
+
+    # Sincroniza lista de alunos para que o tv.html mostre o total real
+    # de cadastrados no card "Total esperado" do painel de TV.
+    lista_alunos = ler_json(LISTA_ALUNOS_FILE, [])
+    if lista_alunos:
+        if not _sync_nuvem("/admin/lista-alunos", "PUT", lista_alunos):
+            logger.warning("Falha ao sincronizar lista_alunos com a nuvem")
+        else:
+            logger.info(f"Lista de alunos sincronizada: {len(lista_alunos)} alunos")
+    else:
+        logger.warning("lista_alunos.json vazio ou inexistente — total esperado no TV pode ser impreciso")
+
     if ok and _cloud_api_url():
         logger.info("Configurações sincronizadas com a API na nuvem")
 
@@ -319,17 +399,16 @@ def _sincronizar_tudo_nuvem():
 # Defina MARWIN_DB_URL no sistema antes de rodar:
 #   Windows : set MARWIN_DB_URL=postgresql://usuario:senha@host/neondb?sslmode=require
 #   Linux   : export MARWIN_DB_URL=postgresql://...
-_DB_FALLBACK = (
-    "postgresql://neondb_owner:npg_ydP7rqBR0ZoQ@"
-    "ep-broad-mountain-apatc77i-pooler.c-7.us-east-1.aws.neon.tech"
-    "/neondb?sslmode=require&channel_binding=require"
+# ⚠️  Nunca coloque a connection string diretamente no código.
+DB_DEFAULT_CONNECTION = os.getenv(
+    "MARWIN_DB_URL",
+    os.getenv("MARWIN_DATABASE_URL", os.getenv("DATABASE_URL", ""))
 )
-DB_DEFAULT_CONNECTION = os.getenv("MARWIN_DB_URL", _DB_FALLBACK)
-if DB_DEFAULT_CONNECTION == _DB_FALLBACK:
+if not DB_DEFAULT_CONNECTION:
     print(
-        "\n[AVISO DE SEGURANÇA] A variável de ambiente MARWIN_DB_URL não está definida.\n"
-        "O servidor está usando a connection string padrão embutida no código.\n"
-        "Defina MARWIN_DB_URL para evitar expor credenciais.\n"
+        "\n[AVISO DE SEGURANÇA] Nenhuma variável de ambiente de banco definida.\n"
+        "Defina MARWIN_DB_URL com a connection string do Neon antes de rodar.\n"
+        "Exemplo: set MARWIN_DB_URL=postgresql://usuario:senha@host/neondb?sslmode=require\n"
     )
 PG_POOL = None
 
@@ -472,6 +551,19 @@ def _criar_tabelas_neon():
         logger.warning(f"Nao foi possivel criar tabelas Neon: {e}")
 
 
+def _semana_atual_datas():
+    """Retorna (data_inicio, data_fim) da semana atual (seg–dom) no formato DD/MM/YYYY.
+
+    Usado para filtrar registros de refeitório, frequência e avaliações
+    somente da semana em curso, evitando trazer o histórico inteiro do banco.
+    """
+    hoje = _agora_br().date()
+    # weekday(): seg=0 … dom=6
+    inicio = hoje - datetime.timedelta(days=hoje.weekday())
+    fim    = inicio + datetime.timedelta(days=6)
+    return inicio.strftime("%d/%m/%Y"), fim.strftime("%d/%m/%Y")
+
+
 def _ler_refeitorio_hoje_db():
     rows = _executar_pg(
         "SELECT data, horaentrada, matricula, nome, serie, curso, refeicao FROM refeitorio WHERE data = %s",
@@ -586,10 +678,17 @@ def _inserir_avaliacao_db(registro):
 
 
 def _ler_avaliacoes_db():
+    """Retorna apenas as avaliações da semana atual (seg–dom)."""
+    inicio, fim = _semana_atual_datas()
     rows = _executar_pg(
-        "SELECT data, aluno, serie, curso, estagio, item, nota FROM avaliacoes ORDER BY data DESC",
-        (),
-        fetch=True
+        """
+        SELECT data, aluno, serie, curso, estagio, item, nota
+        FROM avaliacoes
+        WHERE data >= %s AND data <= %s
+        ORDER BY data DESC
+        """,
+        (inicio, fim),
+        fetch=True,
     )
     if not rows:
         return []
@@ -608,9 +707,16 @@ def _ler_avaliacoes_db():
 
 
 def _ler_refeitorio_todos_db():
+    """Retorna apenas os registros do refeitório da semana atual (seg–dom)."""
+    inicio, fim = _semana_atual_datas()
     rows = _executar_pg(
-        "SELECT data, horaentrada, matricula, nome, serie, curso, refeicao FROM refeitorio ORDER BY data DESC, horaentrada DESC",
-        (),
+        """
+        SELECT data, horaentrada, matricula, nome, serie, curso, refeicao
+        FROM refeitorio
+        WHERE data >= %s AND data <= %s
+        ORDER BY data DESC, horaentrada DESC
+        """,
+        (inicio, fim),
         fetch=True,
     )
     if not rows:
@@ -622,9 +728,16 @@ def _ler_refeitorio_todos_db():
 
 
 def _ler_frequencia_todos_db():
+    """Retorna apenas os registros de frequência da semana atual (seg–dom)."""
+    inicio, fim = _semana_atual_datas()
     rows = _executar_pg(
-        "SELECT data, horaentrada, matricula, nome, serie, curso, aula FROM frequencia ORDER BY data DESC, horaentrada DESC",
-        (),
+        """
+        SELECT data, horaentrada, matricula, nome, serie, curso, aula
+        FROM frequencia
+        WHERE data >= %s AND data <= %s
+        ORDER BY data DESC, horaentrada DESC
+        """,
+        (inicio, fim),
         fetch=True,
     )
     if not rows:
@@ -1031,6 +1144,9 @@ def post_avaliacao():
         logger.error(f"Erro ao salvar avaliação: {e}")
         return jsonify({"erro": "Erro ao salvar avaliação"}), 500
     logger.info(f"Avaliação recebida de {nome} ({len(respostas)} itens)")
+    # Notifica todos os clientes SSE conectados
+    _sse_notificar("avaliacao", {"nome": nome, "serie": serie, "curso": curso,
+                                  "itens": len(respostas)})
     return jsonify({"status": "ok"})
 
 @app.route("/avaliacao/verificar", methods=["GET"])
@@ -1227,6 +1343,10 @@ def registrar_refeicao():
     registros = _ler_refeitorio_hoje_db()
     total_hoje = len(registros)
     total_refeicao = sum(1 for r in registros if r[6] == refeicao)
+    # Notifica todos os clientes SSE conectados
+    _sse_notificar("refeitorio", {"nome": nome, "matricula": matricula,
+                                   "refeicao": refeicao, "hora": hora,
+                                   "total_hoje": total_hoje})
     return jsonify({"status": "ok", "nome": nome, "hora": hora, "aula": periodo,
                     "total_hoje": total_hoje, "total_refeicao": total_refeicao}), 200
 
@@ -1427,6 +1547,10 @@ def registrar_frequencia():
 
     registros = _ler_frequencia_hoje_db()
     total_hoje = len(registros)
+    # Notifica todos os clientes SSE conectados
+    _sse_notificar("frequencia", {"nome": nome, "matricula": matricula,
+                                   "aula": aula, "hora": hora,
+                                   "total_hoje": total_hoje})
     return jsonify({"status": "ok", "nome": nome, "hora": hora, "aula": aula, "total_hoje": total_hoje}), 200
 
 @app.route("/frequencia/hoje", methods=["GET"])
@@ -1845,8 +1969,36 @@ def abrir_painel_admin_ctk(event=None):
     sidebar.grid(row=0, column=0, sticky="nsew")
     sidebar.grid_propagate(False)
 
+    # ── Estado de recolhimento da sidebar ─────────────────────────
+    _sidebar_estado = {"expandida": True}
+    _SIDEBAR_LARGA  = 230
+    _SIDEBAR_CURTA  = 56   # só ícones
+
+    def _toggle_sidebar():
+        if _sidebar_estado["expandida"]:
+            # Recolhe
+            sidebar.configure(width=_SIDEBAR_CURTA)
+            textos_logo.pack_forget()
+            for nome, btn in botoes_menu.items():
+                icone_btn = _icone_por_nome.get(nome, "●")
+                btn.configure(text=f"  {icone_btn}", width=_SIDEBAR_CURTA - 12,
+                               anchor="center")
+            rodape.pack_forget()
+            btn_toggle.configure(text="❯")
+            _sidebar_estado["expandida"] = False
+        else:
+            # Expande
+            sidebar.configure(width=_SIDEBAR_LARGA)
+            textos_logo.pack(side="left", padx=(8, 0))
+            for nome, btn in botoes_menu.items():
+                icone_btn = _icone_por_nome.get(nome, "●")
+                btn.configure(text=f"  {icone_btn}   {nome}", width=0, anchor="w")
+            rodape.pack(fill="x", padx=12, pady=16, side="bottom")
+            btn_toggle.configure(text="❮")
+            _sidebar_estado["expandida"] = True
+
     topo = ctk.CTkFrame(sidebar, fg_color="transparent")
-    topo.pack(fill="x", padx=20, pady=(24, 20))
+    topo.pack(fill="x", padx=12, pady=(24, 20))
 
     logo_path = _buscar_logo_png()
     logo_ref = None
@@ -1870,6 +2022,15 @@ def abrir_painel_admin_ctk(event=None):
     ctk.CTkLabel(textos_logo, text=f"EEEP MARWIN · {PERFIS_NOME_EXIBICAO.get(perfil, perfil)}",
                   font=("Segoe UI", 11), text_color=TEXTO_CLARO).pack(anchor="w")
 
+    # Botão de recolher — fica no topo da sidebar, lado direito
+    btn_toggle = ctk.CTkButton(
+        sidebar, text="❮", width=32, height=28,
+        fg_color=VERDE_HOVER, hover_color=VERDE_SELECAO,
+        text_color="white", font=("Segoe UI", 12, "bold"),
+        corner_radius=6, command=_toggle_sidebar,
+    )
+    btn_toggle.pack(anchor="e", padx=8, pady=(0, 4))
+
     TODOS_ITENS_MENU = [
         ("🏠", "Visão Geral"),
         ("📋", "Avaliações"),
@@ -1884,6 +2045,8 @@ def abrir_painel_admin_ctk(event=None):
     ]
     # Só mostra, no menu lateral, as abas liberadas para o perfil logado.
     itens_menu = [(icone, nome) for icone, nome in TODOS_ITENS_MENU if nome in abas_permitidas]
+    # Mapa rápido icone → nome (usado pelo _toggle_sidebar)
+    _icone_por_nome = {nome: icone for icone, nome in TODOS_ITENS_MENU}
 
     botoes_menu = {}
 
@@ -1900,10 +2063,47 @@ def abrir_painel_admin_ctk(event=None):
     PAGINAS_RECRIAR = {"Refeitório", "Frequência", "Histórico", "QR Codes",
                         "Editar Cardápio", "Editar Eventos", "Relatório Semanal"}
 
+    # ── Polling global — atualiza a aba ativa quando Neon receber dado novo ──
+    _polling_estado = {"ts": None, "aba_atual": None, "vivo": True}
+    jd.bind("<Destroy>", lambda e: _polling_estado.update({"vivo": False}))
+
+    def _polling_verificar():
+        if not _polling_estado["vivo"]:
+            return
+        import urllib.request, json as _json
+        try:
+            with urllib.request.urlopen(
+                "https://marwin-api-uuul.onrender.com/ultimo-update", timeout=4
+            ) as r:
+                data = _json.loads(r.read())
+            ts = data.get("ts")
+            if ts and ts != _polling_estado["ts"]:
+                _polling_estado["ts"] = ts
+                aba = _polling_estado["aba_atual"]
+                if aba and _polling_estado["vivo"]:
+                    try:
+                        jd.after(0, lambda: mostrar_pagina(aba))
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+        if _polling_estado["vivo"]:
+            try:
+                jd.after(5000, _polling_agendar)
+            except Exception:
+                pass
+
+    def _polling_agendar():
+        import threading
+        threading.Thread(target=_polling_verificar, daemon=True).start()
+
+    jd.after(5000, _polling_agendar)
+
     def mostrar_pagina(nome):
         if nome not in abas_permitidas:
             logger.warning(f"Perfil {perfil} tentou abrir aba não permitida: {nome}")
             return
+        _polling_estado["aba_atual"] = nome
         selecionar_botao(nome)
         _scroll_canvas.yview_moveto(0)  # Volta ao topo ao trocar de página
 

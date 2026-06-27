@@ -9,6 +9,7 @@ import customtkinter as ctk
 from tkinter import messagebox
 
 from paineis.helpers import card_resumo
+from paineis.helpers import iniciar_polling
 
 
 def criar_pagina_logs(_scroll_inner, cores, logger, _agora_br, LOG_FILE):
@@ -227,4 +228,5 @@ def criar_pagina_logs(_scroll_inner, cores, logger, _agora_br, LOG_FILE):
         lbl_status.configure(text=f"Atualizado em {agora_txt}  ·  exibindo até 500 linhas mais recentes do arquivo de log.")
 
     atualizar_logs()
+    iniciar_polling(page, atualizar_logs)
     return page

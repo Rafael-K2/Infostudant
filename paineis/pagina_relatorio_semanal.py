@@ -31,6 +31,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from paineis.helpers import card_resumo
+from paineis.helpers import iniciar_polling
 
 
 def criar_pagina_relatorio_semanal(_scroll_inner, cores, _agora_br, _ler_avaliacoes_db):
@@ -74,14 +75,14 @@ def criar_pagina_relatorio_semanal(_scroll_inner, cores, _agora_br, _ler_avaliac
                                         "TEXTO_ESCURO": TEXTO_ESCURO})
 
     # ── Mapas de setor (estágio do questionário) ───────────────────
-    SETOR_LABEL = {1: "🍽️ Comida", 2: "🧹 Limpeza", 3: "📚 Ensino", 4: "✨ Semana"}
+    SETOR_LABEL = {1: "🍽️ Comida", 2: "🧹 Limpeza", 3: "📚 Ensino", 4: "✨ Acolhimento"}
     SETOR_ICONE = {1: "🍽️", 2: "🧹", 3: "📚", 4: "✨"}
-    SETOR_TITULO = {1: "COMIDA", 2: "LIMPEZA", 3: "ENSINO", 4: "SEMANA"}
+    SETOR_TITULO = {1: "COMIDA", 2: "LIMPEZA", 3: "ENSINO", 4: "ACOLHIMENTO"}
     SETOR_SUBTITULO = {
         1: "Avaliações do setor de alimentação",
         2: "Avaliações do setor de limpeza",
         3: "Avaliações do setor de ensino",
-        4: "Avaliações gerais da semana",
+        4: "Avaliações de acolhimento da semana",
     }
     SETOR_POR_LABEL = {v: k for k, v in SETOR_LABEL.items()}
     SETOR_COR = {1: VERDE_VIBRANTE, 2: AZUL_FORTE, 3: ROXO_FORTE, 4: LARANJA}
@@ -187,6 +188,10 @@ def criar_pagina_relatorio_semanal(_scroll_inner, cores, _agora_br, _ler_avaliac
     page = ctk.CTkFrame(_scroll_inner, fg_color=CINZA_BG)
     page.grid_columnconfigure(0, weight=1)
 
+    # ── Estado do filtro de curso ──────────────────────────────────
+    _filtro_curso = {"valor": "Todos"}
+    _registros_cache = {"dados": []}
+
     # Cabeçalho
     cab = ctk.CTkFrame(page, fg_color="transparent")
     cab.grid(row=0, column=0, sticky="ew", pady=(4, 16))
@@ -200,22 +205,34 @@ def criar_pagina_relatorio_semanal(_scroll_inner, cores, _agora_br, _ler_avaliac
     ctk.CTkLabel(cab, text="O que os alunos disseram sobre comida, limpeza, ensino e a semana.",
                   font=("Segoe UI", 12), text_color=TEXTO_CINZA).pack(anchor="w")
 
+    # Barra de filtro por turma/curso
+    filtro_bar = ctk.CTkFrame(cab, fg_color="transparent")
+    filtro_bar.pack(fill="x", pady=(10, 0))
+    ctk.CTkLabel(filtro_bar, text="Filtrar por curso/turma:",
+                  font=("Segoe UI", 11, "bold"), text_color=TEXTO_ESCURO).pack(side="left", padx=(0, 8))
+    cb_curso = ctk.CTkOptionMenu(filtro_bar, values=["Todos"],
+                                  width=200, fg_color=VERDE_VIBRANTE,
+                                  button_color=VERDE_ESCURO, button_hover_color=VERDE_ESCURO,
+                                  font=("Segoe UI", 11))
+    cb_curso.set("Todos")
+    cb_curso.pack(side="left", padx=(0, 10))
+    lbl_filtro_info = ctk.CTkLabel(filtro_bar, text="", font=("Segoe UI", 10),
+                                    text_color=TEXTO_CINZA)
+    lbl_filtro_info.pack(side="left")
+
     # ── Cards de resumo (4 no topo, igual ao mockup) ───────────────
     cards_row = ctk.CTkFrame(page, fg_color="transparent")
     cards_row.grid(row=1, column=0, sticky="ew", pady=(0, 16))
-    cards_row.grid_columnconfigure((0, 1, 2, 3), weight=1)
+    cards_row.grid_columnconfigure((0, 1, 2), weight=1)
 
     lbl_alunos, sub_alunos = _card_resumo(
         cards_row, 0, 0, "🙋", VERDE_CLARO, VERDE_VIBRANTE,
         "Alunos que avaliaram", "...", "respostas coletadas")
-    lbl_total, sub_total = _card_resumo(
-        cards_row, 0, 1, "📋", AZUL_CLARO, AZUL_FORTE,
-        "Total de avaliações", "...", "registros no banco")
     lbl_media, sub_media = _card_resumo(
-        cards_row, 0, 2, "⭐", ROXO_CLARO, ROXO_FORTE,
+        cards_row, 0, 1, "⭐", ROXO_CLARO, ROXO_FORTE,
         "Média geral", "...", "de 5 estrelas")
     lbl_almoco, sub_almoco = _card_resumo(
-        cards_row, 0, 3, "🍽️", "#FFF3E0", LARANJA,
+        cards_row, 0, 2, "🍽️", "#FFF3E0", LARANJA,
         "Almoço favorito", "...", "dia mais votado")
 
     # ════════════════════════════════════════════════════════════
@@ -237,7 +254,7 @@ def criar_pagina_relatorio_semanal(_scroll_inner, cores, _agora_br, _ler_avaliac
     ctk.CTkLabel(col_media_setor, text="Média por setor",
                   font=("Segoe UI", 12, "bold"), text_color=TEXTO_ESCURO).pack(anchor="w", pady=(0, 8))
     linhas_media_setor = {}
-    for estagio in (1, 2, 3, 4):
+    for estagio in (1, 2, 4):
         linha = ctk.CTkFrame(col_media_setor, fg_color="transparent")
         linha.pack(fill="x", pady=4)
         linha.grid_columnconfigure(1, weight=1)
@@ -398,8 +415,65 @@ def criar_pagina_relatorio_semanal(_scroll_inner, cores, _agora_br, _ler_avaliac
 
     _criar_card_setor(setores_grid, 0, 0, 1)   # Comida
     _criar_card_setor(setores_grid, 0, 1, 2)   # Limpeza
-    _criar_card_setor(setores_grid, 1, 0, 3)   # Ensino
-    _criar_card_setor(setores_grid, 1, 1, 4)   # Semana
+    # Acolhimento ocupa a linha inteira abaixo
+    acolhimento_card_outer = ctk.CTkFrame(setores_grid, fg_color="transparent")
+    acolhimento_card_outer.grid(row=1, column=0, columnspan=2, sticky="nsew", pady=(0, 18))
+    acolhimento_card_outer.grid_columnconfigure(0, weight=1)
+    acolhimento_card_outer.grid_rowconfigure(0, weight=1)
+    # Recria o card de Acolhimento (estagio 4) dentro do frame expandido
+    _criar_card_setor(acolhimento_card_outer, 0, 0, 4)   # Acolhimento
+
+    # Mapa de almoço por dia (preenchido ao processar avaliações)
+    # usado pelo tooltip do card de Comida
+    _almoco_por_dia = {}
+
+    def _extrair_almoco_por_dia(_registros=None):
+        """Lê o cardapio.json e monta {dia: almoco} para o tooltip do card de Comida."""
+        import os, json
+        mapa = {}
+        try:
+            # Sobe até a pasta raiz do projeto (onde fica a pasta dados/)
+            base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            cardapio_path = os.path.join(base, "dados", "cardapio.json")
+            with open(cardapio_path, "r", encoding="utf-8") as f:
+                cardapio = json.load(f)
+            # cardapio.json tem formato: {"SEGUNDA": ["merenda manha", "almoco", "merenda tarde"], ...}
+            CHAVES = {
+                "Segunda-feira": "SEGUNDA",
+                "Terça-feira":   "TERCA",
+                "Quarta-feira":  "QUARTA",
+                "Quinta-feira":  "QUINTA",
+                "Sexta-feira":   "SEXTA",
+            }
+            for dia, chave in CHAVES.items():
+                refeicoes = cardapio.get(chave, [])
+                # índice 1 é o almoço (merenda manhã=0, almoço=1, merenda tarde=2)
+                if len(refeicoes) > 1 and refeicoes[1]:
+                    mapa[dia] = refeicoes[1]
+        except Exception:
+            pass
+        return mapa
+
+    def _tooltip_mostrar(widget, texto):
+        """Exibe um tooltip flutuante próximo ao widget."""
+        tip = ctk.CTkToplevel(widget)
+        tip.wm_overrideredirect(True)
+        tip.configure(fg_color="#1C1C1C")
+        tip.attributes("-topmost", True)
+        ctk.CTkLabel(tip, text=texto, font=("Segoe UI", 10),
+                      text_color="white", wraplength=220).pack(padx=10, pady=6)
+        x = widget.winfo_rootx() + 10
+        y = widget.winfo_rooty() - 36
+        tip.wm_geometry(f"+{x}+{y}")
+        widget._tooltip_win = tip
+
+    def _tooltip_esconder(widget):
+        if hasattr(widget, "_tooltip_win"):
+            try:
+                widget._tooltip_win.destroy()
+            except Exception:
+                pass
+            widget._tooltip_win = None
 
     def _renderizar_card_setor(estagio, stats):
         refs = cards_setor[estagio]
@@ -421,7 +495,27 @@ def criar_pagina_relatorio_semanal(_scroll_inner, cores, _agora_br, _ler_avaliac
         item_menor = min(medias_item, key=medias_item.get)
         empate = item_maior == item_menor
 
-        for item, lista_notas in itens.items():
+        # ── Setor de Comida: ordenar seg→sex, manhã antes da tarde ──
+        if estagio == 1:
+            ORDEM_PERIODO = ["manhã", "manha", "mañana", "tarde"]
+            def _chave_comida(item_nome):
+                nome_lower = item_nome.lower()
+                idx_dia = 99
+                for i, dia in enumerate(DIAS_ORDEM):
+                    if dia.lower() in nome_lower or DIAS_ABREV.get(dia, "").lower() in nome_lower:
+                        idx_dia = i
+                        break
+                idx_periodo = 99
+                for i, p in enumerate(ORDEM_PERIODO):
+                    if p in nome_lower:
+                        idx_periodo = i // 2  # manhã=0, tarde=1
+                        break
+                return (idx_dia, idx_periodo)
+            itens_ord = sorted(itens.items(), key=lambda x: _chave_comida(x[0]))
+        else:
+            itens_ord = list(itens.items())
+
+        for item, lista_notas in itens_ord:
             media_item = medias_item[item]
             qtd = len(lista_notas)
 
@@ -438,8 +532,27 @@ def criar_pagina_relatorio_semanal(_scroll_inner, cores, _agora_br, _ler_avaliac
             cabeca_linha = ctk.CTkFrame(linha, fg_color="transparent")
             cabeca_linha.grid(row=0, column=0, columnspan=3, sticky="ew")
             cabeca_linha.grid_columnconfigure(0, weight=1)
-            ctk.CTkLabel(cabeca_linha, text=_label_curto(item), font=("Segoe UI", 11),
-                          text_color=TEXTO_ESCURO, anchor="w").grid(row=0, column=0, sticky="w")
+
+            # Acolhimento ocupa linha inteira — exibe texto completo sem truncar
+            _texto_item = _label_curto(item) if estagio != 4 else item
+            lbl_item = ctk.CTkLabel(cabeca_linha, text=_texto_item, font=("Segoe UI", 11),
+                          text_color=TEXTO_ESCURO, anchor="w", wraplength=600 if estagio == 4 else 0)
+            lbl_item.grid(row=0, column=0, sticky="w")
+
+            # Tooltip com almoço do dia — só para o card de Comida
+            if estagio == 1:
+                almoco_txt = None
+                for dia in DIAS_ORDEM:
+                    if dia.lower() in item.lower() or DIAS_ABREV.get(dia,"").lower() in item.lower():
+                        almoco_txt = _almoco_por_dia.get(dia)
+                        if not almoco_txt:
+                            almoco_txt = f"Almoço de {DIAS_ABREV.get(dia, dia)}"
+                        break
+                if almoco_txt:
+                    tip_texto = f"🍽️ Almoço: {almoco_txt}"
+                    lbl_item.bind("<Enter>", lambda e, w=lbl_item, t=tip_texto: _tooltip_mostrar(w, t))
+                    lbl_item.bind("<Leave>", lambda e, w=lbl_item: _tooltip_esconder(w))
+
             ctk.CTkLabel(cabeca_linha, text=f"{media_item:.2f} ★", font=("Segoe UI", 11, "bold"),
                           text_color=TEXTO_ESCURO, width=56, anchor="e").grid(row=0, column=1, sticky="e")
             ctk.CTkLabel(cabeca_linha, text=str(qtd), font=("Segoe UI", 11),
@@ -536,8 +649,7 @@ def criar_pagina_relatorio_semanal(_scroll_inner, cores, _agora_br, _ler_avaliac
         else:
             sub_alunos.configure(text="respostas coletadas")
 
-        lbl_total.configure(text=str(stats["total_registros"]))
-        sub_total.configure(text="registros no banco")
+
 
         lbl_media.configure(text=f"{stats['media_geral']:.2f}" if stats["total_estrelas"] else "–")
         sub_media.configure(text="de 5 estrelas")
@@ -548,7 +660,7 @@ def criar_pagina_relatorio_semanal(_scroll_inner, cores, _agora_br, _ler_avaliac
             text=f"{votos} voto{'s' if votos != 1 else ''}" if dia else "ainda sem votos")
 
         # Média por setor (barras CTk da coluna esquerda do card Geral)
-        for estagio in (1, 2, 3, 4):
+        for estagio in (1, 2, 4):
             barra, lbl_valor = linhas_media_setor[estagio]
             media_e = stats["media_setor"].get(estagio, 0.0)
             barra.set(min(media_e / 5.0, 1.0) if stats["total_setor"].get(estagio) else 0)
@@ -556,7 +668,7 @@ def criar_pagina_relatorio_semanal(_scroll_inner, cores, _agora_br, _ler_avaliac
 
         _renderizar_donut(stats)
 
-        for estagio in (1, 2, 3, 4):
+        for estagio in (1, 2, 4):
             _renderizar_card_setor(estagio, stats)
 
         _renderizar_almoco(stats)
@@ -570,11 +682,50 @@ def criar_pagina_relatorio_semanal(_scroll_inner, cores, _agora_br, _ler_avaliac
         except Exception:
             registros = []
 
-        stats = _processar_avaliacoes(registros)
+        _registros_cache["dados"] = registros
+
+        # Descobre cursos presentes nos dados
+        cursos_detectados = sorted({
+            str(r.get("Curso", "")).strip()
+            for r in registros
+            if str(r.get("Curso", "")).strip() not in ("", "N/A")
+        })
+        opcoes = ["Todos"] + cursos_detectados
+
+        # Aplica filtro de curso
+        curso_selecionado = _filtro_curso["valor"]
+        if curso_selecionado != "Todos":
+            registros_filtrados = [
+                r for r in registros
+                if str(r.get("Curso", "")).strip() == curso_selecionado
+            ]
+        else:
+            registros_filtrados = registros
+
+        stats = _processar_avaliacoes(registros_filtrados)
+        # Alimenta o mapa de almoço por dia para os tooltips do card de Comida
+        _almoco_por_dia.update(_extrair_almoco_por_dia(registros_filtrados))
 
         def _atualizar_ui():
             if not _ativo["vivo"] or not page.winfo_exists():
                 return
+            # Atualiza opções do filtro sem perder a seleção atual
+            valor_atual = cb_curso.get()
+            cb_curso.configure(values=opcoes)
+            if valor_atual in opcoes:
+                cb_curso.set(valor_atual)
+            else:
+                cb_curso.set("Todos")
+                _filtro_curso["valor"] = "Todos"
+
+            # Info de quantos registros filtrados
+            if curso_selecionado != "Todos":
+                total_geral = len(_registros_cache["dados"])
+                lbl_filtro_info.configure(
+                    text=f"{len(registros_filtrados)} de {total_geral} avaliações")
+            else:
+                lbl_filtro_info.configure(text="")
+
             cache["stats"] = stats
             _renderizar_tudo(stats)
 
@@ -584,6 +735,12 @@ def criar_pagina_relatorio_semanal(_scroll_inner, cores, _agora_br, _ler_avaliac
         _ativo["vivo"] = False  # sinaliza threads para pararem
         _limpar_donut()
         _limpar_almoco_chart()
+
+    def _aplicar_filtro_curso(valor):
+        _filtro_curso["valor"] = valor
+        threading.Thread(target=_carregar, daemon=True).start()
+
+    cb_curso.configure(command=_aplicar_filtro_curso)
 
     page.bind("<Destroy>", _limpar_ao_destruir)
 
@@ -597,4 +754,5 @@ def criar_pagina_relatorio_semanal(_scroll_inner, cores, _agora_br, _ler_avaliac
                    font=("Segoe UI", 11, "bold"),
                    command=lambda: threading.Thread(target=_carregar, daemon=True).start()
                    ).pack(side="left")
+    iniciar_polling(page, _carregar)
     return page

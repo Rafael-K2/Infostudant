@@ -87,3 +87,48 @@ def card_tabela(parent, titulo, colunas, linhas, cores, rodape="", larguras=None
     else:
         ctk.CTkFrame(card, fg_color="transparent", height=10).pack()
     return card
+
+
+def iniciar_polling(page, fn_carregar, intervalo_ms=5000,
+                    api_url="https://marwin-api-uuul.onrender.com/ultimo-update"):
+    """Verifica /ultimo-update a cada `intervalo_ms` ms.
+    Chama fn_carregar() apenas quando o timestamp mudar (novo dado no Neon).
+
+    page        : CTkFrame da aba — o polling para automaticamente quando
+                  a página for destruída.
+    fn_carregar : função sem argumentos que recarrega os dados da aba.
+    """
+    import threading
+    import urllib.request
+
+    _estado = {"ts": None, "vivo": True}
+    page.bind("<Destroy>", lambda e: _estado.update({"vivo": False}))
+
+    def _verificar():
+        if not _estado["vivo"]:
+            return
+        try:
+            with urllib.request.urlopen(api_url, timeout=4) as r:
+                import json as _json
+                data = _json.loads(r.read())
+            ts = data.get("ts")
+            if ts and ts != _estado["ts"]:
+                _estado["ts"] = ts
+                if _estado["vivo"] and page.winfo_exists():
+                    page.after(0, fn_carregar)
+        except Exception:
+            pass  # API offline — silencia e tenta na próxima rodada
+        if _estado["vivo"]:
+            try:
+                page.after(intervalo_ms, _agendar)
+            except Exception:
+                pass
+
+    def _agendar():
+        threading.Thread(target=_verificar, daemon=True).start()
+
+    # Inicia após 5s para não competir com o carregamento inicial
+    try:
+        page.after(intervalo_ms, _agendar)
+    except Exception:
+        pass

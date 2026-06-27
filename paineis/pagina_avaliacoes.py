@@ -8,6 +8,7 @@ import customtkinter as ctk
 from tkinter import messagebox
 
 from paineis.helpers import card_resumo
+from paineis.helpers import iniciar_polling
 
 
 def criar_pagina_avaliacoes(_scroll_inner, cores, ler_json, salvar_json,
@@ -90,8 +91,8 @@ def criar_pagina_avaliacoes(_scroll_inner, cores, ler_json, salvar_json,
     stats_frame.grid(row=2, column=0, sticky="ew", padx=24, pady=(0, 12))
     stats_frame.grid_columnconfigure((0, 1, 2, 3), weight=1)
 
-    lbl_total, _ = _card_resumo(stats_frame, 0, 0, "📋", AZUL_CLARO, "#2196F3",
-                                   "Total de avaliações", "0", "")
+    lbl_total, _ = _card_resumo(stats_frame, 0, 0, "👤", AZUL_CLARO, "#2196F3",
+                                   "Alunos que avaliaram", "0", "")
     lbl_pos, sub_pos = _card_resumo(stats_frame, 0, 1, "🙂", VERDE_CLARO, "#4CAF50",
                                        "Positivas", "0", "")
     lbl_neu, sub_neu = _card_resumo(stats_frame, 0, 2, "😐", "#FFF8E1", "#FBC02D",
@@ -121,26 +122,113 @@ def criar_pagina_avaliacoes(_scroll_inner, cores, ler_json, salvar_json,
 
     lbl_cnt = ctk.CTkLabel(tabela_card, text="0 registro(s)", font=("Segoe UI", 10),
                               text_color=TEXTO_CINZA)
-    lbl_cnt.grid(row=2, column=0, sticky="w", padx=18, pady=(4, 14))
+    lbl_cnt.grid(row=2, column=0, sticky="w", padx=18, pady=(4, 4))
+
+    btn_ver_mais = ctk.CTkButton(tabela_card, text="▼ Ver mais",
+                                   fg_color="transparent", hover_color="#E8F5E9",
+                                   text_color=VERDE_VIBRANTE, font=("Segoe UI", 11, "bold"),
+                                   height=28, width=110, border_width=1,
+                                   border_color=VERDE_VIBRANTE)
+    btn_ver_mais.grid(row=3, column=0, sticky="w", padx=18, pady=(0, 14))
+    btn_ver_mais.grid_remove()  # escondido até carregar dados
     _ativo_aval = {"vivo": True}
     page.bind("<Destroy>", lambda e: _ativo_aval.update({"vivo": False}))
 
-    # ── Lógica (igual ao painel antigo) ──────────────────────────────
+    # ── Lógica ────────────────────────────────────────────────────────
     MAPA_ESTAGIO = {"Comida": "1", "Limpeza": "2", "Ensino": "3", "Semana": "4"}
+    _PAGE_SIZE = 20
+    # Estado da paginação — guardado entre chamadas
+    _estado = {"linhas_filtradas": [], "exibindo": 0}
 
     def _eh_almoco_favorito(item):
         return "almoco favorito" in item.lower() or "almoço favorito" in item.lower()
 
-    def carregar_dados():
+    def _renderizar_linhas(linhas_vis, total_filtrado):
+        """Desenha apenas as linhas recebidas no corpo da tabela."""
         for w in corpo.winfo_children():
             w.destroy()
+
+        pos = neu = neg = 0
+        for r in linhas_vis:
+            if len(r) < 7:
+                continue
+            data, aluno, serie, curso, estagio, item, nota = r
+            categoria = "Almoço favorito" if _eh_almoco_favorito(item) else "Avaliação"
+            resposta = nota
+            if str(estagio) == "4" and not _eh_almoco_favorito(item):
+                try:
+                    n_val = float(nota)
+                    resposta = "Ruim" if n_val <= 1 else ("Medio" if n_val <= 3 else "Bom")
+                except Exception:
+                    pass
+            if resposta == "Bom":   pos += 1
+            elif resposta == "Medio": neu += 1
+            elif resposta == "Ruim":  neg += 1
+
+            linha_frame = ctk.CTkFrame(corpo, fg_color="transparent")
+            linha_frame.pack(fill="x")
+            valores = [data, aluno, serie, curso, estagio, categoria, item, resposta]
+            nv = len(valores)
+            for i, valor in enumerate(valores):
+                ctk.CTkLabel(linha_frame, text=str(valor), font=("Segoe UI", 11),
+                              width=larguras.get(i, 0), anchor="w",
+                              text_color="#374151", wraplength=320 if i == 6 else 0
+                              ).pack(side="left", expand=(i == nv - 1), fill="x", padx=8, pady=6)
+            ctk.CTkFrame(corpo, fg_color="#F0F0F0", height=1).pack(fill="x")
+
+        exibindo = len(linhas_vis)
+        lbl_cnt.configure(text=f"{exibindo} de {total_filtrado} registro(s)")
+        # Conta alunos únicos igual ao relatório semanal:
+        # nomes identificados (únicos) + submissões anônimas (por data única)
+        _nomes_id  = set()
+        _anonimas  = set()
+        for r in _estado["linhas_filtradas"]:
+            if len(r) < 7:
+                continue
+            _data_r, _aluno_r = str(r[0]), str(r[1]).strip()
+            if not _aluno_r or _aluno_r.lower() in ("", "anonimo", "anônimo"):
+                _anonimas.add(_data_r)
+            else:
+                _nomes_id.add(_aluno_r.lower())
+        alunos_unicos = len(_nomes_id) + len(_anonimas)
+        lbl_total.configure(text=str(alunos_unicos))
+
+        def _pct(v):
+            return f"{(v / total_filtrado * 100):.1f}%" if total_filtrado else "0%"
+        lbl_pos.configure(text=str(pos));  sub_pos.configure(text=_pct(pos))
+        lbl_neu.configure(text=str(neu));  sub_neu.configure(text=_pct(neu))
+        lbl_neg.configure(text=str(neg));  sub_neg.configure(text=_pct(neg))
+
+        # Atualiza botão ver mais / ver menos
+        if exibindo >= total_filtrado:
+            btn_ver_mais.configure(text="▲ Ver menos", command=_ver_menos)
+        else:
+            btn_ver_mais.configure(text="▼ Ver mais", command=_ver_mais)
+        btn_ver_mais.grid() if total_filtrado > _PAGE_SIZE else btn_ver_mais.grid_remove()
+
+    def _ver_mais():
+        _estado["exibindo"] = min(
+            _estado["exibindo"] + _PAGE_SIZE, len(_estado["linhas_filtradas"])
+        )
+        _renderizar_linhas(
+            _estado["linhas_filtradas"][: _estado["exibindo"]],
+            len(_estado["linhas_filtradas"]),
+        )
+
+    def _ver_menos():
+        _estado["exibindo"] = _PAGE_SIZE
+        _renderizar_linhas(
+            _estado["linhas_filtradas"][: _estado["exibindo"]],
+            len(_estado["linhas_filtradas"]),
+        )
+
+    def carregar_dados():
         lbl_cnt.configure(text="Carregando...")
 
-        # Captura os filtros antes de sair da thread principal
         nome_f = ent_nome.get().strip().lower()
         data_f = ent_data.get().strip()
-        est_f = combo_est.get()
-        est_f = MAPA_ESTAGIO.get(est_f) if est_f and est_f != "Todos" else None
+        est_f  = combo_est.get()
+        est_f  = MAPA_ESTAGIO.get(est_f) if est_f and est_f != "Todos" else None
 
         def _buscar():
             try:
@@ -148,7 +236,7 @@ def criar_pagina_avaliacoes(_scroll_inner, cores, ler_json, salvar_json,
             except Exception as e:
                 return None, e
 
-        def _renderizar(linhas, erro):
+        def _aplicar(linhas, erro):
             if not _ativo_aval["vivo"] or not page.winfo_exists():
                 return
             if erro is not None:
@@ -156,66 +244,26 @@ def criar_pagina_avaliacoes(_scroll_inner, cores, ler_json, salvar_json,
                 lbl_cnt.configure(text="0 registro(s)")
                 return
 
-            total = pos = neu = neg = 0
-
-            for idx, r in enumerate(linhas):
+            filtradas = []
+            for r in linhas:
                 if len(r) < 7:
                     continue
                 data, aluno, serie, curso, estagio, item, nota = r
-
                 if nome_f and nome_f not in str(aluno).lower():
                     continue
                 if data_f and data_f not in str(data):
                     continue
                 if est_f and str(estagio) != est_f:
                     continue
+                filtradas.append(r)
 
-                categoria = "Almoço favorito" if _eh_almoco_favorito(item) else "Avaliação"
-                resposta = nota
-                if str(estagio) == "4" and not _eh_almoco_favorito(item):
-                    try:
-                        n = float(nota)
-                        if n <= 1:
-                            resposta = "Ruim"
-                        elif n <= 3:
-                            resposta = "Medio"
-                        else:
-                            resposta = "Bom"
-                    except Exception:
-                        pass
-
-                total += 1
-                if resposta == "Bom":
-                    pos += 1
-                elif resposta == "Medio":
-                    neu += 1
-                elif resposta == "Ruim":
-                    neg += 1
-
-                linha_frame = ctk.CTkFrame(corpo, fg_color="transparent")
-                linha_frame.pack(fill="x")
-                valores = [data, aluno, serie, curso, estagio, categoria, item, resposta]
-                n = len(valores)
-                for i, valor in enumerate(valores):
-                    ctk.CTkLabel(linha_frame, text=str(valor), font=("Segoe UI", 11),
-                                  width=larguras.get(i, 0), anchor="w",
-                                  text_color="#374151", wraplength=320 if i == 6 else 0
-                                  ).pack(side="left", expand=(i == n - 1), fill="x", padx=8, pady=6)
-                ctk.CTkFrame(corpo, fg_color="#F0F0F0", height=1).pack(fill="x")
-
-            lbl_cnt.configure(text=f"{total} registro(s)")
-            lbl_total.configure(text=str(total))
-
-            def _pct(v):
-                return f"{(v / total * 100):.1f}%" if total else "0%"
-
-            lbl_pos.configure(text=str(pos)); sub_pos.configure(text=_pct(pos))
-            lbl_neu.configure(text=str(neu)); sub_neu.configure(text=_pct(neu))
-            lbl_neg.configure(text=str(neg)); sub_neg.configure(text=_pct(neg))
+            _estado["linhas_filtradas"] = filtradas
+            _estado["exibindo"] = min(_PAGE_SIZE, len(filtradas))
+            _renderizar_linhas(filtradas[: _estado["exibindo"]], len(filtradas))
 
         def _thread_body():
             linhas, erro = _buscar()
-            corpo.after(0, lambda: _renderizar(linhas, erro))
+            corpo.after(0, lambda: _aplicar(linhas, erro))
 
         threading.Thread(target=_thread_body, daemon=True).start()
 
@@ -309,4 +357,5 @@ def criar_pagina_avaliacoes(_scroll_inner, cores, ler_json, salvar_json,
                     command=apagar_tudo).pack(side="right")
 
     carregar_dados()
+    iniciar_polling(page, carregar_dados())
     return page

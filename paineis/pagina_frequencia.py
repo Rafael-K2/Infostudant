@@ -12,6 +12,7 @@ import customtkinter as ctk
 from tkinter import messagebox
 
 from paineis.helpers import card_resumo
+from paineis.helpers import iniciar_polling
 
 
 def criar_pagina_frequencia(_scroll_inner, cores, _hoje, _agora_br,
@@ -300,23 +301,57 @@ def criar_pagina_frequencia(_scroll_inner, cores, _hoje, _agora_br,
                           ).grid(row=0, column=0, pady=24)
             return
 
-        for i, info in enumerate(sorted(exibidos, key=lambda a: a["nome"].lower())):
-            bg = BRANCO if i % 2 == 0 else "#F8F9FA"
-            linha = ctk.CTkFrame(corpo_tab, fg_color=bg, corner_radius=4)
-            linha.grid(row=i, column=0, sticky="ew", pady=1)
+        exibidos_ord = sorted(exibidos, key=lambda a: a["nome"].lower())
+        _estado_pag_freq = {"pagina": 0, "exibidos": exibidos_ord}
+        LIMITE = 10
 
-            valores = [(info["nome"] or "-", 240),
-                       (info["serie"] or "-", 80),
-                       (info["curso"] or "-", 220),
-                       (info.get("hora", "") or "-", 120),
-                       (info.get("aula", "Fora do horário"), 110)]
-            n = len(valores)
-            for j, (val, w) in enumerate(valores):
-                cor_t = "#2E7D32" if j == 0 else "#374151"
-                fonte = ("Segoe UI", 11, "bold") if j == 0 else ("Segoe UI", 11)
-                ctk.CTkLabel(linha, text=val, font=fonte,
-                              width=w, anchor="w", text_color=cor_t
-                              ).pack(side="left", expand=(j == n-1), fill="x", padx=6, pady=6)
+        def _renderizar_pagina_freq():
+            for w in corpo_tab.winfo_children():
+                w.destroy()
+            pag = _estado_pag_freq["pagina"]
+            dados = _estado_pag_freq["exibidos"]
+            inicio = pag * LIMITE
+            fatia = dados[inicio:inicio + LIMITE]
+
+            for i, info in enumerate(fatia):
+                bg = BRANCO if i % 2 == 0 else "#F8F9FA"
+                linha = ctk.CTkFrame(corpo_tab, fg_color=bg, corner_radius=4)
+                linha.grid(row=i, column=0, sticky="ew", pady=1)
+                valores = [(info["nome"] or "-", 240),
+                           (info["serie"] or "-", 80),
+                           (info["curso"] or "-", 220),
+                           (info.get("hora", "") or "-", 120),
+                           (info.get("aula", "Fora do horário"), 110)]
+                n = len(valores)
+                for j, (val, w) in enumerate(valores):
+                    cor_t = "#2E7D32" if j == 0 else "#374151"
+                    fonte = ("Segoe UI", 11, "bold") if j == 0 else ("Segoe UI", 11)
+                    ctk.CTkLabel(linha, text=val, font=fonte,
+                                  width=w, anchor="w", text_color=cor_t
+                                  ).pack(side="left", expand=(j == n-1), fill="x", padx=6, pady=6)
+
+            # Rodapé de paginação
+            total_pags = max(1, -(-len(dados) // LIMITE))
+            rod = ctk.CTkFrame(corpo_tab, fg_color="transparent")
+            rod.grid(row=LIMITE + 1, column=0, sticky="ew", pady=(6, 2))
+            ctk.CTkLabel(rod, text=f"Exibindo {inicio+1}–{min(inicio+LIMITE, len(dados))} de {len(dados)}",
+                          font=("Segoe UI", 10), text_color=TEXTO_CINZA).pack(side="left", padx=4)
+            if pag > 0:
+                ctk.CTkButton(rod, text="← Anterior", width=90, height=26,
+                               fg_color=VERDE_VIBRANTE, hover_color=VERDE_ESCURO,
+                               font=("Segoe UI", 10, "bold"),
+                               command=lambda: [_estado_pag_freq.update({"pagina": pag - 1}),
+                                                _renderizar_pagina_freq()]
+                               ).pack(side="left", padx=4)
+            if inicio + LIMITE < len(dados):
+                ctk.CTkButton(rod, text="Ver mais →", width=90, height=26,
+                               fg_color=VERDE_VIBRANTE, hover_color=VERDE_ESCURO,
+                               font=("Segoe UI", 10, "bold"),
+                               command=lambda: [_estado_pag_freq.update({"pagina": pag + 1}),
+                                                _renderizar_pagina_freq()]
+                               ).pack(side="left", padx=4)
+
+        _renderizar_pagina_freq()
 
     # ── Filtro por sala rápida ────────────────────────────────────────────
     def _filtrar_por_sigla(sigla):
@@ -585,4 +620,5 @@ def criar_pagina_frequencia(_scroll_inner, cores, _hoje, _agora_br,
     ent_nome.bind("<KeyRelease>", lambda e: atualizar_freq())
 
     atualizar_freq()
+    iniciar_polling(page, atualizar_freq())
     return page

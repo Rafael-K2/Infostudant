@@ -1,0 +1,43 @@
+26/06/2026 08:18:33 - INFO - Pool PostgreSQL inicializado
+26/06/2026 08:18:34 - INFO - Tabelas Neon verificadas/criadas
+26/06/2026 08:18:35 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
+26/06/2026 08:18:37 - INFO - Configurações sincronizadas com a API na nuvem
+26/06/2026 08:18:51 - INFO - Painel admin (CTk) aberto com sucesso — perfil: ADM
+26/06/2026 10:05:58 - INFO - Pool PostgreSQL inicializado
+26/06/2026 10:05:59 - INFO - Tabelas Neon verificadas/criadas
+26/06/2026 10:06:00 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
+26/06/2026 10:06:01 - INFO - Configurações sincronizadas com a API na nuvem
+26/06/2026 10:06:33 - INFO - Painel admin (CTk) aberto com sucesso — perfil: ADM
+26/06/2026 15:52:41 - INFO - Pool PostgreSQL inicializado
+26/06/2026 15:52:42 - INFO - Tabelas Neon verificadas/criadas
+26/06/2026 15:52:43 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
+26/06/2026 15:52:45 - WARNING - Sync nuvem falhou (/admin/lista-alunos): HTTP 404 — <!doctype html>
+<html lang=en>
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try agai
+26/06/2026 15:52:45 - WARNING - Falha ao sincronizar lista_alunos com a nuvem
+26/06/2026 15:52:45 - INFO - Configurações sincronizadas com a API na nuvem
+26/06/2026 15:53:06 - INFO - Painel admin (CTk) aberto com sucesso — perfil: ADM
+26/06/2026 16:12:06 - INFO - Pool PostgreSQL inicializado
+26/06/2026 16:12:07 - INFO - Tabelas Neon verificadas/criadas
+26/06/2026 16:12:08 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
+26/06/2026 16:12:10 - WARNING - Sync nuvem falhou (/admin/lista-alunos): HTTP 404 — <!doctype html>
+<html lang=en>
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try agai
+26/06/2026 16:12:10 - WARNING - Falha ao sincronizar lista_alunos com a nuvem
+26/06/2026 16:12:10 - INFO - Configurações sincronizadas com a API na nuvem
+26/06/2026 16:12:25 - INFO - Painel admin (CTk) aberto com sucesso — perfil: ADM
+26/06/2026 16:13:03 - INFO - Pool PostgreSQL inicializado
+26/06/2026 16:13:04 - INFO - Tabelas Neon verificadas/criadas
+26/06/2026 16:13:05 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
+26/06/2026 16:13:06 - WARNING - Sync nuvem falhou (/admin/lista-alunos): HTTP 404 — <!doctype html>
+<html lang=en>
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try agai
+26/06/2026 16:13:06 - WARNING - Falha ao sincronizar lista_alunos com a nuvem
+26/06/2026 16:13:06 - INFO - Configurações sincronizadas com a API na nuvem
+26/06/2026 16:13:09 - INFO - Painel admin (CTk) aberto com sucesso — perfil: ADM

@@ -1,60 +1,24 @@
-20/06/2026 00:15:49 - INFO - Pool PostgreSQL inicializado
-20/06/2026 00:15:50 - INFO - Tabelas Neon verificadas/criadas
-20/06/2026 00:15:51 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
-20/06/2026 00:15:52 - INFO - Configurações sincronizadas com a API na nuvem
-20/06/2026 00:15:55 - INFO - Painel admin (CTk) aberto com sucesso
-20/06/2026 00:20:06 - INFO - Pool PostgreSQL inicializado
-20/06/2026 00:20:07 - INFO - Tabelas Neon verificadas/criadas
-20/06/2026 00:20:08 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
-20/06/2026 00:20:09 - INFO - Configurações sincronizadas com a API na nuvem
-20/06/2026 00:20:13 - INFO - Painel admin (CTk) aberto com sucesso
-20/06/2026 00:31:24 - INFO - Pool PostgreSQL inicializado
-20/06/2026 00:31:25 - INFO - Tabelas Neon verificadas/criadas
-20/06/2026 00:31:26 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
-20/06/2026 00:31:28 - INFO - Configurações sincronizadas com a API na nuvem
-20/06/2026 00:31:44 - INFO - Painel admin (CTk) aberto com sucesso
-20/06/2026 00:32:58 - INFO - Pool PostgreSQL inicializado
-20/06/2026 00:32:59 - INFO - Tabelas Neon verificadas/criadas
-20/06/2026 00:33:00 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
-20/06/2026 00:33:01 - INFO - Configurações sincronizadas com a API na nuvem
-20/06/2026 00:33:04 - INFO - Painel admin (CTk) aberto com sucesso
-20/06/2026 00:34:21 - INFO - Pool PostgreSQL inicializado
-20/06/2026 00:34:22 - INFO - Tabelas Neon verificadas/criadas
-20/06/2026 00:34:23 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
-20/06/2026 00:34:24 - INFO - Configurações sincronizadas com a API na nuvem
-20/06/2026 00:34:38 - INFO - Painel admin (CTk) aberto com sucesso
-20/06/2026 08:47:22 - INFO - Pool PostgreSQL inicializado
-20/06/2026 08:47:23 - INFO - Tabelas Neon verificadas/criadas
-20/06/2026 08:47:24 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
-20/06/2026 08:47:30 - INFO - Painel admin (CTk) aberto com sucesso
-20/06/2026 08:47:38 - WARNING - Sync nuvem falhou (/admin/cardapio): The read operation timed out
-20/06/2026 08:47:53 - WARNING - Sync nuvem falhou (/admin/eventos): The read operation timed out
-20/06/2026 09:10:41 - INFO - Pool PostgreSQL inicializado
-20/06/2026 09:10:42 - INFO - Tabelas Neon verificadas/criadas
-20/06/2026 09:10:43 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
-20/06/2026 09:10:48 - INFO - Painel admin (CTk) aberto com sucesso
-20/06/2026 09:10:58 - WARNING - Sync nuvem falhou (/admin/cardapio): The read operation timed out
-20/06/2026 09:11:13 - WARNING - Sync nuvem falhou (/admin/eventos): The read operation timed out
-20/06/2026 09:25:59 - INFO - Pool PostgreSQL inicializado
-20/06/2026 09:26:00 - INFO - Tabelas Neon verificadas/criadas
-20/06/2026 09:26:00 - WARNING - Sync nuvem falhou (/admin/cardapio): HTTP 500 — {"erro":"SSL connection has been closed unexpectedly\n"}
-
-20/06/2026 09:26:01 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
-20/06/2026 09:26:08 - INFO - Painel admin (CTk) aberto com sucesso
-20/06/2026 09:32:24 - INFO - Pool PostgreSQL inicializado
-20/06/2026 09:32:25 - INFO - Tabelas Neon verificadas/criadas
-20/06/2026 09:32:26 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
-20/06/2026 09:32:27 - INFO - Configurações sincronizadas com a API na nuvem
-20/06/2026 09:32:48 - INFO - Painel admin (CTk) aberto com sucesso
-20/06/2026 13:47:22 - INFO - Pool PostgreSQL inicializado
-20/06/2026 13:47:23 - INFO - Tabelas Neon verificadas/criadas
-20/06/2026 13:47:24 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
-20/06/2026 13:47:39 - WARNING - Sync nuvem falhou (/admin/cardapio): The read operation timed out
-20/06/2026 13:47:54 - WARNING - Sync nuvem falhou (/admin/eventos): The read operation timed out
-20/06/2026 13:48:08 - INFO - Painel admin (CTk) aberto com sucesso — perfil: SERC
-20/06/2026 13:53:55 - INFO - Pool PostgreSQL inicializado
-20/06/2026 13:53:56 - INFO - Tabelas Neon verificadas/criadas
-20/06/2026 13:53:56 - WARNING - Sync nuvem falhou (/admin/cardapio): HTTP 500 — {"erro":"SSL connection has been closed unexpectedly\n"}
-
-20/06/2026 13:53:57 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
-20/06/2026 13:54:07 - INFO - Painel admin (CTk) aberto com sucesso — perfil: SERC
+27/06/2026 09:46:33 - INFO - Pool PostgreSQL inicializado
+27/06/2026 09:46:34 - INFO - Tabelas Neon verificadas/criadas
+27/06/2026 09:46:35 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
+27/06/2026 09:46:38 - INFO - Lista de alunos sincronizada: 504 alunos
+27/06/2026 09:46:38 - INFO - Configurações sincronizadas com a API na nuvem
+27/06/2026 09:47:39 - INFO - Painel admin (CTk) aberto com sucesso — perfil: ADM
+27/06/2026 09:52:57 - INFO - Pool PostgreSQL inicializado
+27/06/2026 09:52:58 - INFO - Tabelas Neon verificadas/criadas
+27/06/2026 09:52:59 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
+27/06/2026 09:53:01 - INFO - Lista de alunos sincronizada: 504 alunos
+27/06/2026 09:53:01 - INFO - Configurações sincronizadas com a API na nuvem
+27/06/2026 09:53:09 - INFO - Painel admin (CTk) aberto com sucesso — perfil: ADM
+27/06/2026 09:56:00 - INFO - Pool PostgreSQL inicializado
+27/06/2026 09:56:01 - INFO - Tabelas Neon verificadas/criadas
+27/06/2026 09:56:02 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
+27/06/2026 09:56:04 - INFO - Lista de alunos sincronizada: 504 alunos
+27/06/2026 09:56:04 - INFO - Configurações sincronizadas com a API na nuvem
+27/06/2026 09:56:09 - INFO - Painel admin (CTk) aberto com sucesso — perfil: ADM
+27/06/2026 09:57:56 - INFO - Pool PostgreSQL inicializado
+27/06/2026 09:57:57 - INFO - Tabelas Neon verificadas/criadas
+27/06/2026 09:57:58 - INFO - Servidor MARWIN iniciado em http://26.86.100.119:5000
+27/06/2026 09:58:00 - INFO - Lista de alunos sincronizada: 504 alunos
+27/06/2026 09:58:00 - INFO - Configurações sincronizadas com a API na nuvem
+27/06/2026 09:58:20 - INFO - Painel admin (CTk) aberto com sucesso — perfil: ADM
